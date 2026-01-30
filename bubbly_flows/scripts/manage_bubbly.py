@@ -537,14 +537,14 @@ def submit_training_job():
 #SBATCH -e {logs_dir}/%x_%j.err
 
 # Load Modules (Oscar Standard)
-# We use minimal modules and rely on the venv for python packages (torch, etc)
-# 'cuda' module ensures driver/nvcc compatibility if needed
+# We use minimal modules and rely on the conda env for python packages
 module purge
-module load python/3.11
-module load cuda
+module load miniforge3
+module load cuda/11.8
 
-# Activate Venv (Dedicated Training Env)
-source {ROOT_DIR.parent}/bubbly-train-env/bin/activate
+# Activate Conda Env
+source activate {ROOT_DIR.parent}/bubbly-train-env
+# Alternative: conda activate {ROOT_DIR.parent}/bubbly-train-env
 
 # Echo Info
 echo "Job ID: $SLURM_JOB_ID"
