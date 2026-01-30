@@ -428,6 +428,10 @@ def submit_training_job():
     exp_name = input_str("Experiment Name", default_exp)
     hours = input_int("Time limit (hours)", 4)
     
+    # Prepare Logs Directory
+    logs_dir = ROOT_DIR / "logs"
+    logs_dir.mkdir(exist_ok=True)
+
     # Generate Slurm Script
     slurm_content = f"""#!/bin/bash
 #SBATCH --job-name={exp_name}
@@ -461,9 +465,6 @@ python3 {SCRIPTS_DIR}/train.py \\
 """
     
     # Write Script
-    logs_dir = ROOT_DIR / "logs"
-    logs_dir.mkdir(exist_ok=True)
-    
     script_path = logs_dir / f"submit_{exp_name}.sh"
     with open(script_path, "w") as f:
         f.write(slurm_content)
