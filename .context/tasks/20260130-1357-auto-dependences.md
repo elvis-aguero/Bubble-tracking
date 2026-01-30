@@ -9,6 +9,7 @@
 - Specifically ensure `micro_sam` is detected.
 - If missing, prompt user to install via the existing self-repair mechanism.
 - Fix logic to ensure new requirements are installed even if `numpy` is already present.
+- **Correction**: Run this check on STARTUP, not just before training.
 
 ## Constraints / Non-goals
 - We still respect the `bubbly-train-env`.
@@ -17,18 +18,16 @@
 - `bubbly_flows/scripts/manage_bubbly.py`
 
 ## Plan
-1.  **Modify `check_training_reqs`** in `manage_bubbly.py `:
-    - Instead of just checking `torch`, iterate through critical packages: `micro_sam`, `torch`, `cv2`, `tqdm`.
-    - If ANY are missing, prompt for full reinstall/update from `requirements.txt`.
-2.  **Startup Check**:
-    - Ensure this check runs at startup or when entering training menus.
+1.  **Modify `check_training_reqs`** in `manage_bubbly.py `: (Done)
+2.  **Startup Check**: Move the call to `check_training_reqs()` to `if __name__ == "__main__":` before `main_menu()`.
 
 ## Work Log
 - [2026-01-30 13:57 EST] Task created.
-- [2026-01-30 13:59 EST] Updated `check_training_reqs` to check `micro_sam`, `cv2`, and `tqdm`. If missing, it runs `pip install -r requirements.txt`.
+- [2026-01-30 13:59 EST] Updated `check_training_reqs`.
+- [2026-01-30 14:01 EST] Moving check to startup.
 
 ## Messages
 (None)
 
 ## Handoff
-- Implementation complete. The script will now robustly handle missing `micro_sam`.
+- Moving check to main entry point.

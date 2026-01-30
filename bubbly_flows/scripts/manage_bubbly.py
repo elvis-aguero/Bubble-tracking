@@ -664,8 +664,12 @@ def main_menu():
             input("Predictions done. Press Enter...")
 
 
+
 if __name__ == "__main__":
     try:
+        # Ensure environment is ready before showing menu
+        check_training_reqs()
         main_menu()
     except KeyboardInterrupt:
         print("\nExiting.")
+
