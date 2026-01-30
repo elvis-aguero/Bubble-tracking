@@ -1,11 +1,10 @@
-numpy
+numpy<2.0
 opencv-python-headless
 # Torch with CUDA 11.8 URL will be handled via find-links or index-url in the pip command
 # but we list the packages here.
-torch
-torchvision
-torchaudio
-
+torch==2.3.1
+torchvision==0.18.1
+torchaudio==2.3.1
 
 git+https://github.com/computational-cell-analytics/micro-sam.git
 scikit-image
