@@ -5,3 +5,7 @@ opencv-python-headless
 torch
 torchvision
 torchaudio
+
+micro_sam
+scikit-image
+tqdm

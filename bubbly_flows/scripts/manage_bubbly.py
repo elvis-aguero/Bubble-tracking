@@ -583,8 +583,65 @@ def main_menu():
         elif choice == '5':
             submit_training_job()
         elif choice == '6':
-            print("Inference stub.")
-            input("Enter...")
+
+            # Stub logic removed, implementing real inference call.
+            # We want to ask for model and image and then run inference.py
+            print("\n[ Run Inference ]")
+            
+            # 1. Select Model
+            models_dir = MICROSAM_DIR / "models"
+            if not models_dir.exists():
+                print("No models found. Run training first.")
+                input("Enter...")
+                continue
+                
+            model_exps = sorted([d.name for d in models_dir.iterdir() if d.is_dir()])
+            if not model_exps:
+                print("No model experiments found.")
+                input("Enter...")
+                continue
+                
+            print("Available Experiments:")
+            for i, m in enumerate(model_exps):
+                print(f"{i+1}. {m}")
+            
+            idx = input_int("Select experiment", 1) - 1
+            if not (0 <= idx < len(model_exps)): continue
+            
+            exp_name = model_exps[idx]
+            # Assume best.pt 
+            model_path = models_dir / exp_name / "checkpoints" / exp_name / "best.pt"
+            if not model_path.exists():
+                # Fallback to just under models if script saved differently?
+                # train.py saves to: microsam/models/EXP/checkpoints/EXP/best.pt via micro_sam default?
+                # Actually my train.py wrapper passes save_root=models/EXP
+                # micro_sam usually appends 'checkpoints/name/best.pt'
+                # Let's try finding any .pt
+                pts = list((models_dir / exp_name).glob("**/*.pt"))
+                if not pts:
+                    print(f"No .pt files found in {exp_name}")
+                    input("Enter...")
+                    continue
+                model_path = pts[0]
+                print(f"Using checkpoint: {model_path.name}")
+                
+            # 2. Select Image
+            # For simplicity, ask for absolute path or pick from pool?
+            img_path_str = input_str("Enter path to image")
+            img_path = Path(img_path_str)
+            if not img_path.exists():
+                print("Image not found.")
+                input("Enter...")
+                continue
+            
+            # 3. Output
+            out_path_str = input_str("Output path (mask.png)", f"{img_path.stem}_mask.png")
+            
+            # Run
+            cmd = f"python3 {SCRIPTS_DIR}/inference.py --model_path {model_path} --image {img_path} --output {out_path_str}"
+            os.system(cmd)
+            input("Predictions done. Press Enter...")
+
 
 if __name__ == "__main__":
     try:
