@@ -1,6 +1,6 @@
 module load python/3.11
-module load cudnn/8.9
-module load cuda/11
+module load cuda
+module load cudnn/8
 
 # Determine this script directory and repository root (parent of bubbly_flows)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"

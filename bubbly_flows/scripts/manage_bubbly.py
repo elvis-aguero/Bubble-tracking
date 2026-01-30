@@ -418,9 +418,10 @@ def submit_training_job():
 #SBATCH -e logs/%x_%j.err
 
 # Load Modules (Oscar Standard)
+# We use minimal modules and rely on the venv for python packages (torch, etc)
+# 'cuda' module ensures driver/nvcc compatibility if needed
 module load python/3.11
-module load cuda/11
-module load cudnn/8.9
+module load cuda
 
 # Activate Venv (Repository Root)
 source {ROOT_DIR.parent}/x-labeling-env/bin/activate
