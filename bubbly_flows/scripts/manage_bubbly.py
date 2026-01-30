@@ -18,6 +18,7 @@ import json
 import csv
 import random
 import argparse
+import datetime
 from pathlib import Path
 from typing import List, Optional
 import cv2
@@ -49,8 +50,20 @@ WORKSPACES_DIR = ROOT_DIR / "workspaces"
 GOLD_DIR = ROOT_DIR / "annotations" / "gold"
 MICROSAM_DIR = ROOT_DIR / "microsam"
 SCRIPTS_DIR = ROOT_DIR / "scripts"
+DIARY_LOG = ROOT_DIR / "diary.log"
 
 VALID_EXTS = {".png", ".jpg", ".jpeg", ".tif", ".bmp"}
+
+def log_command(action: str, details: str = ""):
+    """Logs action to the diary file."""
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    entry = f"[{timestamp}] {action}: {details}"
+    try:
+        with open(DIARY_LOG, "a") as f:
+            f.write(entry + "\n")
+    except Exception as e:
+        print(f"Warning: Could not write to diary: {e}")
+
 
 def clear_screen():
     print("\033[H\033[J", end="")
@@ -136,6 +149,7 @@ def update_pool():
         pass
 
     print(f"Moved {count} new files to pool.")
+    log_command("update_pool", f"Moved {count} files to pool")
     input("Press Enter to continue...")
 
 # --- 2. Create Workspace ---
@@ -200,6 +214,7 @@ def create_workspace():
     print(f"Workspace '{name}' created at {ws_dir}")
     print("IMPORTANT: Configure X-AnyLabeling to save labels to:")
     print(f"  {ws_dir / 'labels'}")
+    log_command("create_workspace", f"Created workspace {name}")
     input("Press Enter to continue...")
 
 # --- 3. Promote to Gold ---
@@ -271,6 +286,7 @@ def promote_to_gold():
         json.dump(stats, f, indent=2)
 
     print(f"Promoted {count} labels. Total in {gold_ver}: {len(final_gold_labels)}")
+    log_command("promote_gold", f"Promoted {ws_name} to {gold_ver} ({count} labels)")
     input("Press Enter...")
 
 
@@ -376,6 +392,7 @@ def export_microsam_dataset():
         count += 1
         
     print(f"Export complete. {count} images/masks ready in {dest_ds_dir}")
+    log_command("export_microsam", f"Exported {count} images to {dest_ds_name}")
     input("Press Enter...")
 
 
@@ -404,7 +421,10 @@ def submit_training_job():
     ds_name = datasets[idx]
 
     # Job Params
-    exp_name = input_str("Experiment Name", f"train_{ds_name}")
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    default_exp = f"train_{ds_name}_{timestamp}"
+    
+    exp_name = input_str("Experiment Name", default_exp)
     hours = input_int("Time limit (hours)", 4)
     
     # Generate Slurm Script
@@ -456,8 +476,10 @@ python3 {SCRIPTS_DIR}/train.py \\
         ret = os.system(f"sbatch {script_path}")
         if ret == 0:
             print("Job submitted successfully.")
+            log_command("submit_job", f"Submitted job {exp_name} (dataset: {ds_name})")
         else:
             print("Error submitting job (is sbatch available?).")
+            log_command("submit_job_error", f"Failed to submit {exp_name}")
     else:
         print("Skipped submission.")
     

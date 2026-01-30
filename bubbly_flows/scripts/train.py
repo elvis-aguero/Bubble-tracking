@@ -32,10 +32,12 @@ def main():
     
     # 2. Check GPU
     import torch
-    if torch.cuda.is_available():
-        print(f"[2/3] GPU DETECTED: {torch.cuda.get_device_name(0)}")
-    else:
-        print("[2/3] WARNING: No GPU detected. Training will be slow.")
+    if not torch.cuda.is_available():
+        print("CRITICAL ERROR: No GPU key detected! (torch.cuda.is_available() is False)")
+        print("This script requires a GPU. Check your Slurm configuration or modules.")
+        sys.exit(1)
+        
+    print(f"[2/3] GPU DETECTED: {torch.cuda.get_device_name(0)}")
         
     # 3. Train Loop (Placeholder)
     print("[3/3] Training MicroSAM (Simulated)...")
