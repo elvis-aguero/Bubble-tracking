@@ -17,6 +17,35 @@ import datetime
 from pathlib import Path
 from typing import List, Optional
 
+# --- Helpers (Moved to Top for Bootstrap) ---
+def input_str(prompt: str, default: str = None) -> str:
+    if default:
+        p = f"{prompt} [{default}]: "
+    else:
+        p = f"{prompt}: "
+    val = input(p).strip()
+    if not val and default:
+        return default
+    return val
+
+def input_int(prompt: str, default: int = None) -> int:
+    while True:
+        s = input_str(prompt, str(default) if default is not None else None)
+        try:
+            return int(s)
+        except ValueError:
+            print("Invalid integer.")
+
+def clear_screen():
+    print("\033[H\033[J", end="")
+
+def banner():
+    print("========================================")
+    print("   BUBBLY FLOWS - DATASET MANAGER")
+    print("========================================")
+    print(f"Root: {ROOT_DIR}")
+    print("========================================\n")
+
 # Auto-relaunch under repository-root virtualenv if available and not already active.
 # Auto-relaunch under repository-root 'bubbly-train-env' (dedicated for management/training).
 # This isolates training dependencies (PyTorch, cv2) from the legacy X-AnyLabeling environment.
@@ -74,7 +103,7 @@ if not os.environ.get("_MANAGE_SKIP_ENV_CHECK"):
                     print("        Scanning for Python 3.11, 3.10, 3.9...")
                     found = None
                     import shutil
-                    for ver in ["3.11", "3.10", "3.9", "3.8"]:
+                    for ver in ["3.11", "3.10"]:
                         cand = shutil.which(f"python{ver}")
                         if cand:
                             found = cand
@@ -143,34 +172,10 @@ DIARY_LOG = ROOT_DIR / "diary.log"
 VALID_EXTS = {".png", ".jpg", ".jpeg", ".tif", ".bmp"}
 
 
-# --- Helpers ---
-def clear_screen():
-    print("\033[H\033[J", end="")
 
-def banner():
-    print("========================================")
-    print("   BUBBLY FLOWS - DATASET MANAGER")
-    print("========================================")
-    print(f"Root: {ROOT_DIR}")
-    print("========================================\n")
-
-def input_str(prompt: str, default: str = None) -> str:
-    if default:
-        p = f"{prompt} [{default}]: "
-    else:
-        p = f"{prompt}: "
-    val = input(p).strip()
-    if not val and default:
-        return default
-    return val
-
-def input_int(prompt: str, default: int = None) -> int:
-    while True:
-        s = input_str(prompt, str(default) if default is not None else None)
-        try:
-            return int(s)
-        except ValueError:
-            print("Invalid integer.")
+# --- Setup Paths ---
+_script_dir = Path(__file__).resolve().parent
+_repo_root = _script_dir.parent.parent
 
 # --- Helper: Check Training Requirements (Moved Up) ---
 def check_training_reqs():
