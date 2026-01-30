@@ -18,21 +18,44 @@ from pathlib import Path
 from typing import List, Optional
 
 # Auto-relaunch under repository-root virtualenv if available and not already active.
+# Auto-relaunch under repository-root 'bubbly-train-env' (dedicated for management/training).
+# This isolates training dependencies (PyTorch, cv2) from the legacy X-AnyLabeling environment.
 try:
-    if not os.environ.get("VIRTUAL_ENV") and not os.environ.get("_MANAGE_VENV_LAUNCHED"):
-        # Resolve repo root using the known location of this script
-        _script_dir = Path(__file__).resolve().parent
-        _repo_root = _script_dir.parent
-        # Try a few common venv names; prefer the project's x-labeling env
-        for _venv_name in ("x-labeling-env", ".venv", "venv"):
-            _py = _repo_root / _venv_name / "bin" / "python"
-            if _py.exists():
-                os.environ["_MANAGE_VENV_LAUNCHED"] = "1"
-                # Replace the current process with the venv python
-                os.execv(str(_py), [str(_py)] + sys.argv)
-except Exception:
-    # If anything goes wrong, continue without relaunching (user might use system python)
-    pass
+    _script_dir = Path(__file__).resolve().parent
+    _repo_root = _script_dir.parent.parent
+    _venv_name = "bubbly-train-env"
+    _venv_dir = _repo_root / _venv_name
+    _py_venv = _venv_dir / "bin" / "python"
+    
+    # 1. If we are NOT in the target venv, try to switch to it
+    if os.environ.get("VIRTUAL_ENV") != str(_venv_dir) and not os.environ.get("_MANAGE_VENV_LAUNCHED"):
+        
+        # 2. If it doesn't exist, OFFER TO CREATE IT
+        if not _py_venv.exists():
+            print(f"\n[!] The dedicated environment '{_venv_name}' was not found.")
+            print("    We are separating training/management from the labeling tool to avoid conflicts.")
+            print("    Strictly necessary packages: numpy, opencv-python, torch (optional but recommended for training).")
+            
+            # Simple interactive setup
+            print(f"    Creating {_venv_name} now...")
+            import subprocess
+            subprocess.check_call([sys.executable, "-m", "venv", str(_venv_dir)])
+            
+            print("    Installing core dependencies (numpy, opencv-python)...")
+            subprocess.check_call([str(_py_venv), "-m", "pip", "install", "numpy", "opencv-python"])
+            
+            print("    (Torch will be checked/installed when you try to train.)")
+            print(f"    Environment created at {_venv_dir}\n")
+
+        # 3. Relaunch
+        os.environ["_MANAGE_VENV_LAUNCHED"] = "1"
+        os.execv(str(_py_venv), [str(_py_venv)] + sys.argv)
+
+except Exception as e:
+    # If setup fails, we might just crash later on missing cv2, but we print usage.
+    print(f"Warning: Auto-setup of {_venv_name} failed: {e}")
+    print("Trying to continue with system python...")
+
 
 import shutil
 import glob
@@ -397,9 +420,42 @@ def export_microsam_dataset():
     input("Press Enter...")
 
 
+# --- Helper: Check Training Requirements ---
+def check_training_reqs():
+    """Ensure torch is installed in the current environment."""
+    import importlib.util
+    if importlib.util.find_spec("torch") is None:
+        print("\n[!] PyTorch is missing in this environment.")
+        print("    Training requires torch, torchvision, torchaudio.")
+        print("    We need to install the CUDA 11.8 compatible version to avoid conflicts.")
+        
+        choice = input_str("Install PyTorch now? (y/n)", "y")
+        if choice.lower() == 'y':
+            print("Installing... (this may take a few minutes)")
+            import subprocess
+            cmd = [
+                sys.executable, "-m", "pip", "install", 
+                "torch", "torchvision", "torchaudio", 
+                "--index-url", "https://download.pytorch.org/whl/cu118"
+            ]
+            ret = subprocess.call(cmd)
+            if ret != 0:
+                print("Error installing PyTorch. Please install manually.")
+                return False
+            print("PyTorch installed successfully.")
+            return True
+        else:
+            print("Cannot proceed without PyTorch.")
+            return False
+    return True
+
 # --- 5. Submit Training Job ---
 def submit_training_job():
     print("\n[ Submit Training Job (Oscar) ]")
+
+    # Check dependencies first
+    if not check_training_reqs():
+        return
 
     # Select Dataset
     ds_root = MICROSAM_DIR / "datasets"
@@ -449,8 +505,8 @@ module purge
 module load python/3.11
 module load cuda
 
-# Activate Venv (Repository Root)
-source {ROOT_DIR.parent}/x-labeling-env/bin/activate
+# Activate Venv (Dedicated Training Env)
+source {ROOT_DIR.parent}/bubbly-train-env/bin/activate
 
 # Echo Info
 echo "Job ID: $SLURM_JOB_ID"

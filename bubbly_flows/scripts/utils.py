@@ -62,20 +62,25 @@ from pathlib import Path
 import argparse
 import sys
 
-# Auto-relaunch under repository-root virtualenv if available and not already active.
+# Auto-relaunch under repository-root 'bubbly-train-env' virtualenv.
 # This ensures `utils.py` uses the same venv that auxiliary scripts in this repo expect.
 try:
     import os
+    _script_dir = Path(__file__).resolve().parent
+    # utils.py is in bubbly_flows/scripts/, so repo root is up 2 levels
+    _repo_root = _script_dir.parent.parent
+    _venv_name = "bubbly-train-env"
+    _py = _repo_root / _venv_name / "bin" / "python"
+    
     if not os.environ.get("VIRTUAL_ENV") and not os.environ.get("_UTILS_VENV_LAUNCHED"):
-        _script_dir = Path(__file__).resolve().parent
-        # utils.py is in bubbly_flows/scripts/, so repo root is up 2 levels
-        _repo_root = _script_dir.parent.parent
-        # Try a few common venv names; prefer the project's x-labeling env
-        for _venv_name in ("x-labeling-env", ".venv", "venv"):
-            _py = _repo_root / _venv_name / "bin" / "python"
-            if _py.exists():
-                os.environ["_UTILS_VENV_LAUNCHED"] = "1"
-                os.execv(str(_py), [str(_py)] + sys.argv)
+        if _py.exists():
+            os.environ["_UTILS_VENV_LAUNCHED"] = "1"
+            os.execv(str(_py), [str(_py)] + sys.argv)
+        else:
+             # Fallback to older envs if the dedicated one isn't there?
+             # Or just proceed and hope system python works.
+             # Let's try x-labeling-env as fallback ONLY if strictly needed, but better to fail soft.
+             pass
 except Exception:
     # If anything goes wrong, continue without relaunching
     pass
