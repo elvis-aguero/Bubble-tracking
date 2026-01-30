@@ -24,9 +24,11 @@ export OMP_WAIT_POLICY=PASSIVE
 echo " [1/5] Loading Oscar Modules..."
 module purge
 module load python/3.11
+
 # X-AnyLabeling / ONNXRuntime needs CUDA. 
 # We rely on pip packages (onnxruntime-gpu) and basic cuda driver modules.
-module load cuda
+module load cuda/11
+module load cudnn/8
 
 # ================= SETUP LOGIC =================
 # Check if the Base Directory exists, create if not

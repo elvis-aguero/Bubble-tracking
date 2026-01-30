@@ -1,0 +1,34 @@
+Lmod Warning:
+-------------------------------------------------------------------------------
+The following dependent module(s) are not currently loaded: cuda/11.6.0-fwdj
+(required by: cudnn/8.7.0.84-11.8-kff3)
+-------------------------------------------------------------------------------
+
+
+
+Lmod Warning:
+-------------------------------------------------------------------------------
+The following dependent module(s) are not currently loaded: cuda/11.6.0-fwdj
+(required by: cudnn/8.7.0.84-11.8-kff3)
+-------------------------------------------------------------------------------
+
+
+
+Lmod has detected the following error: The following module(s) are unknown:
+"cudnn/8.9"
+
+Please check the spelling or version number. Also try "module spider ..."
+It is also possible your cache file is out-of-date; it may help to try:
+  $ module --ignore_cache load "cudnn/8.9"
+
+Also make sure that all modulefiles written in TCL start with the string
+#%Module
+
+
+
+Traceback (most recent call last):
+  File "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/scripts/train.py", line 51, in <module>
+    main()
+  File "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/scripts/train.py", line 34, in main
+    import torch
+ModuleNotFoundError: No module named 'torch'

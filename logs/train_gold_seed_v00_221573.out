@@ -1,0 +1,17 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 221573
+##  Job Name : train_gold_seed_v00
+##  Nodelist : gpu2113
+##      CPUs : 
+##  Mem/Node : 32768 MB
+## Directory : /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
+##   Job Started : Thu Jan 29 10:37:28 PM EST 2026
+###############################################################################
+Job ID: 221573
+Node: gpu2113
+Dataset: gold_seed_v00
+STARTING TRAINING: train_gold_seed_v00
+Dataset: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/microsam/datasets/gold_seed_v00
+Epochs:  100
+--------------------------------
+[1/3] Loading data...
