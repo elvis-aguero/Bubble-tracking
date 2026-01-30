@@ -3,7 +3,8 @@ import sys
 import os
 import glob
 import torch
-from micro_sam.training import sam_trainer
+import torch
+from micro_sam.training.training import train_sam
 from pathlib import Path
 
 def main():
@@ -60,11 +61,8 @@ def main():
     
     print("Starting MicroSAM training...")
     
-    # Check what functions are available if we hit issues again
-    # print(f"DEBUG: sam_trainer attributes: {dir(sam_trainer)}")
-
     try:
-        sam_trainer.train_sam(
+        train_sam(
             name=args.name,
             save_root=str(model_save_root),
             train_image_paths=train_image_paths,
