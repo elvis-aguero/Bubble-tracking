@@ -21,101 +21,102 @@ from typing import List, Optional
 # Auto-relaunch under repository-root 'bubbly-train-env' (dedicated for management/training).
 # This isolates training dependencies (PyTorch, cv2) from the legacy X-AnyLabeling environment.
 
-    _script_dir = Path(__file__).resolve().parent
-    _repo_root = _script_dir.parent.parent
-    _venv_name = "bubbly-train-env"
-    _venv_dir = _repo_root / _venv_name
-    _venv_bin = _venv_dir / "bin"
-    _py_venv = _venv_bin / "python"
+
+_script_dir = Path(__file__).resolve().parent
+_repo_root = _script_dir.parent.parent
+_venv_name = "bubbly-train-env"
+_venv_dir = _repo_root / _venv_name
+_venv_bin = _venv_dir / "bin"
+_py_venv = _venv_bin / "python"
+
+# helper to check if we are running in the target venv
+# We check if sys.prefix (active env) matches the target directory
+_running_in_venv = str(_venv_dir) in sys.prefix or os.environ.get("VIRTUAL_ENV") == str(_venv_dir)
+
+# If explicitly disabled via flag, skip
+if not os.environ.get("_MANAGE_SKIP_ENV_CHECK"):
     
-    # helper to check if we are running in the target venv
-    # We check if sys.prefix (active env) matches the target directory
-    _running_in_venv = str(_venv_dir) in sys.prefix or os.environ.get("VIRTUAL_ENV") == str(_venv_dir)
-    
-    # If explicitly disabled via flag, skip
-    if not os.environ.get("_MANAGE_SKIP_ENV_CHECK"):
+    if not _running_in_venv:
+        print(f"\n[!] You are NOT running in the dedicated environment '{_venv_name}'.")
+        print(f"    Current: {sys.prefix}")
+        print(f"    Target:  {_venv_dir}")
         
-        if not _running_in_venv:
-            print(f"\n[!] You are NOT running in the dedicated environment '{_venv_name}'.")
-            print(f"    Current: {sys.prefix}")
-            print(f"    Target:  {_venv_dir}")
-            
-            # Case A: Venv exists -> Offer to switch
-            if _py_venv.exists():
-                print(f"    The environment '{_venv_name}' already exists.")
-                # Auto-switch if not explicitly interactive-only? 
-                # Let's prompt to be safe/transparent, or just do it?
-                # User said "glitchy", so being explicit is better.
-                # actually, user just wants it to work. 
-                # Let's auto-switch nicely.
-                print(f"    Switching to {_venv_name}...")
-                os.environ["_MANAGE_SKIP_ENV_CHECK"] = "1" # prevent loops if logic is flawed
-                # Use execv to replace current process
-                try:
-                    os.execv(str(_py_venv), [str(_py_venv)] + sys.argv)
-                except OSError as e:
-                    print(f"    Error switching environment: {e}")
-                    input("Press Enter to continue with system python...")
+        # Case A: Venv exists -> Offer to switch
+        if _py_venv.exists():
+            print(f"    The environment '{_venv_name}' already exists.")
+            # Auto-switch if not explicitly interactive-only? 
+            # Let's prompt to be safe/transparent, or just do it?
+            # User said "glitchy", so being explicit is better.
+            # actually, user just wants it to work. 
+            # Let's auto-switch nicely.
+            print(f"    Switching to {_venv_name}...")
+            os.environ["_MANAGE_SKIP_ENV_CHECK"] = "1" # prevent loops if logic is flawed
+            # Use execv to replace current process
+            try:
+                os.execv(str(_py_venv), [str(_py_venv)] + sys.argv)
+            except OSError as e:
+                print(f"    Error switching environment: {e}")
+                input("Press Enter to continue with system python...")
 
-            # Case B: Venv missing -> Offer to create
-            else:
-                print(f"    The dedicated environment is missing.")
-                print("    We recommend creating it to manage dependencies (torch, micro_sam) in isolation.")
-                
-                if input_str(f"    Create '{_venv_name}' now? (y/n)", "y").lower() == 'y':
-                    print(f"    Creating {_venv_name}...")
-                    
-                    # 1. Select Python Version
-                    target_python = sys.executable
-                    # If current is too new (>= 3.13), search for older
-                    if sys.version_info >= (3, 13):
-                        print(f"    [!] Current Python ({sys.version.split()[0]}) is too new for some ML libraries.")
-                        print("        Scanning for Python 3.11, 3.10, 3.9...")
-                        found = None
-                        import shutil
-                        for ver in ["3.11", "3.10", "3.9", "3.8"]:
-                            cand = shutil.which(f"python{ver}")
-                            if cand:
-                                found = cand
-                                break
-                        if found:
-                            print(f"        Found compatible python: {found}")
-                            target_python = found
-                        else:
-                            print("        [!] No older python found. Using current (install may fail).")
-
-                    # 2. Create Venv
-                    import subprocess
-                    subprocess.check_call([target_python, "-m", "venv", str(_venv_dir)])
-                    
-                    # 3. Initial Install (Pip upgrade + dependencies)
-                    print("    Environment created. Upgrading pip and installing dependencies...")
-                    subprocess.check_call([str(_py_venv), "-m", "pip", "install", "--upgrade", "pip"])
-                    
-                    # Install requirements
-                    # Use check_call so we see output. If it fails, we pause.
-                    req_path = _repo_root / "requirements.txt"
-                    cmd = [
-                        str(_py_venv), "-m", "pip", "install", 
-                        "-r", str(req_path),
-                        "--extra-index-url", "https://download.pytorch.org/whl/cu118"
-                    ]
-                    try:
-                        subprocess.check_call(cmd)
-                        print("    Dependencies installed.")
-                    except subprocess.CalledProcessError:
-                        print("    [!] Error installing dependencies.")
-                        print(f"    Try running manually: {' '.join(cmd)}")
-                        input("Press Enter to continue...")
-
-                    # 4. Relaunch
-                    print("    Relaunching in new environment...")
-                    os.environ["_MANAGE_SKIP_ENV_CHECK"] = "1"
-                    os.execv(str(_py_venv), [str(_py_venv)] + sys.argv)
-
+        # Case B: Venv missing -> Offer to create
         else:
-            # We are in the venv. 
-            pass
+            print(f"    The dedicated environment is missing.")
+            print("    We recommend creating it to manage dependencies (torch, micro_sam) in isolation.")
+            
+            if input_str(f"    Create '{_venv_name}' now? (y/n)", "y").lower() == 'y':
+                print(f"    Creating {_venv_name}...")
+                
+                # 1. Select Python Version
+                target_python = sys.executable
+                # If current is too new (>= 3.13), search for older
+                if sys.version_info >= (3, 13):
+                    print(f"    [!] Current Python ({sys.version.split()[0]}) is too new for some ML libraries.")
+                    print("        Scanning for Python 3.11, 3.10, 3.9...")
+                    found = None
+                    import shutil
+                    for ver in ["3.11", "3.10", "3.9", "3.8"]:
+                        cand = shutil.which(f"python{ver}")
+                        if cand:
+                            found = cand
+                            break
+                    if found:
+                        print(f"        Found compatible python: {found}")
+                        target_python = found
+                    else:
+                        print("        [!] No older python found. Using current (install may fail).")
+
+                # 2. Create Venv
+                import subprocess
+                subprocess.check_call([target_python, "-m", "venv", str(_venv_dir)])
+                
+                # 3. Initial Install (Pip upgrade + dependencies)
+                print("    Environment created. Upgrading pip and installing dependencies...")
+                subprocess.check_call([str(_py_venv), "-m", "pip", "install", "--upgrade", "pip"])
+                
+                # Install requirements
+                # Use check_call so we see output. If it fails, we pause.
+                req_path = _repo_root / "requirements.txt"
+                cmd = [
+                    str(_py_venv), "-m", "pip", "install", 
+                    "-r", str(req_path),
+                    "--extra-index-url", "https://download.pytorch.org/whl/cu118"
+                ]
+                try:
+                    subprocess.check_call(cmd)
+                    print("    Dependencies installed.")
+                except subprocess.CalledProcessError:
+                    print("    [!] Error installing dependencies.")
+                    print(f"    Try running manually: {' '.join(cmd)}")
+                    input("Press Enter to continue...")
+
+                # 4. Relaunch
+                print("    Relaunching in new environment...")
+                os.environ["_MANAGE_SKIP_ENV_CHECK"] = "1"
+                os.execv(str(_py_venv), [str(_py_venv)] + sys.argv)
+
+    else:
+        # We are in the venv. 
+        pass
 
 
 
@@ -140,6 +141,36 @@ SCRIPTS_DIR = ROOT_DIR / "scripts"
 DIARY_LOG = ROOT_DIR / "diary.log"
 
 VALID_EXTS = {".png", ".jpg", ".jpeg", ".tif", ".bmp"}
+
+
+# --- Helpers ---
+def clear_screen():
+    print("\033[H\033[J", end="")
+
+def banner():
+    print("========================================")
+    print("   BUBBLY FLOWS - DATASET MANAGER")
+    print("========================================")
+    print(f"Root: {ROOT_DIR}")
+    print("========================================\n")
+
+def input_str(prompt: str, default: str = None) -> str:
+    if default:
+        p = f"{prompt} [{default}]: "
+    else:
+        p = f"{prompt}: "
+    val = input(p).strip()
+    if not val and default:
+        return default
+    return val
+
+def input_int(prompt: str, default: int = None) -> int:
+    while True:
+        s = input_str(prompt, str(default) if default is not None else None)
+        try:
+            return int(s)
+        except ValueError:
+            print("Invalid integer.")
 
 # --- Helper: Check Training Requirements (Moved Up) ---
 def check_training_reqs():
@@ -214,33 +245,6 @@ def log_command(action: str, details: str = ""):
         print(f"Warning: Could not write to diary: {e}")
 
 
-def clear_screen():
-    print("\033[H\033[J", end="")
-
-def banner():
-    print("========================================")
-    print("   BUBBLY FLOWS - DATASET MANAGER")
-    print("========================================")
-    print(f"Root: {ROOT_DIR}")
-    print("========================================\n")
-
-def input_str(prompt: str, default: Optional[str] = None) -> str:
-    if default:
-        p = f"{prompt} [{default}]: "
-    else:
-        p = f"{prompt}: "
-    val = input(p).strip()
-    if not val and default:
-        return default
-    return val
-
-def input_int(prompt: str, default: Optional[int] = None) -> int:
-    while True:
-        s = input_str(prompt, str(default) if default is not None else None)
-        try:
-            return int(s)
-        except ValueError:
-            print("Invalid integer.")
 
 # --- 1. Initialize / Update Pool ---
 def update_pool():
