@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/scripts/train.py", line 6, in <module>
+    import micro_sam.training as sam_training
+ModuleNotFoundError: No module named 'micro_sam'
