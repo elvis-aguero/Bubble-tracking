@@ -77,7 +77,8 @@ try:
     import os
     if not os.environ.get("VIRTUAL_ENV") and not os.environ.get("_UTILS_VENV_LAUNCHED"):
         _script_dir = Path(__file__).resolve().parent
-        _repo_root = _script_dir.parent
+        # utils.py is in bubbly_flows/scripts/, so repo root is up 2 levels
+        _repo_root = _script_dir.parent.parent
         # Try a few common venv names; prefer the project's x-labeling env
         for _venv_name in ("x-labeling-env", ".venv", "venv"):
             _py = _repo_root / _venv_name / "bin" / "python"

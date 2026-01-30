@@ -23,6 +23,23 @@ from typing import List, Optional
 import cv2
 import numpy as np
 
+# Auto-relaunch under repository-root virtualenv if available and not already active.
+try:
+    if not os.environ.get("VIRTUAL_ENV") and not os.environ.get("_MANAGE_VENV_LAUNCHED"):
+        # Resolve repo root using the known location of this script
+        _script_dir = Path(__file__).resolve().parent
+        _repo_root = _script_dir.parent
+        # Try a few common venv names; prefer the project's x-labeling env
+        for _venv_name in ("x-labeling-env", ".venv", "venv"):
+            _py = _repo_root / _venv_name / "bin" / "python"
+            if _py.exists():
+                os.environ["_MANAGE_VENV_LAUNCHED"] = "1"
+                # Replace the current process with the venv python
+                os.execv(str(_py), [str(_py)] + sys.argv)
+except Exception:
+    # If anything goes wrong, continue without relaunching (user might use system python)
+    pass
+
 # --- Configuration ---
 # Fix: resolve root relative to THIS script file, not CWD
 ROOT_DIR = Path(__file__).resolve().parent.parent
