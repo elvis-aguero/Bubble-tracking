@@ -21,14 +21,19 @@ export OMP_WAIT_POLICY=PASSIVE
 
 # OSCAR MODULES (Adjust these if you used specific versions)
 # We load these to ensure the system has the right drivers before Python starts
-echo " [1/5] Loading Oscar Modules..."
-module purge
-module load python/3.11
+# Only run this if we are on a system with the 'module' command (e.g. Oscar Cluster)
+if command -v module >/dev/null 2>&1; then
+    echo " [1/5] Loading Oscar Modules..."
+    module purge
+    module load python/3.11
 
-# X-AnyLabeling / ONNXRuntime needs CUDA. 
-# We rely on pip packages (onnxruntime-gpu) and basic cuda driver modules.
-module load cuda/11
-module load cudnn/8
+    # X-AnyLabeling / ONNXRuntime needs CUDA. 
+    # We rely on pip packages (onnxruntime-gpu) and basic cuda driver modules.
+    module load cuda/11
+    module load cudnn/8
+else
+    echo " [1/5] Skipping module load (running on local machine)..."
+fi
 
 # ================= SETUP LOGIC =================
 # Check if the Base Directory exists, create if not
