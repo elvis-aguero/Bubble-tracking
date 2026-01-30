@@ -495,10 +495,6 @@ def export_microsam_dataset():
 def submit_training_job():
     print("\n[ Submit Training Job (Oscar) ]")
 
-    # Check dependencies first
-    if not check_training_reqs():
-        return
-
     # Select Dataset
     ds_root = MICROSAM_DIR / "datasets"
     if not ds_root.exists():
