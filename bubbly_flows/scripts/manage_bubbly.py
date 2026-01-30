@@ -432,33 +432,54 @@ def export_microsam_dataset():
 
 
 # --- Helper: Check Training Requirements ---
+
 def check_training_reqs():
-    """Ensure torch is installed in the current environment."""
+    """Ensure all required packages are installed in the current environment."""
     import importlib.util
-    if importlib.util.find_spec("torch") is None:
-        print("\n[!] PyTorch is missing in this environment.")
-        print("    Training requires torch, torchvision, torchaudio.")
-        print("    We need to install the CUDA 11.8 compatible version to avoid conflicts.")
+    
+    required = ["torch", "micro_sam", "cv2", "tqdm"]
+    missing = []
+    
+    for req in required:
+        # cv2 is opencv-python, but module is cv2
+        req_mod = req
+        if req == "opencv-python-headless" or req == "opencv-python":
+            req_mod = "cv2"
+            
+        if importlib.util.find_spec(req_mod) is None:
+            missing.append(req)
+            
+    if missing:
+        print(f"\n[!] Missing dependencies: {', '.join(missing)}")
+        print("    The 'bubbly-train-env' needs to be updated with the latest requirements.")
         
-        choice = input_str("Install PyTorch now? (y/n)", "y")
+        choice = input_str("Install dependencies now? (y/n)", "y")
         if choice.lower() == 'y':
             print("Installing... (this may take a few minutes)")
             import subprocess
+            
+            # Use the python executable running this script
+            # Install from requirements.txt
             cmd = [
                 sys.executable, "-m", "pip", "install", 
-                "torch", "torchvision", "torchaudio", 
-                "--index-url", "https://download.pytorch.org/whl/cu118"
+                "-r", str(ROOT_DIR.parent / "requirements.txt"),
+                "--extra-index-url", "https://download.pytorch.org/whl/cu118"
             ]
-            ret = subprocess.call(cmd)
-            if ret != 0:
-                print("Error installing PyTorch. Please install manually.")
+            
+            try:
+                subprocess.check_call(cmd)
+                print("Dependencies installed successfully.")
+                return True
+            except subprocess.CalledProcessError as e:
+                print(f"Error installing dependencies: {e}")
+                print("Please try running: pip install -r requirements.txt")
                 return False
-            print("PyTorch installed successfully.")
-            return True
         else:
-            print("Cannot proceed without PyTorch.")
+            print("Cannot proceed without dependencies.")
             return False
+            
     return True
+
 
 # --- 5. Submit Training Job ---
 def submit_training_job():
