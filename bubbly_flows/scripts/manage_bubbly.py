@@ -20,64 +20,116 @@ from typing import List, Optional
 # Auto-relaunch under repository-root virtualenv if available and not already active.
 # Auto-relaunch under repository-root 'bubbly-train-env' (dedicated for management/training).
 # This isolates training dependencies (PyTorch, cv2) from the legacy X-AnyLabeling environment.
-try:
+
     _script_dir = Path(__file__).resolve().parent
     _repo_root = _script_dir.parent.parent
     _venv_name = "bubbly-train-env"
     _venv_dir = _repo_root / _venv_name
-    _py_venv = _venv_dir / "bin" / "python"
+    _venv_bin = _venv_dir / "bin"
+    _py_venv = _venv_bin / "python"
     
-    # 1. If we are NOT in the target venv, try to switch to it
-    if os.environ.get("VIRTUAL_ENV") != str(_venv_dir) and not os.environ.get("_MANAGE_VENV_LAUNCHED"):
+    # helper to check if we are running in the target venv
+    # We check if sys.prefix (active env) matches the target directory
+    _running_in_venv = str(_venv_dir) in sys.prefix or os.environ.get("VIRTUAL_ENV") == str(_venv_dir)
+    
+    # If explicitly disabled via flag, skip
+    if not os.environ.get("_MANAGE_SKIP_ENV_CHECK"):
         
-        # 2. If it doesn't exist, OFFER TO CREATE IT
-        if not _py_venv.exists():
-            print(f"\n[!] The dedicated environment '{_venv_name}' was not found.")
-            print("    We are separating training/management from the labeling tool to avoid conflicts.")
-            print("    Strictly necessary packages: numpy, opencv-python, torch (optional but recommended for training).")
+        if not _running_in_venv:
+            print(f"\n[!] You are NOT running in the dedicated environment '{_venv_name}'.")
+            print(f"    Current: {sys.prefix}")
+            print(f"    Target:  {_venv_dir}")
             
-            # Simple interactive setup
-            print(f"    Creating {_venv_name} now...")
-            import subprocess
-            subprocess.check_call([sys.executable, "-m", "venv", str(_venv_dir)])
-            
-            # Ask user for permission to install everything
-            print(f"    [?] Install all dependencies from requirements.txt? (y/n)")
-            print(f"        (Includes PyTorch w/ CUDA 11.8, numpy, opencv)")
-            
-            if input().lower().strip().startswith('y'):
-                 print("    Installing dependencies... This may take a few minutes.")
-                 # Install from requirements.txt with the specific index-url for torch
-                 subprocess.check_call([
-                     str(_py_venv), "-m", "pip", "install", 
-                     "-r", str(_repo_root / "requirements.txt"),
-                     "--extra-index-url", "https://download.pytorch.org/whl/cu118"
-                 ])
+            # Case A: Venv exists -> Offer to switch
+            if _py_venv.exists():
+                print(f"    The environment '{_venv_name}' already exists.")
+                # Auto-switch if not explicitly interactive-only? 
+                # Let's prompt to be safe/transparent, or just do it?
+                # User said "glitchy", so being explicit is better.
+                # actually, user just wants it to work. 
+                # Let's auto-switch nicely.
+                print(f"    Switching to {_venv_name}...")
+                os.environ["_MANAGE_SKIP_ENV_CHECK"] = "1" # prevent loops if logic is flawed
+                # Use execv to replace current process
+                try:
+                    os.execv(str(_py_venv), [str(_py_venv)] + sys.argv)
+                except OSError as e:
+                    print(f"    Error switching environment: {e}")
+                    input("Press Enter to continue with system python...")
+
+            # Case B: Venv missing -> Offer to create
             else:
-                 print("    Skipping dependency installation. You may need to run this manually later.")
-            
-            print(f"    Environment created at {_venv_dir}\n")
+                print(f"    The dedicated environment is missing.")
+                print("    We recommend creating it to manage dependencies (torch, micro_sam) in isolation.")
+                
+                if input_str(f"    Create '{_venv_name}' now? (y/n)", "y").lower() == 'y':
+                    print(f"    Creating {_venv_name}...")
+                    
+                    # 1. Select Python Version
+                    target_python = sys.executable
+                    # If current is too new (>= 3.13), search for older
+                    if sys.version_info >= (3, 13):
+                        print(f"    [!] Current Python ({sys.version.split()[0]}) is too new for some ML libraries.")
+                        print("        Scanning for Python 3.11, 3.10, 3.9...")
+                        found = None
+                        import shutil
+                        for ver in ["3.11", "3.10", "3.9", "3.8"]:
+                            cand = shutil.which(f"python{ver}")
+                            if cand:
+                                found = cand
+                                break
+                        if found:
+                            print(f"        Found compatible python: {found}")
+                            target_python = found
+                        else:
+                            print("        [!] No older python found. Using current (install may fail).")
 
-        # 3. Relaunch
-        os.environ["_MANAGE_VENV_LAUNCHED"] = "1"
-        os.execv(str(_py_venv), [str(_py_venv)] + sys.argv)
+                    # 2. Create Venv
+                    import subprocess
+                    subprocess.check_call([target_python, "-m", "venv", str(_venv_dir)])
+                    
+                    # 3. Initial Install (Pip upgrade + dependencies)
+                    print("    Environment created. Upgrading pip and installing dependencies...")
+                    subprocess.check_call([str(_py_venv), "-m", "pip", "install", "--upgrade", "pip"])
+                    
+                    # Install requirements
+                    # Use check_call so we see output. If it fails, we pause.
+                    req_path = _repo_root / "requirements.txt"
+                    cmd = [
+                        str(_py_venv), "-m", "pip", "install", 
+                        "-r", str(req_path),
+                        "--extra-index-url", "https://download.pytorch.org/whl/cu118"
+                    ]
+                    try:
+                        subprocess.check_call(cmd)
+                        print("    Dependencies installed.")
+                    except subprocess.CalledProcessError:
+                        print("    [!] Error installing dependencies.")
+                        print(f"    Try running manually: {' '.join(cmd)}")
+                        input("Press Enter to continue...")
 
-except Exception as e:
-    # If setup fails, we might just crash later on missing cv2, but we print usage.
-    print(f"Warning: Auto-setup of {_venv_name} failed: {e}")
-    print("Trying to continue with system python...")
+                    # 4. Relaunch
+                    print("    Relaunching in new environment...")
+                    os.environ["_MANAGE_SKIP_ENV_CHECK"] = "1"
+                    os.execv(str(_py_venv), [str(_py_venv)] + sys.argv)
+
+        else:
+            # We are in the venv. 
+            pass
 
 
+
+
+# --- Imports & Setup ---
 import shutil
 import glob
 import json
 import csv
 import random
-import cv2
-import numpy as np
+import datetime
+# Note: cv2 and numpy are imported safely below after checks
 
 # --- Configuration ---
-# Fix: resolve root relative to THIS script file, not CWD
 ROOT_DIR = Path(__file__).resolve().parent.parent
 POOL_DIR = ROOT_DIR / "data" / "patches_pool" / "images"
 POOL_MAP = ROOT_DIR / "data" / "patches_pool" / "patch_map.csv"
@@ -88,6 +140,68 @@ SCRIPTS_DIR = ROOT_DIR / "scripts"
 DIARY_LOG = ROOT_DIR / "diary.log"
 
 VALID_EXTS = {".png", ".jpg", ".jpeg", ".tif", ".bmp"}
+
+# --- Helper: Check Training Requirements (Moved Up) ---
+def check_training_reqs():
+    """Ensure all required packages are installed in the current environment."""
+    import importlib.util
+    import sys
+    
+    required = ["torch", "micro_sam", "cv2", "tqdm"]
+    missing = []
+    
+    for req in required:
+        # cv2 is opencv-python, but module is cv2
+        req_mod = req
+        if req == "opencv-python-headless" or req == "opencv-python":
+            req_mod = "cv2"
+            
+        if importlib.util.find_spec(req_mod) is None:
+            missing.append(req)
+            
+    if missing:
+        print(f"\n[!] Missing dependencies in '{sys.prefix}': {', '.join(missing)}")
+        print("    The environment needs to be updated with the latest requirements.")
+        
+        choice = input_str("Install dependencies now? (y/n)", "y")
+
+        if choice.lower() == 'y':
+            print("Installing... (this may take a few minutes)")
+            
+            # Debug info
+            print(f"    DEBUG: Running pip via: {sys.executable}")
+            
+            import subprocess
+            
+            # Use the python executable running this script
+            # Install from requirements.txt
+            cmd = [
+                sys.executable, "-m", "pip", "install", 
+                "-r", str(ROOT_DIR.parent / "requirements.txt"),
+                "--extra-index-url", "https://download.pytorch.org/whl/cu118"
+            ]
+            
+            try:
+                subprocess.check_call(cmd)
+                print("Dependencies installed successfully.")
+                return True
+            except subprocess.CalledProcessError as e:
+                print(f"\n[ERROR] Installation failed with exit code: {e.returncode}")
+                input("\nPress Enter to verify the error message (this window will close)...")
+                return False
+        else:
+            print("Cannot proceed without dependencies.")
+            return False
+            
+    return True
+
+# --- Check Deps BEFORE Importing Heavy Libs ---
+check_training_reqs()
+
+# Now safe to import
+import cv2
+import numpy as np
+
 
 def log_command(action: str, details: str = ""):
     """Logs action to the diary file."""
@@ -431,54 +545,6 @@ def export_microsam_dataset():
     input("Press Enter...")
 
 
-# --- Helper: Check Training Requirements ---
-
-def check_training_reqs():
-    """Ensure all required packages are installed in the current environment."""
-    import importlib.util
-    
-    required = ["torch", "micro_sam", "cv2", "tqdm"]
-    missing = []
-    
-    for req in required:
-        # cv2 is opencv-python, but module is cv2
-        req_mod = req
-        if req == "opencv-python-headless" or req == "opencv-python":
-            req_mod = "cv2"
-            
-        if importlib.util.find_spec(req_mod) is None:
-            missing.append(req)
-            
-    if missing:
-        print(f"\n[!] Missing dependencies: {', '.join(missing)}")
-        print("    The 'bubbly-train-env' needs to be updated with the latest requirements.")
-        
-        choice = input_str("Install dependencies now? (y/n)", "y")
-        if choice.lower() == 'y':
-            print("Installing... (this may take a few minutes)")
-            import subprocess
-            
-            # Use the python executable running this script
-            # Install from requirements.txt
-            cmd = [
-                sys.executable, "-m", "pip", "install", 
-                "-r", str(ROOT_DIR.parent / "requirements.txt"),
-                "--extra-index-url", "https://download.pytorch.org/whl/cu118"
-            ]
-            
-            try:
-                subprocess.check_call(cmd)
-                print("Dependencies installed successfully.")
-                return True
-            except subprocess.CalledProcessError as e:
-                print(f"Error installing dependencies: {e}")
-                print("Please try running: pip install -r requirements.txt")
-                return False
-        else:
-            print("Cannot proceed without dependencies.")
-            return False
-            
-    return True
 
 
 # --- 5. Submit Training Job ---

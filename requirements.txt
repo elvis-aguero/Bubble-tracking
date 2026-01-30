@@ -6,6 +6,7 @@ torch
 torchvision
 torchaudio
 
-micro_sam
+
+git+https://github.com/computational-cell-analytics/micro-sam.git
 scikit-image
 tqdm
