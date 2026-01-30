@@ -1,4 +1,4 @@
-[2026-01-30 13:18:21] update_pool: Moved 4 files to pool
+[2026-01-30 13:18:21] update_pool: Moved 4 files to poo
 [2026-01-30 13:18:21] create_workspace: Created workspace test_workspace_v01
 [2026-01-30 13:18:21] promote_gold: Promoted test_workspace_v01 to gold_test_v01 (1 labels)
 [2026-01-30 13:18:21] export_microsam: Exported 1 images to microsam_test_ds
@@ -10,3 +10,7 @@
 [2026-01-30 13:23:17] create_workspace: Created workspace test_workspace_v01
 [2026-01-30 13:23:17] promote_gold: Promoted test_workspace_v01 to gold_test_v01 (1 labels)
 [2026-01-30 13:23:17] export_microsam: Exported 1 images to microsam_test_ds
+[2026-01-30 11:41:20] submit_job: Submitted job train_gold_seed_v00_20260130_114111 (dataset: gold_seed_v00)
+[2026-01-30 11:52:50] submit_job_error: Failed to submit train_gold_seed_v00_20260130_115246
+[2026-01-30 11:55:02] submit_job: Submitted job train_gold_seed_v00_20260130_115458 (dataset: gold_seed_v00)
+[2026-01-30 13:08:50] submit_job: Submitted job train_gold_seed_v00_20260130_130844 (dataset: gold_seed_v00)
