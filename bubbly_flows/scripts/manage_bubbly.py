@@ -439,8 +439,8 @@ def submit_training_job():
 #SBATCH -p gpu
 #SBATCH --gres=gpu:1
 #SBATCH --mem=32G
-#SBATCH --o {logs_dir}/%x_%j.out
-#SBATCH --e {logs_dir}/%x_%j.err
+#SBATCH -o {logs_dir}/%x_%j.out
+#SBATCH -e {logs_dir}/%x_%j.err
 
 # Load Modules (Oscar Standard)
 # We use minimal modules and rely on the venv for python packages (torch, etc)
