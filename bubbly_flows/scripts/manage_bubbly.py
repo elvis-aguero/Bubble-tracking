@@ -379,6 +379,90 @@ def export_microsam_dataset():
     input("Press Enter...")
 
 
+# --- 5. Submit Training Job ---
+def submit_training_job():
+    print("\n[ Submit Training Job (Oscar) ]")
+
+    # Select Dataset
+    ds_root = MICROSAM_DIR / "datasets"
+    if not ds_root.exists():
+        print("No datasets found (microsam/datasets empty).")
+        return
+        
+    datasets = sorted([d.name for d in ds_root.iterdir() if d.is_dir()])
+    if not datasets:
+        print("No datasets found.")
+        return
+
+    print("Available Datasets:")
+    for i, d in enumerate(datasets):
+        print(f"{i+1}. {d}")
+    
+    idx = input_int("Select dataset", 1) - 1
+    if not (0 <= idx < len(datasets)):
+        return
+    ds_name = datasets[idx]
+
+    # Job Params
+    exp_name = input_str("Experiment Name", f"train_{ds_name}")
+    hours = input_int("Time limit (hours)", 4)
+    
+    # Generate Slurm Script
+    slurm_content = f"""#!/bin/bash
+#SBATCH --job-name={exp_name}
+#SBATCH --time={hours}:00:00
+#SBATCH -p gpu
+#SBATCH --gres=gpu:1
+#SBATCH --mem=32G
+#SBATCH -o logs/%x_%j.out
+#SBATCH -e logs/%x_%j.err
+
+# Load Modules (Oscar Standard)
+module load python/3.11
+module load cuda/11
+module load cudnn/8.9
+
+# Activate Venv (Repository Root)
+source {ROOT_DIR.parent}/x-labeling-env/bin/activate
+
+# Echo Info
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $SLURMD_NODENAME"
+echo "Dataset: {ds_name}"
+
+# Run Training
+python3 {SCRIPTS_DIR}/train.py \\
+    --dataset {ds_root / ds_name} \\
+    --name {exp_name} \\
+    --epochs 100
+"""
+    
+    # Write Script
+    logs_dir = ROOT_DIR / "logs"
+    logs_dir.mkdir(exist_ok=True)
+    
+    script_path = logs_dir / f"submit_{exp_name}.sh"
+    with open(script_path, "w") as f:
+        f.write(slurm_content)
+        
+    print(f"\nGenerated Slurm script: {script_path}")
+    print("-" * 40)
+    # print(slurm_content)
+    print("-" * 40)
+    
+    submit = input_str("Submit to Slurm now? (y/n)", "n")
+    if submit.lower() == 'y':
+        ret = os.system(f"sbatch {script_path}")
+        if ret == 0:
+            print("Job submitted successfully.")
+        else:
+            print("Error submitting job (is sbatch available?).")
+    else:
+        print("Skipped submission.")
+    
+    input("Press Enter...")
+
+
 # --- Main Menu ---
 def main_menu():
     while True:
@@ -388,7 +472,7 @@ def main_menu():
         print("2. Create New Workspace")
         print("3. Promote Workspace to Gold (+ Cleanup)")
         print("4. Prepare MicroSAM Dataset (Export)")
-        print("5. Train Model (Stub)")
+        print("5. Train Model (submit job)")
         print("6. Run Inference (Stub)")
         print("q. Quit")
         
@@ -404,8 +488,7 @@ def main_menu():
         elif choice == '4':
             export_microsam_dataset()
         elif choice == '5':
-            print("Training stub.")
-            input("Enter...")
+            submit_training_job()
         elif choice == '6':
             print("Inference stub.")
             input("Enter...")
