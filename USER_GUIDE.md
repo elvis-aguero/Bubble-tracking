@@ -25,18 +25,28 @@ This repository implements a scalable, versioned human-in-the-loop annotation pi
 
 ## 1. Environment Setup (Cluster & Dev)
 
-The pipeline manages its own dependencies to ensure stability.
+The pipeline manages its own dependencies via **Conda** to ensure robust support for critical libraries (pytorch, micro_sam, elf, nifty).
 
-1.  **First Run**: Simply run the master script.
+1.  **Prerequisites**:
+    *   **Cluster (Oscar)**: Load the anaconda module first: `module load anaconda/3-2023.07` (or similar).
+    *   **Local**: Install Miniconda or Anaconda.
+
+2.  **First Run**: Simply run the master script.
     ```bash
     python bubbly_flows/scripts/manage_bubbly.py
     ```
-2.  **Auto-Installation**:
-    *   The script will detect if `bubbly-train-env` is missing.
-    *   It will ask to install dependencies from `requirements.txt`.
-    *   **Say Yes**. This installs `numpy`, `opencv`, and `torch` (CUDA 11.8) in one go.
 
-*Note: The older `x-labeling-env` is preserved strictly for the visual labeling tool and is not touched by this setup.*
+3.  **Auto-Installation**:
+    *   The script will detect if the Conda environment `bubbly-train-env` is missing.
+    *   It will ask to create it from `environment.yml` (Say **Yes**).
+    *   *Note*: This process takes 5-10 minutes as it solves the environment and installs binary packages.
+
+4.  **Activation**:
+    *   Once created, you may need to restart the script, or run:
+        ```bash
+        conda activate bubbly-train-env
+        python bubbly_flows/scripts/manage_bubbly.py
+        ```
 
 ---
 

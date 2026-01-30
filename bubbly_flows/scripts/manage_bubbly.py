@@ -46,106 +46,87 @@ def banner():
     print(f"Root: {ROOT_DIR}")
     print("========================================\n")
 
-# Auto-relaunch under repository-root virtualenv if available and not already active.
-# Auto-relaunch under repository-root 'bubbly-train-env' (dedicated for management/training).
-# This isolates training dependencies (PyTorch, cv2) from the legacy X-AnyLabeling environment.
-
+# Auto-relaunch under 'bubbly-train-env' (Conda) if available and not already active.
+# This ensures binaries (nifty, torch, cuda) are correct.
 
 _script_dir = Path(__file__).resolve().parent
 _repo_root = _script_dir.parent.parent
-_venv_name = "bubbly-train-env"
-_venv_dir = _repo_root / _venv_name
-_venv_bin = _venv_dir / "bin"
-_py_venv = _venv_bin / "python"
+_env_name = "bubbly-train-env"
+_yaml_path = _repo_root / "environment.yml"
 
-# helper to check if we are running in the target venv
-# We check if sys.prefix (active env) matches the target directory
-_running_in_venv = str(_venv_dir) in sys.prefix or os.environ.get("VIRTUAL_ENV") == str(_venv_dir)
+# Helper to check if we are in the target conda env
+# CONDA_DEFAULT_ENV is reliable for active conda env
+_active_env = os.environ.get("CONDA_DEFAULT_ENV", "")
+_in_target_env = (_active_env == _env_name)
 
-# If explicitly disabled via flag, skip
 if not os.environ.get("_MANAGE_SKIP_ENV_CHECK"):
-    
-    if not _running_in_venv:
-        print(f"\n[!] You are NOT running in the dedicated environment '{_venv_name}'.")
-        print(f"    Current: {sys.prefix}")
-        print(f"    Target:  {_venv_dir}")
+    if not _in_target_env:
+        print(f"\n[!] You are NOT running in the dedicated Conda environment '{_env_name}'.")
+        print(f"    Current: {_active_env if _active_env else 'System/Other'}")
         
-        # Case A: Venv exists -> Offer to switch
-        if _py_venv.exists():
-            print(f"    The environment '{_venv_name}' already exists.")
-            # Auto-switch if not explicitly interactive-only? 
-            # Let's prompt to be safe/transparent, or just do it?
-            # User said "glitchy", so being explicit is better.
-            # actually, user just wants it to work. 
-            # Let's auto-switch nicely.
-            print(f"    Switching to {_venv_name}...")
-            os.environ["_MANAGE_SKIP_ENV_CHECK"] = "1" # prevent loops if logic is flawed
-            # Use execv to replace current process
-            try:
-                os.execv(str(_py_venv), [str(_py_venv)] + sys.argv)
-            except OSError as e:
-                print(f"    Error switching environment: {e}")
-                input("Press Enter to continue with system python...")
-
-        # Case B: Venv missing -> Offer to create
+        # Check if conda installed
+        if shutil.which("conda") is None:
+            print("    [ERROR] 'conda' command not found. Please load anaconda/miniconda module.")
+            print("    On Cluster: module load anaconda/3-2023.07 (or similar)")
+            # Continue anyway? might fail imports
         else:
-            print(f"    The dedicated environment is missing.")
-            print("    We recommend creating it to manage dependencies (torch, micro_sam) in isolation.")
-            
-            if input_str(f"    Create '{_venv_name}' now? (y/n)", "y").lower() == 'y':
-                print(f"    Creating {_venv_name}...")
+            # Check if env exists
+            import subprocess
+            try:
+                # fast check of entries
+                envs = subprocess.check_output(["conda", "env", "list", "--json"], text=True)
+                envs_json = json.loads(envs)
+                env_paths = envs_json.get("envs", [])
                 
-                # 1. Select Python Version
-                target_python = sys.executable
-                # If current is too new (>= 3.13), search for older
-                if sys.version_info >= (3, 13):
-                    print(f"    [!] Current Python ({sys.version.split()[0]}) is too new for some ML libraries.")
-                    print("        Scanning for Python 3.11, 3.10, 3.9...")
-                    found = None
-                    import shutil
-                    for ver in ["3.11", "3.10"]:
-                        cand = shutil.which(f"python{ver}")
-                        if cand:
-                            found = cand
-                            break
-                    if found:
-                        print(f"        Found compatible python: {found}")
-                        target_python = found
+                target_env_path = None
+                for p in env_paths:
+                    if Path(p).name == _env_name:
+                        target_env_path = p
+                        break
+                        
+                if target_env_path:
+                    # Case A: Env Exists -> Relaunch
+                    print(f"    Found existing environment: {_env_name}")
+                    print("    Switching...")
+                    
+                    # Relaunch using 'conda run' protocol is safest to get all vars
+                    # But os.execv is cleaner process-wise.
+                    # Best: Find python in that env
+                    _data_py = Path(target_env_path) / "bin" / "python"
+                    if not _data_py.exists():
+                         # Windows? 
+                        _data_py = Path(target_env_path) / "python.exe"
+                    
+                    if _data_py.exists():
+                        os.environ["_MANAGE_SKIP_ENV_CHECK"] = "1"
+                        # We use execv on the python binary directly. 
+                        # Note: This doesn't run activation scripts perfectly but usually enough for python libs.
+                        try:
+                            os.execv(str(_data_py), [str(_data_py)] + sys.argv)
+                        except OSError as e:
+                             print(f"    Failed to switch: {e}")
                     else:
-                        print("        [!] No older python found. Using current (install may fail).")
+                        print("    [!] Could not locate python binary in env.")
 
-                # 2. Create Venv
-                import subprocess
-                subprocess.check_call([target_python, "-m", "venv", str(_venv_dir)])
-                
-                # 3. Initial Install (Pip upgrade + dependencies)
-                print("    Environment created. Upgrading pip and installing dependencies...")
-                subprocess.check_call([str(_py_venv), "-m", "pip", "install", "--upgrade", "pip"])
-                
-                # Install requirements
-                # Use check_call so we see output. If it fails, we pause.
-                req_path = _repo_root / "requirements.txt"
-                cmd = [
-                    str(_py_venv), "-m", "pip", "install", 
-                    "-r", str(req_path),
-                    "--extra-index-url", "https://download.pytorch.org/whl/cu118"
-                ]
-                try:
-                    subprocess.check_call(cmd)
-                    print("    Dependencies installed.")
-                except subprocess.CalledProcessError:
-                    print("    [!] Error installing dependencies.")
-                    print(f"    Try running manually: {' '.join(cmd)}")
-                    input("Press Enter to continue...")
+                else:
+                    # Case B: Create Env
+                    print(f"    Environment '{_env_name}' is missing.")
+                    print("    We recommend creating it via Conda to handle C++ dependencies (nifty/elf).")
+                    
+                    if input_str(f"    Create '{_env_name}' from environment.yml? (y/n)", "y").lower() == 'y':
+                        print(f"    Creating {_env_name} (this takes 5-10m)...")
+                        cmd = ["conda", "env", "create", "-f", str(_yaml_path)]
+                        ret = subprocess.call(cmd)
+                        if ret == 0:
+                            print("    Environment created successfully.")
+                            # We can't easily auto-switch to a NEW conda env with execv because params aren't set
+                            print(f"    PLEASE RE-RUN THIS SCRIPT to auto-switch, or run: conda activate {_env_name}")
+                            sys.exit(0)
+                        else:
+                            print("    [!] Conda env creation failed.")
+            except Exception as e:
+                print(f"    Conda check failed: {e}")
 
-                # 4. Relaunch
-                print("    Relaunching in new environment...")
-                os.environ["_MANAGE_SKIP_ENV_CHECK"] = "1"
-                os.execv(str(_py_venv), [str(_py_venv)] + sys.argv)
-
-    else:
-        # We are in the venv. 
-        pass
 
 
 
@@ -177,66 +158,14 @@ VALID_EXTS = {".png", ".jpg", ".jpeg", ".tif", ".bmp"}
 _script_dir = Path(__file__).resolve().parent
 _repo_root = _script_dir.parent.parent
 
-# --- Helper: Check Training Requirements (Moved Up) ---
-def check_training_reqs():
-    """Ensure all required packages are installed in the current environment."""
-    import importlib.util
-    import sys
-    
-    required = ["torch", "micro_sam", "cv2", "tqdm"]
-    missing = []
-    
-    for req in required:
-        # cv2 is opencv-python, but module is cv2
-        req_mod = req
-        if req == "opencv-python-headless" or req == "opencv-python":
-            req_mod = "cv2"
-            
-        if importlib.util.find_spec(req_mod) is None:
-            missing.append(req)
-            
-    if missing:
-        print(f"\n[!] Missing dependencies in '{sys.prefix}': {', '.join(missing)}")
-        print("    The environment needs to be updated with the latest requirements.")
-        
-        choice = input_str("Install dependencies now? (y/n)", "y")
-
-        if choice.lower() == 'y':
-            print("Installing... (this may take a few minutes)")
-            
-            # Debug info
-            print(f"    DEBUG: Running pip via: {sys.executable}")
-            
-            import subprocess
-            
-            # Use the python executable running this script
-            # Install from requirements.txt
-            cmd = [
-                sys.executable, "-m", "pip", "install", 
-                "-r", str(ROOT_DIR.parent / "requirements.txt"),
-                "--extra-index-url", "https://download.pytorch.org/whl/cu118"
-            ]
-            
-            try:
-                subprocess.check_call(cmd)
-                print("Dependencies installed successfully.")
-                return True
-            except subprocess.CalledProcessError as e:
-                print(f"\n[ERROR] Installation failed with exit code: {e.returncode}")
-                input("\nPress Enter to verify the error message (this window will close)...")
-                return False
-        else:
-            print("Cannot proceed without dependencies.")
-            return False
-            
-    return True
-
-# --- Check Deps BEFORE Importing Heavy Libs ---
-check_training_reqs()
-
-# Now safe to import
-import cv2
-import numpy as np
+# Now safe to import (we assume conda env is correct)
+try:
+    import cv2
+    import numpy as np
+except ImportError:
+    print("\n[!] Critical libraries (cv2/numpy) missing.")
+    print("    If you just created the conda environment, please restart the script.")
+    sys.exit(1)
 
 
 def log_command(action: str, details: str = ""):
@@ -742,8 +671,7 @@ def main_menu():
 
 if __name__ == "__main__":
     try:
-        # Ensure environment is ready before showing menu
-        check_training_reqs()
+        # Dependency check handled at bootstrap by conda activation
         main_menu()
     except KeyboardInterrupt:
         print("\nExiting.")

@@ -1,0 +1,27 @@
+name: bubbly-train-env
+channels:
+  - conda-forge
+  - pytorch
+  - nvidia
+dependencies:
+  - python=3.11
+  - pip
+  # Core scientific stack
+  - numpy
+  - pandas
+  - scipy
+  - scikit-image
+  - tqdm
+  # Computer Vision
+  - opencv
+  # MicroSAM & its dependencies (elf, nifty, torch-em are dependencies of micro_sam on conda-forge)
+  - micro_sam
+  # PyTorch Stack (with CUDA support)
+  # Adjust cuda version if needed, typically pytorch-cuda=11.8 or 12.1 for modern clusters
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pytorch-cuda=11.8
+  # Pip fallbacks if needed
+  - pip:
+    - natsort

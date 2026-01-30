@@ -62,27 +62,17 @@ from pathlib import Path
 import argparse
 import sys
 
-# Auto-relaunch under repository-root 'bubbly-train-env' virtualenv.
-# This ensures `utils.py` uses the same venv that auxiliary scripts in this repo expect.
+# Auto-check if we are in the correct Conda environment
 try:
     import os
-    _script_dir = Path(__file__).resolve().parent
-    # utils.py is in bubbly_flows/scripts/, so repo root is up 2 levels
-    _repo_root = _script_dir.parent.parent
-    _venv_name = "bubbly-train-env"
-    _py = _repo_root / _venv_name / "bin" / "python"
+    _expected_env = "bubbly-train-env"
+    _active_env = os.environ.get("CONDA_DEFAULT_ENV", "")
     
-    if not os.environ.get("VIRTUAL_ENV") and not os.environ.get("_UTILS_VENV_LAUNCHED"):
-        if _py.exists():
-            os.environ["_UTILS_VENV_LAUNCHED"] = "1"
-            os.execv(str(_py), [str(_py)] + sys.argv)
-        else:
-             # Fallback to older envs if the dedicated one isn't there?
-             # Or just proceed and hope system python works.
-             # Let's try x-labeling-env as fallback ONLY if strictly needed, but better to fail soft.
-             pass
+    if _active_env != _expected_env and not os.environ.get("_UTILS_SKIP_ENV_CHECK"):
+        # Just a warning for utils.py since users might run it ad-hoc
+        # print(f"[Info] utils.py running in '{_active_env}' (Expected '{_expected_env}').")
+        pass
 except Exception:
-    # If anything goes wrong, continue without relaunching
     pass
 
 import csv
