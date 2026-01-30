@@ -1,0 +1,7 @@
+numpy
+opencv-python-headless
+# Torch with CUDA 11.8 URL will be handled via find-links or index-url in the pip command
+# but we list the packages here.
+torch
+torchvision
+torchaudio

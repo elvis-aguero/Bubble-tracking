@@ -41,10 +41,21 @@ try:
             import subprocess
             subprocess.check_call([sys.executable, "-m", "venv", str(_venv_dir)])
             
-            print("    Installing core dependencies (numpy, opencv-python)...")
-            subprocess.check_call([str(_py_venv), "-m", "pip", "install", "numpy", "opencv-python"])
+            # Ask user for permission to install everything
+            print(f"    [?] Install all dependencies from requirements.txt? (y/n)")
+            print(f"        (Includes PyTorch w/ CUDA 11.8, numpy, opencv)")
             
-            print("    (Torch will be checked/installed when you try to train.)")
+            if input().lower().strip().startswith('y'):
+                 print("    Installing dependencies... This may take a few minutes.")
+                 # Install from requirements.txt with the specific index-url for torch
+                 subprocess.check_call([
+                     str(_py_venv), "-m", "pip", "install", 
+                     "-r", str(_repo_root / "requirements.txt"),
+                     "--extra-index-url", "https://download.pytorch.org/whl/cu118"
+                 ])
+            else:
+                 print("    Skipping dependency installation. You may need to run this manually later.")
+            
             print(f"    Environment created at {_venv_dir}\n")
 
         # 3. Relaunch
