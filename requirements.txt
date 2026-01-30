@@ -6,6 +6,10 @@ torch==2.3.1
 torchvision==0.18.1
 torchaudio==2.3.1
 
+
+# Deep Learning Dependencies (Constantin Pape Lab Stack)
+git+https://github.com/constantinpape/elf.git
+git+https://github.com/constantinpape/torch-em.git
 git+https://github.com/computational-cell-analytics/micro-sam.git
 scikit-image
 tqdm
