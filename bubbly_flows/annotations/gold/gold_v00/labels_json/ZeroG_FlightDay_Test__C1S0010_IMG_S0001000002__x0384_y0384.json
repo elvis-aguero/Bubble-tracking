@@ -1,0 +1,204 @@
+{
+  "version": "3.3.5",
+  "flags": {},
+  "shapes": [
+    {
+      "label": "bubble",
+      "score": null,
+      "points": [
+        [
+          359.26701570680626,
+          314.76439790575915
+        ],
+        [
+          359.26701570680626,
+          305.34031413612564
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "circle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "bubble",
+      "score": null,
+      "points": [
+        [
+          199.5811518324607,
+          272.87958115183244
+        ],
+        [
+          196.9633507853403,
+          259.79057591623035
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "circle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "bubble",
+      "score": null,
+      "points": [
+        [
+          156.64921465968587,
+          274.9738219895288
+        ],
+        [
+          154.03141361256547,
+          266.59685863874347
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "circle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "bubble",
+      "score": null,
+      "points": [
+        [
+          110.0523560209424,
+          341.4659685863874
+        ],
+        [
+          112.14659685863876,
+          333.6125654450262
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "circle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "bubble",
+      "score": null,
+      "points": [
+        [
+          31.0,
+          34.0
+        ],
+        [
+          34.0,
+          54.0
+        ],
+        [
+          48.0,
+          94.0
+        ],
+        [
+          60.0,
+          113.0
+        ],
+        [
+          76.0,
+          124.0
+        ],
+        [
+          91.0,
+          127.0
+        ],
+        [
+          122.0,
+          126.0
+        ],
+        [
+          129.0,
+          123.0
+        ],
+        [
+          143.0,
+          124.0
+        ],
+        [
+          191.0,
+          121.0
+        ],
+        [
+          237.0,
+          121.0
+        ],
+        [
+          282.0,
+          124.0
+        ],
+        [
+          301.0,
+          127.0
+        ],
+        [
+          339.0,
+          127.0
+        ],
+        [
+          365.0,
+          122.0
+        ],
+        [
+          391.0,
+          110.0
+        ],
+        [
+          419.0,
+          91.0
+        ],
+        [
+          443.0,
+          72.0
+        ],
+        [
+          460.0,
+          54.0
+        ],
+        [
+          470.0,
+          39.0
+        ],
+        [
+          477.0,
+          19.0
+        ],
+        [
+          478.0,
+          0.0
+        ],
+        [
+          34.0,
+          0.0
+        ],
+        [
+          31.0,
+          13.0
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "polygon",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002__x0384_y0384.png",
+  "imageData": null,
+  "imageHeight": 640,
+  "imageWidth": 640,
+  "description": ""
+}

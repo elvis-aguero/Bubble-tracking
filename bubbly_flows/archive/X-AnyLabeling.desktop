@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=X-AnyLabeling (GPU)
+Comment=Launch Auto-Labeling with GPU Support
+# Launch the packaged script from the repository absolute path
+Exec=/bin/bash -c "/Users/eaguerov/Documents/Github/Bubble-tracking/bubbly_flows/xanylabel.sh; bash"
+Icon=utilities-terminal
+Terminal=true
+Categories=Science;ArtificialIntelligence;

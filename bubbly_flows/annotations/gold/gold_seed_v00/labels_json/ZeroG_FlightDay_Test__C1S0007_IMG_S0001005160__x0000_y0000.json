@@ -1,0 +1,53 @@
+{
+  "version": "3.3.5",
+  "flags": {},
+  "shapes": [
+    {
+      "label": "bubble",
+      "score": null,
+      "points": [
+        [
+          449.84293193717275,
+          342.5130890052356
+        ],
+        [
+          450.89005235602093,
+          314.76439790575915
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "circle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "bubble",
+      "score": null,
+      "points": [
+        [
+          578.1151832460732,
+          352.9842931937173
+        ],
+        [
+          578.1151832460732,
+          333.0890052356021
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "circle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "ZeroG_FlightDay_Test__C1S0007_IMG_S0001005160__x0000_y0000.png",
+  "imageData": null,
+  "imageHeight": 640,
+  "imageWidth": 640,
+  "description": ""
+}
