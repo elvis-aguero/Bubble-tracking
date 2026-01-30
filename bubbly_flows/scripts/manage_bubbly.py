@@ -46,6 +46,12 @@ def banner():
     print(f"Root: {ROOT_DIR}")
     print("========================================\n")
 
+import os
+import sys
+import shutil
+import json
+from pathlib import Path
+
 # Auto-relaunch under 'bubbly-train-env' (Conda) if available and not already active.
 # This ensures binaries (nifty, torch, cuda) are correct.
 
