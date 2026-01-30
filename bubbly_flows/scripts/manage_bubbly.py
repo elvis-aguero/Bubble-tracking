@@ -12,17 +12,10 @@ Handles:
 
 import sys
 import os
-import shutil
-import glob
-import json
-import csv
-import random
 import argparse
 import datetime
 from pathlib import Path
 from typing import List, Optional
-import cv2
-import numpy as np
 
 # Auto-relaunch under repository-root virtualenv if available and not already active.
 try:
@@ -40,6 +33,14 @@ try:
 except Exception:
     # If anything goes wrong, continue without relaunching (user might use system python)
     pass
+
+import shutil
+import glob
+import json
+import csv
+import random
+import cv2
+import numpy as np
 
 # --- Configuration ---
 # Fix: resolve root relative to THIS script file, not CWD

@@ -60,16 +60,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import argparse
-import csv
-import json
-import random
-import re
-import shutil
 import sys
-from typing import Iterable, Optional, Tuple, List
-
-import cv2
-import numpy as np
 
 # Auto-relaunch under repository-root virtualenv if available and not already active.
 # This ensures `utils.py` uses the same venv that auxiliary scripts in this repo expect.
@@ -88,6 +79,16 @@ try:
 except Exception:
     # If anything goes wrong, continue without relaunching
     pass
+
+import csv
+import json
+import random
+import re
+import shutil
+from typing import Iterable, Optional, Tuple, List
+
+import cv2
+import numpy as np
 
 
 VALID_EXT_DEFAULT = [".bmp", ".png", ".jpg", ".jpeg", ".tif", ".tiff"]
