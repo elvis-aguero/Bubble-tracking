@@ -542,9 +542,9 @@ module purge
 module load miniforge3
 module load cuda/11.8
 
-# Activate Conda Env (Standard Oscar pattern)
-# Ensure conda shell functions are available
-source ${{CONDA_PREFIX}}/etc/profile.d/conda.sh
+# Activate Conda Env
+# We use the universal hook to initialize conda, avoiding ambiguous CONDA_PREFIX paths
+eval "$(conda shell.bash hook)"
 conda activate {ROOT_DIR.parent}/bubbly-train-env
 
 # Echo Info
