@@ -542,9 +542,10 @@ module purge
 module load miniforge3
 module load cuda/11.8
 
-# Activate Conda Env
-source activate {ROOT_DIR.parent}/bubbly-train-env
-# Alternative: conda activate {ROOT_DIR.parent}/bubbly-train-env
+# Activate Conda Env (Standard Oscar pattern)
+# Ensure conda shell functions are available
+source ${{CONDA_PREFIX}}/etc/profile.d/conda.sh
+conda activate {ROOT_DIR.parent}/bubbly-train-env
 
 # Echo Info
 echo "Job ID: $SLURM_JOB_ID"
