@@ -1,0 +1,58 @@
+2026-02-01 18:19:12 [INFO] root - Logging initialized. Log file: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/logs/bubble_frst_sam3_20260201_181912.log
+2026-02-01 18:19:13 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-01 18:19:13 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-01 18:19:14 [INFO] __main__ - FRST detected 338 centers
+2026-02-01 18:19:49 [INFO] __main__ - Point-tiling enabled: tile_size=200, overlap=62, tiles=49
+2026-02-01 18:19:49 [INFO] __main__ - Negative prompts enabled: knn_k=3, hex_radius=37.50 px
+2026-02-01 18:19:52 [INFO] __main__ - Tile 3/49: points=7 masks=6 discarded_large=0
+2026-02-01 18:19:52 [INFO] __main__ - Tile 4/49: points=9 masks=8 discarded_large=0
+2026-02-01 18:19:52 [INFO] __main__ - Tile 5/49: points=14 masks=14 discarded_large=0
+2026-02-01 18:19:52 [INFO] __main__ - Tile 6/49: points=7 masks=7 discarded_large=0
+2026-02-01 18:19:53 [INFO] __main__ - Tile 7/49: points=3 masks=2 discarded_large=0
+2026-02-01 18:19:53 [INFO] __main__ - Tile 8/49: points=3 masks=3 discarded_large=0
+2026-02-01 18:19:53 [INFO] __main__ - Tile 9/49: points=12 masks=12 discarded_large=0
+2026-02-01 18:19:53 [INFO] __main__ - Tile 10/49: points=22 masks=22 discarded_large=0
+2026-02-01 18:19:53 [INFO] __main__ - Tile 11/49: points=23 masks=23 discarded_large=0
+2026-02-01 18:19:54 [INFO] __main__ - Tile 12/49: points=29 masks=29 discarded_large=0
+2026-02-01 18:19:54 [INFO] __main__ - Tile 13/49: points=29 masks=29 discarded_large=0
+2026-02-01 18:19:54 [INFO] __main__ - Tile 14/49: points=19 masks=19 discarded_large=0
+2026-02-01 18:19:54 [INFO] __main__ - Tile 15/49: points=7 masks=7 discarded_large=0
+2026-02-01 18:19:54 [INFO] __main__ - Tile 16/49: points=29 masks=29 discarded_large=0
+2026-02-01 18:19:55 [INFO] __main__ - Tile 17/49: points=22 masks=21 discarded_large=0
+2026-02-01 18:19:55 [INFO] __main__ - Tile 18/49: points=20 masks=20 discarded_large=0
+2026-02-01 18:19:55 [INFO] __main__ - Tile 19/49: points=37 masks=37 discarded_large=0
+2026-02-01 18:19:55 [INFO] __main__ - Tile 20/49: points=42 masks=42 discarded_large=0
+2026-02-01 18:19:56 [INFO] __main__ - Tile 21/49: points=21 masks=20 discarded_large=0
+2026-02-01 18:19:56 [INFO] __main__ - Tile 22/49: points=6 masks=5 discarded_large=0
+2026-02-01 18:19:56 [INFO] __main__ - Tile 23/49: points=19 masks=19 discarded_large=0
+2026-02-01 18:19:56 [INFO] __main__ - Tile 24/49: points=19 masks=19 discarded_large=0
+2026-02-01 18:19:56 [INFO] __main__ - Tile 25/49: points=15 masks=15 discarded_large=0
+2026-02-01 18:19:57 [INFO] __main__ - Tile 26/49: points=18 masks=18 discarded_large=0
+2026-02-01 18:19:57 [INFO] __main__ - Tile 27/49: points=24 masks=24 discarded_large=0
+2026-02-01 18:19:57 [INFO] __main__ - Tile 28/49: points=21 masks=20 discarded_large=0
+2026-02-01 18:19:57 [INFO] __main__ - Tile 29/49: points=2 masks=1 discarded_large=0
+2026-02-01 18:19:57 [INFO] __main__ - Tile 30/49: points=11 masks=10 discarded_large=0
+2026-02-01 18:19:58 [INFO] __main__ - Tile 31/49: points=20 masks=20 discarded_large=0
+2026-02-01 18:19:58 [INFO] __main__ - Tile 32/49: points=20 masks=20 discarded_large=0
+2026-02-01 18:19:58 [INFO] __main__ - Tile 33/49: points=22 masks=22 discarded_large=0
+2026-02-01 18:19:58 [INFO] __main__ - Tile 34/49: points=20 masks=20 discarded_large=0
+2026-02-01 18:19:58 [INFO] __main__ - Tile 35/49: points=16 masks=16 discarded_large=0
+2026-02-01 18:19:58 [INFO] __main__ - Tile 37/49: points=4 masks=3 discarded_large=0
+2026-02-01 18:19:59 [INFO] __main__ - Tile 38/49: points=11 masks=11 discarded_large=0
+2026-02-01 18:19:59 [INFO] __main__ - Tile 39/49: points=18 masks=18 discarded_large=0
+2026-02-01 18:19:59 [INFO] __main__ - Tile 40/49: points=27 masks=27 discarded_large=0
+2026-02-01 18:19:59 [INFO] __main__ - Tile 41/49: points=23 masks=23 discarded_large=0
+2026-02-01 18:19:59 [INFO] __main__ - Tile 42/49: points=5 masks=5 discarded_large=0
+2026-02-01 18:20:00 [INFO] __main__ - Tile 45/49: points=2 masks=1 discarded_large=0
+2026-02-01 18:20:00 [INFO] __main__ - Tile 46/49: points=5 masks=5 discarded_large=0
+2026-02-01 18:20:00 [INFO] __main__ - Tile 47/49: points=9 masks=9 discarded_large=0
+2026-02-01 18:20:00 [INFO] __main__ - Tile 48/49: points=3 masks=3 discarded_large=0
+2026-02-01 18:20:00 [INFO] __main__ - Point pass totals: masks=684 discarded_large=0 (limit=10000 px)
+2026-02-01 18:20:12 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-01 18:20:12 [INFO] __main__ - PCS produced 64 big-bubble text masks
+2026-02-01 18:20:12 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 22
+2026-02-01 18:20:12 [INFO] __main__ - Instances: FRST=684, BIG=64, COMBINED=263
+2026-02-01 18:20:13 [INFO] __main__ - Saved FRST overlay to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/result_frst.png
+2026-02-01 18:20:13 [INFO] __main__ - Saved BIG overlay to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/result_big.png
+2026-02-01 18:20:13 [INFO] __main__ - Saved COMBINED overlay to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/result.png
+2026-02-01 18:20:13 [INFO] __main__ - Saved JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/result.json
