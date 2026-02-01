@@ -1,9 +1,0 @@
-2026-01-31 22:06:38 [INFO] root - Logging initialized. Log file: ./bubble_sam3_mask_20260131_220638.log
-2026-01-31 22:06:38 [INFO] __main__ - ================================================================================
-2026-01-31 22:06:38 [INFO] __main__ - SAM3 Bubble Segmentation Pipeline Started
-2026-01-31 22:06:38 [INFO] __main__ - ================================================================================
-2026-01-31 22:06:38 [INFO] __main__ - Input image: img6001.png
-2026-01-31 22:06:38 [INFO] __main__ - Output path: imag6001_mask.png
-2026-01-31 22:06:38 [INFO] __main__ - Config file: config.json
-2026-01-31 22:06:38 [INFO] __main__ - Device: default
-2026-01-31 22:06:38 [INFO] __main__ - Loading configuration...
