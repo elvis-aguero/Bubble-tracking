@@ -116,10 +116,65 @@ class Sam3PointBackend:
                 inputs[key] = value.to(self.device)
         return inputs
 
+    def _prepare_inputs_objects(
+        self,
+        image: Image.Image,
+        objects_points_xy: Sequence[Sequence[Tuple[float, float]]],
+        objects_labels: Sequence[Sequence[int]],
+    ) -> Dict[str, Any]:
+        """Prepare processor inputs for per-object point prompts (supports negative points).
+
+        Sam3TrackerProcessor expects:
+          - input_points: (batch, objects, points, 2)
+          - input_labels: (batch, objects, points) where 1=FG, 0=BG
+        """
+        if len(objects_points_xy) != len(objects_labels):
+            raise ValueError("objects_points_xy and objects_labels must have the same length")
+
+        # Prefer ragged python lists (processor can usually pad internally).
+        points_list = [[[[float(x), float(y)] for (x, y) in pts] for pts in objects_points_xy]]
+        labels_list = [[[int(l) for l in labs] for labs in objects_labels]]
+
+        try:
+            inputs = self.processor(
+                images=image, input_points=points_list, input_labels=labels_list, return_tensors="pt"
+            )
+        except Exception:
+            # Fall back to explicit padding (label=-1 is the standard "ignore" value in SAM prompts).
+            max_len = max((len(pts) for pts in objects_points_xy), default=0)
+            coords = np.zeros((1, len(objects_points_xy), max_len, 2), dtype=np.float32)
+            labels = np.full((1, len(objects_points_xy), max_len), -1, dtype=np.int64)
+            for i, (pts, labs) in enumerate(zip(objects_points_xy, objects_labels)):
+                m = min(len(pts), max_len)
+                if m <= 0:
+                    continue
+                coords[0, i, :m, :] = np.asarray(pts[:m], dtype=np.float32)
+                labels[0, i, :m] = np.asarray(labs[:m], dtype=np.int64)
+            inputs = self.processor(
+                images=image, input_points=coords, input_labels=labels, return_tensors="pt"
+            )
+
+        for key, value in list(inputs.items()):
+            if torch.is_tensor(value):
+                inputs[key] = value.to(self.device)
+        return inputs
+
     def _segment_batch(
         self, image: Image.Image, points_xy: Sequence[Tuple[float, float]]
     ) -> Tuple[List[np.ndarray], List[Optional[float]]]:
         inputs = self._prepare_inputs(image, points_xy)
+        params = dict(inputs)
+        params["multimask_output"] = self.multimask_output
+        outputs = self._call_with_filtered_kwargs(self.model, params)
+        return extract_masks_and_scores(outputs)
+
+    def _segment_objects_batch(
+        self,
+        image: Image.Image,
+        objects_points_xy: Sequence[Sequence[Tuple[float, float]]],
+        objects_labels: Sequence[Sequence[int]],
+    ) -> Tuple[List[np.ndarray], List[Optional[float]]]:
+        inputs = self._prepare_inputs_objects(image, objects_points_xy, objects_labels)
         params = dict(inputs)
         params["multimask_output"] = self.multimask_output
         outputs = self._call_with_filtered_kwargs(self.model, params)
@@ -142,6 +197,34 @@ class Sam3PointBackend:
         for start in range(0, len(points_xy), batch_size):
             batch_points = points_xy[start : start + batch_size]
             masks, scores = self._segment_batch(image, batch_points)
+            masks, scores = filter_masks_by_score(masks, scores, self.confidence_threshold)
+            all_masks.extend(masks)
+            all_scores.extend(scores)
+
+        return all_masks, all_scores
+
+    def segment_with_object_points(
+        self,
+        image: Image.Image,
+        objects_points_xy: Sequence[Sequence[Tuple[float, float]]],
+        objects_labels: Sequence[Sequence[int]],
+        objects_per_batch: Optional[int] = None,
+    ) -> Tuple[List[np.ndarray], List[Optional[float]]]:
+        """Segment multiple objects, each with its own (pos/neg) point prompts."""
+        if not objects_points_xy:
+            return [], []
+        if len(objects_points_xy) != len(objects_labels):
+            raise ValueError("objects_points_xy and objects_labels must have the same length")
+
+        batch_size = int(objects_per_batch or self.points_per_batch or len(objects_points_xy))
+        batch_size = max(batch_size, 1)
+
+        all_masks: List[np.ndarray] = []
+        all_scores: List[Optional[float]] = []
+        for start in range(0, len(objects_points_xy), batch_size):
+            batch_points = objects_points_xy[start : start + batch_size]
+            batch_labels = objects_labels[start : start + batch_size]
+            masks, scores = self._segment_objects_batch(image, batch_points, batch_labels)
             masks, scores = filter_masks_by_score(masks, scores, self.confidence_threshold)
             all_masks.extend(masks)
             all_scores.extend(scores)
@@ -310,6 +393,38 @@ def segment_with_points(
                 batch_size = max(1, batch_size // 2)
                 logger.warning(
                     "CUDA OOM during SAM3 inference; retrying with points_per_batch=%d",
+                    batch_size,
+                )
+                continue
+            raise
+
+
+def segment_with_object_points(
+    backend: Sam3PointBackend,
+    image: Image.Image,
+    objects_points_xy: Sequence[Sequence[Tuple[float, float]]],
+    objects_labels: Sequence[Sequence[int]],
+) -> Tuple[List[np.ndarray], List[Optional[float]]]:
+    if not objects_points_xy:
+        return [], []
+
+    logger = logging.getLogger(__name__)
+    batch_size = backend.points_per_batch
+    while True:
+        try:
+            return backend.segment_with_object_points(
+                image, objects_points_xy, objects_labels, objects_per_batch=batch_size
+            )
+        except RuntimeError as exc:
+            if (
+                "out of memory" in str(exc).lower()
+                and backend.device == "cuda"
+                and batch_size > 1
+            ):
+                torch.cuda.empty_cache()
+                batch_size = max(1, batch_size // 2)
+                logger.warning(
+                    "CUDA OOM during SAM3 inference; retrying with objects_per_batch=%d",
                     batch_size,
                 )
                 continue

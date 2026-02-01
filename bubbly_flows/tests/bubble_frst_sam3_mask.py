@@ -48,6 +48,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import math
 import os
 import random
 import sys
@@ -64,7 +65,11 @@ except ImportError as exc:
     raise RuntimeError("OpenCV is required for FRST detection. Install with: pip install opencv-python") from exc
 
 from classical_test import frst_symmetry_map, pick_peaks
-from bubble_sam3.backend import Sam3ConceptBackend, Sam3PointBackend, segment_with_points
+from bubble_sam3.backend import (
+    Sam3ConceptBackend,
+    Sam3PointBackend,
+    segment_with_object_points,
+)
 from bubble_sam3.config import apply_cli_overrides, ensure_hf_home, load_config
 from bubble_sam3.outputs import (
     build_rgba_cutout,
@@ -315,6 +320,59 @@ def build_tile_instances_from_masks(
     return instances, discarded
 
 
+def build_object_point_prompts(
+    centers_xy: Sequence[Tuple[float, float]],
+    tile_w: int,
+    tile_h: int,
+    knn_k: int,
+    hex_radius: float,
+) -> Tuple[List[List[Tuple[float, float]]], List[List[int]]]:
+    """Build per-object (pos/neg) point prompts for SAM3 tracker.
+
+    For each center:
+      - 1 positive point at the center
+      - kNN neighbors as negative points (k=3 requested)
+      - 6 negative points on a hexagon of radius 1.5*r_max (out-of-tile points are ignored)
+    """
+    if not centers_xy:
+        return [], []
+
+    pts = np.asarray(centers_xy, dtype=np.float32)
+    n = int(pts.shape[0])
+    k = max(0, min(int(knn_k), max(0, n - 1)))
+
+    objects_points: List[List[Tuple[float, float]]] = []
+    objects_labels: List[List[int]] = []
+
+    for i in range(n):
+        cx = float(pts[i, 0])
+        cy = float(pts[i, 1])
+        obj_pts: List[Tuple[float, float]] = [(cx, cy)]
+        obj_lbls: List[int] = [1]
+
+        if k > 0:
+            diff = pts - pts[i]
+            d2 = diff[:, 0] * diff[:, 0] + diff[:, 1] * diff[:, 1]
+            d2[i] = np.inf
+            nbr_idx = np.argpartition(d2, kth=k - 1)[:k]
+            for j in nbr_idx:
+                obj_pts.append((float(pts[j, 0]), float(pts[j, 1])))
+                obj_lbls.append(0)
+
+        for t in range(6):
+            ang = float(t) * (math.pi / 3.0)
+            hx = cx + float(hex_radius) * math.cos(ang)
+            hy = cy + float(hex_radius) * math.sin(ang)
+            if 0.0 <= hx < float(tile_w) and 0.0 <= hy < float(tile_h):
+                obj_pts.append((float(hx), float(hy)))
+                obj_lbls.append(0)
+
+        objects_points.append(obj_pts)
+        objects_labels.append(obj_lbls)
+
+    return objects_points, objects_labels
+
+
 def build_instances_from_pcs(
     masks: Sequence[np.ndarray],
     scores: Sequence[Optional[float]],
@@ -416,6 +474,11 @@ def main() -> None:
         tile_overlap,
         len(tiles),
     )
+    logger.info(
+        "Negative prompts enabled: knn_k=%d, hex_radius=%.2f px",
+        3,
+        1.5 * float(args.r_max),
+    )
 
     area_limit = int(round(16.0 * float(args.r_max) * float(args.r_max)))
     total_discarded = 0
@@ -437,7 +500,14 @@ def main() -> None:
         tile_points = [(float(x - x0), float(y - y0)) for x, y in zip(xs[in_tile], ys[in_tile])]
         tile_rgb = padded_rgb[y0:y1, x0:x1]
         tile_pil = Image.fromarray(tile_rgb)
-        masks, scores = segment_with_points(sam_backend, tile_pil, tile_points)
+        obj_points, obj_labels = build_object_point_prompts(
+            tile_points,
+            tile_w=int(tile_rgb.shape[1]),
+            tile_h=int(tile_rgb.shape[0]),
+            knn_k=3,
+            hex_radius=1.5 * float(args.r_max),
+        )
+        masks, scores = segment_with_object_points(sam_backend, tile_pil, obj_points, obj_labels)
         total_masks += len(masks)
         tile_instances, discarded = build_tile_instances_from_masks(
             masks,
