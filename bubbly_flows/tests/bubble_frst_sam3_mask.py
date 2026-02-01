@@ -41,6 +41,7 @@ Notes:
   - output_mode=cutout produces an RGBA cutout (alpha = union of masks).
   - Output files are derived from --output:
       <stem>_frst.png, <stem>_big.png, and the combined result at --output.
+  - Point prompts are tiled with tile_size=8*r_max and overlap>=2.5*r_max.
 """
 
 from __future__ import annotations
@@ -81,6 +82,7 @@ from bubble_sam3.postprocess import (
     maybe_convex_hull,
     resize_mask_to_shape,
 )
+from bubble_sam3.tiling import create_tiles, pad_image
 
 try:
     import torch
@@ -267,6 +269,52 @@ def build_instances_from_masks(
     return instances
 
 
+def build_tile_instances_from_masks(
+    masks: Sequence[np.ndarray],
+    scores: Sequence[Optional[float]],
+    tile_shape: Tuple[int, int],
+    tile_origin: Tuple[int, int],
+    image_shape: Tuple[int, int],
+    cfg: Dict[str, Any],
+    area_limit: int,
+) -> Tuple[List[Instance], int]:
+    tile_h, tile_w = tile_shape
+    x0, y0 = tile_origin
+    h, w = image_shape
+    instances: List[Instance] = []
+    discarded = 0
+    for mask, score in zip(masks, scores):
+        if mask is None:
+            continue
+        mask = resize_mask_to_shape(mask, (tile_h, tile_w))
+        area_raw = int(mask.sum())
+        if area_limit > 0 and area_raw > area_limit:
+            discarded += 1
+            continue
+        mask = fill_holes(mask, cfg)
+        mask = maybe_convex_hull(mask, cfg)
+        bbox_local = mask_bbox(mask)
+        if bbox_local == (0, 0, 0, 0):
+            continue
+        lx0, ly0, lx1, ly1 = bbox_local
+        gx0 = max(x0 + lx0, 0)
+        gy0 = max(y0 + ly0, 0)
+        gx1 = min(x0 + lx1, w)
+        gy1 = min(y0 + ly1, h)
+        if gx1 <= gx0 or gy1 <= gy0:
+            continue
+        off_x0 = gx0 - (x0 + lx0)
+        off_y0 = gy0 - (y0 + ly0)
+        off_x1 = off_x0 + (gx1 - gx0)
+        off_y1 = off_y0 + (gy1 - gy0)
+        cropped = mask[ly0 + off_y0 : ly0 + off_y1, lx0 + off_x0 : lx0 + off_x1]
+        area = int(cropped.sum())
+        if area == 0:
+            continue
+        instances.append(Instance(mask=cropped, score=score, area=area, bbox=(gx0, gy0, gx1, gy1)))
+    return instances, discarded
+
+
 def build_instances_from_pcs(
     masks: Sequence[np.ndarray],
     scores: Sequence[Optional[float]],
@@ -357,16 +405,72 @@ def main() -> None:
             save_candidate_viz(image_rgb, points_xy, os.path.join(args.debug_dir, "frst_centers.png"))
 
     sam_backend = Sam3PointBackend(cfg["device"], cfg["sam"])
-    masks, scores = segment_with_points(sam_backend, image, points_xy)
-    logger.info("SAM3 produced %d point-prompted masks", len(masks))
+    tile_size = max(1, int(round(8.0 * float(args.r_max))))
+    tile_overlap = max(0, int(round(2.5 * float(args.r_max))))
+    tile_cfg = {"tiling": {"tile_size": tile_size, "tile_overlap": tile_overlap}}
+    tiles, (pad_bottom, pad_right) = create_tiles(h, w, tile_cfg)
+    padded_rgb = pad_image(image_rgb, pad_bottom, pad_right, mode="reflect")
+    logger.info(
+        "Point-tiling enabled: tile_size=%d, overlap=%d, tiles=%d",
+        tile_size,
+        tile_overlap,
+        len(tiles),
+    )
 
-    frst_instances = build_instances_from_masks(masks, scores, (h, w), cfg)
+    area_limit = int(round(16.0 * float(args.r_max) * float(args.r_max)))
+    total_discarded = 0
+    total_masks = 0
+    frst_instances: List[Instance] = []
+
+    if points_xy:
+        centers_arr = np.array(points_xy, dtype=np.float32)
+        xs = centers_arr[:, 0]
+        ys = centers_arr[:, 1]
+    else:
+        xs = np.array([], dtype=np.float32)
+        ys = np.array([], dtype=np.float32)
+
+    for idx, (x0, y0, x1, y1) in enumerate(tiles):
+        in_tile = (xs >= x0) & (xs < x1) & (ys >= y0) & (ys < y1)
+        if not in_tile.any():
+            continue
+        tile_points = [(float(x - x0), float(y - y0)) for x, y in zip(xs[in_tile], ys[in_tile])]
+        tile_rgb = padded_rgb[y0:y1, x0:x1]
+        tile_pil = Image.fromarray(tile_rgb)
+        masks, scores = segment_with_points(sam_backend, tile_pil, tile_points)
+        total_masks += len(masks)
+        tile_instances, discarded = build_tile_instances_from_masks(
+            masks,
+            scores,
+            (tile_rgb.shape[0], tile_rgb.shape[1]),
+            (x0, y0),
+            (h, w),
+            cfg,
+            area_limit,
+        )
+        total_discarded += discarded
+        frst_instances.extend(tile_instances)
+        logger.info(
+            "Tile %d/%d: points=%d masks=%d discarded_large=%d",
+            idx + 1,
+            len(tiles),
+            len(tile_points),
+            len(masks),
+            discarded,
+        )
+
+    logger.info(
+        "Point pass totals: masks=%d discarded_large=%d (limit=%d px)",
+        total_masks,
+        total_discarded,
+        area_limit,
+    )
 
     pcs_backend: Optional[Sam3ConceptBackend] = None
     if cfg["sam"].get("pcs_enable", True) and args.frst_text_prompt:
         pcs_backend = Sam3ConceptBackend(cfg["device"], cfg["sam"])
-        pcs_threshold = float(cfg["sam"].get("pcs_threshold", 0.75))
-        pcs_mask_threshold = float(cfg["sam"].get("pcs_mask_threshold", 0.75))
+        pcs_threshold = float(cfg["sam"].get("pcs_threshold", 0.5))
+        pcs_mask_threshold = float(cfg["sam"].get("pcs_mask_threshold", 0.5))
         pcs_masks, pcs_scores, pcs_boxes = pcs_backend.segment_by_text(
             image, args.frst_text_prompt, pcs_threshold, pcs_mask_threshold
         )
@@ -379,8 +483,8 @@ def main() -> None:
     if cfg["sam"].get("pcs_enable", True) and args.big_text_prompt:
         if pcs_backend is None:
             pcs_backend = Sam3ConceptBackend(cfg["device"], cfg["sam"])
-        pcs_threshold = float(cfg["sam"].get("pcs_threshold", 0.4))
-        pcs_mask_threshold = float(cfg["sam"].get("pcs_mask_threshold", 0.4))
+        pcs_threshold = float(cfg["sam"].get("pcs_threshold", 0.5))
+        pcs_mask_threshold = float(cfg["sam"].get("pcs_mask_threshold", 0.5))
         pcs_masks, pcs_scores, pcs_boxes = pcs_backend.segment_by_text(
             image, args.big_text_prompt, pcs_threshold, pcs_mask_threshold
         )
