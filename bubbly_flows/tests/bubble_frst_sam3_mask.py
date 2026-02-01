@@ -365,8 +365,8 @@ def main() -> None:
     pcs_backend: Optional[Sam3ConceptBackend] = None
     if cfg["sam"].get("pcs_enable", True) and args.frst_text_prompt:
         pcs_backend = Sam3ConceptBackend(cfg["device"], cfg["sam"])
-        pcs_threshold = float(cfg["sam"].get("pcs_threshold", 0.5))
-        pcs_mask_threshold = float(cfg["sam"].get("pcs_mask_threshold", 0.5))
+        pcs_threshold = float(cfg["sam"].get("pcs_threshold", 0.75))
+        pcs_mask_threshold = float(cfg["sam"].get("pcs_mask_threshold", 0.75))
         pcs_masks, pcs_scores, pcs_boxes = pcs_backend.segment_by_text(
             image, args.frst_text_prompt, pcs_threshold, pcs_mask_threshold
         )
@@ -379,8 +379,8 @@ def main() -> None:
     if cfg["sam"].get("pcs_enable", True) and args.big_text_prompt:
         if pcs_backend is None:
             pcs_backend = Sam3ConceptBackend(cfg["device"], cfg["sam"])
-        pcs_threshold = float(cfg["sam"].get("pcs_threshold", 0.5))
-        pcs_mask_threshold = float(cfg["sam"].get("pcs_mask_threshold", 0.5))
+        pcs_threshold = float(cfg["sam"].get("pcs_threshold", 0.4))
+        pcs_mask_threshold = float(cfg["sam"].get("pcs_mask_threshold", 0.4))
         pcs_masks, pcs_scores, pcs_boxes = pcs_backend.segment_by_text(
             image, args.big_text_prompt, pcs_threshold, pcs_mask_threshold
         )
