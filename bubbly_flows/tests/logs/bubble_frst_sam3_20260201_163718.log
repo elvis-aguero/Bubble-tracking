@@ -1,0 +1,13 @@
+2026-02-01 16:37:18 [INFO] root - Logging initialized. Log file: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/logs/bubble_frst_sam3_20260201_163718.log
+2026-02-01 16:37:18 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-01 16:37:18 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-01 16:37:19 [INFO] __main__ - FRST detected 338 centers
+2026-02-01 16:37:29 [INFO] __main__ - SAM3 produced 338 point-prompted masks
+2026-02-01 16:37:43 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-01 16:37:44 [INFO] __main__ - PCS produced 64 big-bubble text masks
+2026-02-01 16:37:44 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 0
+2026-02-01 16:37:44 [INFO] __main__ - Instances: FRST=338, BIG=64, COMBINED=281
+2026-02-01 16:37:44 [INFO] __main__ - Saved FRST overlay to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/result_frst.png
+2026-02-01 16:37:44 [INFO] __main__ - Saved BIG overlay to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/result_big.png
+2026-02-01 16:37:45 [INFO] __main__ - Saved COMBINED overlay to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/result.png
+2026-02-01 16:37:45 [INFO] __main__ - Saved JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/result.json
