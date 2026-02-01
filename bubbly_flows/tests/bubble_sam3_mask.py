@@ -22,7 +22,7 @@ Assumptions:
 ENVIRONMENT SETUP (copy-paste for this environment):
     export HF_HOME=/users/eaguerov/scratch/hf
     export CUDA_VISIBLE_DEVICES=0  # if needed
-    interact -q gpu -g 1 -n 4 -t 01:00:00 -m 16g
+    interact -q gpu -g 1 -n 4 -t 04:00:00 -m 16g
     eval "$(mamba shell hook --shell bash)"
 
 
