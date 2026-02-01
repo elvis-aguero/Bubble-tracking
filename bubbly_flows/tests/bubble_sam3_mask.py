@@ -88,6 +88,7 @@ import os
 import random
 import sys
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -112,9 +113,37 @@ except ImportError as exc:
     raise RuntimeError("torch is required. Install with: pip install torch") from exc
 
 
-def setup_logging(output_path: str) -> None:
+def resolve_output_path(input_path: str, output_arg: str | None) -> str:
+    """Resolve output path relative to the input image by default.
+
+    Rules:
+    - If --output is omitted: write to <input_dir>/output/<input_stem>_mask.png
+    - If --output is relative with no directory component: write to <input_dir>/output/<output_arg>
+    - If --output is relative with directories: interpret it relative to <input_dir>
+    - If --output is absolute: use it as-is.
+    """
+    in_path = Path(input_path).expanduser().resolve()
+    base_dir = in_path.parent
+    out_dir = base_dir / "output"
+
+    if not output_arg:
+        return str(out_dir / f"{in_path.stem}_mask.png")
+
+    out = Path(output_arg).expanduser()
+    if out.is_absolute():
+        return str(out)
+    if out.parent == Path("."):
+        return str(out_dir / out.name)
+    return str(base_dir / out)
+
+
+def resolve_logs_dir(input_path: str) -> str:
+    in_path = Path(input_path).expanduser().resolve()
+    return str(in_path.parent / "logs")
+
+
+def setup_logging(log_dir: str) -> str:
     """Configure logging to both console and file."""
-    log_dir = os.path.dirname(output_path) or "."
     os.makedirs(log_dir, exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -143,6 +172,7 @@ def setup_logging(output_path: str) -> None:
     logger.addHandler(console_handler)
 
     logger.info(f"Logging initialized. Log file: {log_file}")
+    return log_file
 
 
 def set_deterministic_seed(seed: int) -> None:
@@ -158,7 +188,14 @@ def set_deterministic_seed(seed: int) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="SAM3 bubble segmentation pipeline")
     parser.add_argument("--input", required=True, help="Input image path")
-    parser.add_argument("--output", required=True, help="Output RGBA PNG path")
+    parser.add_argument(
+        "--output",
+        default=None,
+        help=(
+            "Output RGBA PNG path. If omitted, defaults to <input_dir>/output/<input_stem>_mask.png. "
+            "If a bare filename is provided, it is written into <input_dir>/output/."
+        ),
+    )
     parser.add_argument("--config", default=None, help="Optional JSON/JSONC config path")
     parser.add_argument("--device", choices=["cuda", "cpu"], default=None, help="Device override")
     parser.add_argument("--seed", type=int, default=None, help="Random seed override")
@@ -191,14 +228,16 @@ def main() -> None:
 
     ensure_hf_home()
 
-    setup_logging(args.output)
+    output_path = resolve_output_path(args.input, args.output)
+    log_dir = resolve_logs_dir(args.input)
+    setup_logging(log_dir)
     logger = logging.getLogger(__name__)
 
     logger.info("=" * 80)
     logger.info("SAM3 Bubble Segmentation Pipeline Started")
     logger.info("=" * 80)
     logger.info(f"Input image: {args.input}")
-    logger.info(f"Output path: {args.output}")
+    logger.info(f"Output path: {output_path}")
     if args.config:
         logger.info(f"Config file: {args.config}")
     logger.info(f"Device: {args.device or 'default'}")
@@ -212,6 +251,12 @@ def main() -> None:
     cfg = load_config(args.config)
     cfg = apply_cli_overrides(cfg, args)
     logger.debug(f"Configuration: {json.dumps(cfg, indent=2, default=str)}")
+
+    # Interpret debug_dir relative to the input image by default.
+    if cfg["debug"].get("debug_dir"):
+        dbg = Path(str(cfg["debug"]["debug_dir"])).expanduser()
+        if not dbg.is_absolute():
+            cfg["debug"]["debug_dir"] = str(Path(args.input).expanduser().resolve().parent / dbg)
 
     device = cfg["device"]
     if device == "cuda" and not torch.cuda.is_available():
@@ -262,12 +307,12 @@ def main() -> None:
         logger.error(f"Unknown output_mode: {output_mode}")
         raise ValueError(f"Unknown output_mode: {output_mode}")
 
-    logger.info(f"Saving output to {args.output}")
-    ensure_output_dir(args.output)
-    Image.fromarray(rgba, mode="RGBA").save(args.output)
+    logger.info(f"Saving output to {output_path}")
+    ensure_output_dir(output_path)
+    Image.fromarray(rgba, mode="RGBA").save(output_path)
     logger.info("Output saved successfully.")
 
-    json_path, csv_path = resolve_output_paths(args.output, cfg)
+    json_path, csv_path = resolve_output_paths(output_path, cfg)
     ensure_output_dir(json_path)
     ensure_output_dir(csv_path)
     include_rle = bool(cfg["output"].get("include_rle", False))
