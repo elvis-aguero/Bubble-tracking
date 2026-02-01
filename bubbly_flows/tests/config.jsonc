@@ -95,7 +95,7 @@
 
   // Output options
   "output": {
-    "output_mode": "cutout", // "cutout" | "overlay"
+    "output_mode": "overlay", // "cutout" | "overlay"
     "overlay_alpha": 128, // Overlay opacity (0-255)
     "overlay_colormap": "tab20", // Overlay colormap
     "write_json": true, // Write per-instance JSON

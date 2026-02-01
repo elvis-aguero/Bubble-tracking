@@ -98,7 +98,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "max_points": 4096,
     },
     "output": {
-        "output_mode": "cutout",  # cutout | overlay
+        "output_mode": "overlay",  # cutout | overlay
         "overlay_alpha": 128,
         "overlay_colormap": "tab20",
         "write_json": True,

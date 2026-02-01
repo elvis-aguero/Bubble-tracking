@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import math
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
@@ -51,6 +52,29 @@ def detect_candidates(gray: np.ndarray, cfg: Dict[str, Any]) -> List[Candidate]:
         candidates = [candidates[i] for i in idx]
 
     return candidates
+
+
+def detect_candidates_by_method(gray: np.ndarray, cfg: Dict[str, Any]) -> Dict[str, List[Candidate]]:
+    min_d = cfg["candidates"]["min_diameter_px"]
+    max_d = cfg["candidates"]["max_diameter_px"]
+
+    min_sigma = diameter_to_sigma(min_d)
+    max_sigma = diameter_to_sigma(max_d)
+
+    results: Dict[str, List[Candidate]] = {}
+    methods = {
+        "log": detect_log_blobs,
+        "dog": detect_dog_blobs,
+        "hough": detect_hough_circles,
+    }
+    logger = logging.getLogger(__name__)
+    for name, fn in methods.items():
+        try:
+            results[name] = fn(gray, cfg, min_sigma, max_sigma)
+        except RuntimeError as exc:
+            logger.warning("Candidate detection '%s' failed: %s", name, exc)
+            results[name] = []
+    return results
 
 
 def detect_log_blobs(gray: np.ndarray, cfg: Dict[str, Any], min_sigma: float, max_sigma: float) -> List[Candidate]:

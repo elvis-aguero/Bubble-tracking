@@ -19,6 +19,11 @@ TAB20_COLORS: List[Tuple[int, int, int]] = [
     (227, 119, 194), (247, 182, 210), (127, 127, 127), (199, 199, 199),
     (188, 189, 34), (219, 219, 141), (23, 190, 207), (158, 218, 229),
 ]
+CANDIDATE_COLORS: Dict[str, Tuple[int, int, int, int]] = {
+    "log": (255, 80, 80, 255),
+    "dog": (80, 255, 120, 255),
+    "hough": (80, 120, 255, 255),
+}
 
 
 def ensure_output_dir(path: Optional[str]) -> None:
@@ -187,6 +192,19 @@ def save_candidate_viz(image_rgb: np.ndarray, points: List[Tuple[float, float]],
     img.save(out_path)
 
 
+def draw_points_on_rgba(
+    rgba: np.ndarray, points_by_method: Dict[str, List[Tuple[float, float]]], radius: int = 3
+) -> np.ndarray:
+    img = Image.fromarray(rgba, mode="RGBA")
+    draw = ImageDraw.Draw(img)
+    r = max(1, int(radius))
+    for method, points in points_by_method.items():
+        color = CANDIDATE_COLORS.get(method, (255, 255, 0, 255))
+        for x, y in points:
+            draw.ellipse((x - r, y - r, x + r, y + r), outline=color, width=1)
+    return np.array(img)
+
+
 def save_tile_grid_viz(image_rgb: np.ndarray, tiles: List[Tuple[int, int, int, int]], out_path: str) -> None:
     img = Image.fromarray(image_rgb).convert("RGB")
     draw = ImageDraw.Draw(img)
@@ -226,6 +244,18 @@ def save_debug_outputs(
         logger.debug("Saving hole fill before/after visualization")
         before, after = debug["hole_fill_example"]
         save_hole_fill_viz(before, after, os.path.join(debug_dir, "hole_fill_before_after.png"))
+    if debug.get("candidate_points_by_method") and debug.get("pcs_instances"):
+        logger.debug("Saving PCS overlay with candidate centers")
+        pcs_overlay = build_rgba_overlay(
+            image_rgb,
+            debug["pcs_instances"],
+            alpha=int(cfg["output"].get("overlay_alpha", 128)),
+            colormap=cfg["output"].get("overlay_colormap", "tab20"),
+        )
+        overlay = draw_points_on_rgba(pcs_overlay, debug["candidate_points_by_method"])
+        Image.fromarray(overlay, mode="RGBA").save(
+            os.path.join(debug_dir, "pcs_candidates_overlay.png")
+        )
     if instances:
         logger.debug(f"Saving consolidated overlay visualization ({len(instances)} masks)")
         overlay = build_rgba_overlay(

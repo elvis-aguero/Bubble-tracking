@@ -13,7 +13,7 @@ from .backend import (
     segment_everything,
     segment_with_points,
 )
-from .candidates import detect_candidates
+from .candidates import detect_candidates, detect_candidates_by_method
 from .postprocess import Instance, consolidate_instances, fill_holes, maybe_convex_hull, resize_mask_to_shape, mask_bbox
 from .preprocess import preprocess_gray
 from .tiling import create_tiles, pad_image
@@ -32,6 +32,10 @@ def run_pipeline(
         "tiles": [],
         "hole_fill_example": None,
     }
+    collect_debug = bool(cfg["debug"].get("debug_dir"))
+    if collect_debug:
+        debug["candidate_points_by_method"] = {"log": [], "dog": [], "hough": []}
+        debug["pcs_instances"] = []
 
     image_rgb = np.array(image.convert("RGB"))
     gray = preprocess_gray(image, cfg)
@@ -62,6 +66,12 @@ def run_pipeline(
         tile_rgb = padded_rgb[y0:y1, x0:x1]
         tile_gray = padded_gray[y0:y1, x0:x1]
         tile_h, tile_w = tile_gray.shape
+
+        if collect_debug:
+            method_points = detect_candidates_by_method(tile_gray, cfg)
+            for method, candidates in method_points.items():
+                for cand in candidates:
+                    debug["candidate_points_by_method"][method].append((cand.x + x0, cand.y + y0))
 
         tile_points: List[Tuple[float, float]] = []
         if cfg["candidates"].get("enable_candidates", True):
@@ -142,6 +152,7 @@ def run_pipeline(
         pcs_produced = len(pcs_masks)
         pcs_survived = 0
         pcs_added = 0
+        pcs_instances: List[Instance] = []
 
         for mask, score, box in zip(pcs_masks, pcs_scores, pcs_boxes):
             if mask.shape != (h, w):
@@ -159,7 +170,12 @@ def run_pipeline(
                 continue
             pcs_survived += 1
             pcs_added += 1
-            instances.append(Instance(mask=crop, score=score, area=area, bbox=(x0, y0, x1, y1)))
+            pcs_inst = Instance(mask=crop, score=score, area=area, bbox=(x0, y0, x1, y1))
+            pcs_instances.append(pcs_inst)
+            instances.append(pcs_inst)
+
+        if collect_debug:
+            debug["pcs_instances"] = pcs_instances
 
         logger.info(
             "PCS produced %d masks; %d survived filtering; %d added before consolidation",
