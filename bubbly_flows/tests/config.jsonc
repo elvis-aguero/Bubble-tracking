@@ -1,0 +1,112 @@
+{
+  // Compute settings
+  "device": "cuda", // "cuda" or "cpu" (overrides auto-detect)
+  "seed": 0, // Random seed for deterministic behavior
+
+  // SAM3 tracker settings
+  "sam": {
+    "backend": "tracker", // Currently only "tracker" is supported
+    "model_name": "facebook/sam3", // HF model id or local path
+    "confidence_threshold": 0.4, // Filter masks below this score (0 disables)
+    "use_fp16": true, // Enable mixed precision on CUDA
+    "local_files_only": true, // Prefer cached weights (no download)
+    "points_per_batch": 128, // Prompt batching to avoid OOM
+    "multimask_output": false // Multiple masks per point (usually false)
+  },
+
+  // Grayscale preprocessing
+  "preprocess": {
+    "enable_contrast_norm": true, // Enable contrast normalization
+    "contrast_method": "clahe", // "clahe" | "rescale" | "none"
+    "clahe_clip_limit": 0.03, // CLAHE clip limit
+    "clahe_kernel_size": 64, // CLAHE kernel size (pixels)
+    "rescale_percentiles": [2, 98], // Percentiles for rescale method
+    "gamma": 1.0, // Gamma correction (1.0 = no change)
+    "invert_gray": false // Invert grayscale (use if bubbles are bright)
+  },
+
+  // Candidate point detection
+  "candidates": {
+    "enable_candidates": true, // Use LoG/DoG/Hough to propose points
+    "method": "log+dog", // "log" | "dog" | "hough" | "log+dog" | "all"
+    "min_diameter_px": 10, // Expected bubble diameter min
+    "max_diameter_px": 200, // Expected bubble diameter max
+    "log_min_sigma": null, // Override LoG min sigma (px)
+    "log_max_sigma": null, // Override LoG max sigma (px)
+    "log_num_sigma": 10, // Number of LoG scales
+    "log_threshold": 0.02, // LoG response threshold
+    "dog_min_sigma": null, // Override DoG min sigma (px)
+    "dog_max_sigma": null, // Override DoG max sigma (px)
+    "dog_sigma_ratio": 1.6, // DoG sigma ratio
+    "dog_threshold": 0.02, // DoG response threshold
+    "hough_dp": 1.2, // Hough circle dp
+    "hough_minDist": 8, // Min distance between Hough centers
+    "hough_param1": 100, // Hough edge threshold
+    "hough_param2": 30, // Hough accumulator threshold
+    "hough_minRadius": null, // Override min radius (px)
+    "hough_maxRadius": null, // Override max radius (px)
+    "max_candidates_per_image": 2000, // Cap candidates per tile
+    "dedup_centers": true, // Remove near-duplicate centers
+    "dedup_radius_px": 4.0, // Dedup radius in pixels
+    "fallback_on_empty_candidates": true // Use grid prompts if none found
+  },
+
+  // Tiling to boost small-bubble visibility
+  "tiling": {
+    "enable_tiling": true, // Process tiles instead of full image
+    "tile_size": 256, // Square tile size if tile_h/w not set
+    "tile_h": null, // Override tile height
+    "tile_w": null, // Override tile width
+    "tile_overlap": 64, // Overlap between tiles (px or fraction)
+    "pad_mode": "reflect", // "reflect" | "constant" | "edge"
+    "min_coverage_for_keep": 0.5 // Drop masks truncated by tile edges
+  },
+
+  // Hole filling and mask cleanup
+  "hole_fill": {
+    "enable_hole_fill": true, // Fill interior holes
+    "hole_fill_method": "binary_fill_holes", // "binary_fill_holes" | "closing"
+    "closing_radius": 2, // Structuring element radius for closing
+    "min_hole_area_px": 0, // Ignore smaller holes (0 = none)
+    "fill_only_if_ringlike": false, // Only fill if ring-like
+    "ringlike_threshold": 0.15 // Hole area fraction threshold
+  },
+
+  // Instance filtering and deduplication
+  "postprocess": {
+    "enable_consolidation": true, // Enable IoU/containment dedup
+    "iou_dedup_thresh": 0.5, // Drop masks with IoU >= threshold
+    "containment_thresh": 0.9, // Drop masks largely contained by others
+    "min_area_px": 60, // Minimum mask area
+    "max_area_fraction": 0.2, // Max mask area as fraction of image
+    "border_exclusion_px": 1, // Drop masks touching border within this px
+    "circularity_min": 0.0, // Minimum circularity (0 disables)
+    "solidity_min": 0.0, // Minimum solidity (0 disables)
+    "enable_convex_hull": false // Use convex hull for stability
+  },
+
+  // Fallback prompting if no candidates
+  "fallback": {
+    "mode": "grid", // "grid" | "transformers"
+    "grid_spacing_px": 24, // Grid spacing
+    "grid_jitter_px": 0, // Random jitter for grid points
+    "max_points": 4096 // Max fallback points
+  },
+
+  // Output options
+  "output": {
+    "output_mode": "cutout", // "cutout" | "overlay"
+    "overlay_alpha": 128, // Overlay opacity (0-255)
+    "overlay_colormap": "tab20", // Overlay colormap
+    "write_json": true, // Write per-instance JSON
+    "json_path": null, // Override JSON path
+    "write_csv": false, // Write per-instance CSV
+    "csv_path": null, // Override CSV path
+    "include_rle": false // Include COCO RLE (requires pycocotools)
+  },
+
+  // Debug output
+  "debug": {
+    "debug_dir": null // Directory for debug PNGs
+  }
+}

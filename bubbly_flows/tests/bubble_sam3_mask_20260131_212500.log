@@ -1,0 +1,118 @@
+2026-01-31 21:25:00 [INFO] root - Logging initialized. Log file: ./bubble_sam3_mask_20260131_212500.log
+2026-01-31 21:25:00 [INFO] __main__ - ================================================================================
+2026-01-31 21:25:00 [INFO] __main__ - SAM3 Bubble Segmentation Pipeline Started
+2026-01-31 21:25:00 [INFO] __main__ - ================================================================================
+2026-01-31 21:25:00 [INFO] __main__ - Input image: img6001.png
+2026-01-31 21:25:00 [INFO] __main__ - Output path: imag6001_mask.png
+2026-01-31 21:25:00 [INFO] __main__ - Config file: config.json
+2026-01-31 21:25:00 [INFO] __main__ - Device: default
+2026-01-31 21:25:00 [INFO] __main__ - Loading configuration...
+2026-01-31 21:25:00 [DEBUG] __main__ - Configuration: {
+  "device": "cuda",
+  "seed": 0,
+  "sam": {
+    "backend": "tracker",
+    "model_name": "facebook/sam3",
+    "confidence_threshold": 0.4,
+    "use_fp16": true,
+    "local_files_only": true,
+    "points_per_batch": 128,
+    "multimask_output": false
+  },
+  "preprocess": {
+    "enable_contrast_norm": true,
+    "contrast_method": "clahe",
+    "clahe_clip_limit": 0.03,
+    "clahe_kernel_size": 64,
+    "rescale_percentiles": [
+      2,
+      98
+    ],
+    "gamma": 1.0,
+    "invert_gray": false
+  },
+  "candidates": {
+    "enable_candidates": true,
+    "method": "log+dog",
+    "min_diameter_px": 10,
+    "max_diameter_px": 200,
+    "log_min_sigma": null,
+    "log_max_sigma": null,
+    "log_num_sigma": 10,
+    "log_threshold": 0.02,
+    "dog_min_sigma": null,
+    "dog_max_sigma": null,
+    "dog_sigma_ratio": 1.6,
+    "dog_threshold": 0.02,
+    "hough_dp": 1.2,
+    "hough_minDist": 8,
+    "hough_param1": 100,
+    "hough_param2": 30,
+    "hough_minRadius": null,
+    "hough_maxRadius": null,
+    "max_candidates_per_image": 2000,
+    "dedup_centers": true,
+    "dedup_radius_px": 4.0,
+    "fallback_on_empty_candidates": true
+  },
+  "tiling": {
+    "enable_tiling": true,
+    "tile_size": 256,
+    "tile_h": null,
+    "tile_w": null,
+    "tile_overlap": 64,
+    "pad_mode": "reflect",
+    "min_coverage_for_keep": 0.5
+  },
+  "hole_fill": {
+    "enable_hole_fill": true,
+    "hole_fill_method": "binary_fill_holes",
+    "closing_radius": 2,
+    "min_hole_area_px": 0,
+    "fill_only_if_ringlike": false,
+    "ringlike_threshold": 0.15
+  },
+  "postprocess": {
+    "enable_consolidation": true,
+    "iou_dedup_thresh": 0.5,
+    "containment_thresh": 0.9,
+    "min_area_px": 60,
+    "max_area_fraction": 0.2,
+    "border_exclusion_px": 1,
+    "circularity_min": 0.0,
+    "solidity_min": 0.0,
+    "enable_convex_hull": false
+  },
+  "fallback": {
+    "mode": "grid",
+    "grid_spacing_px": 24,
+    "grid_jitter_px": 0,
+    "max_points": 4096
+  },
+  "output": {
+    "output_mode": "cutout",
+    "overlay_alpha": 128,
+    "overlay_colormap": "tab20",
+    "write_json": true,
+    "json_path": null,
+    "write_csv": false,
+    "csv_path": null,
+    "include_rle": false
+  },
+  "debug": {
+    "debug_dir": null
+  }
+}
+2026-01-31 21:25:00 [INFO] __main__ - Setting random seed to 0
+2026-01-31 21:25:00 [INFO] __main__ - Loading image from img6001.png
+2026-01-31 21:25:00 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-01-31 21:25:00 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-01-31 21:25:00 [INFO] __main__ - Image size: (1024, 1024)
+2026-01-31 21:25:00 [INFO] __main__ - Loading SAM3 tracker model on cuda...
+2026-01-31 21:25:11 [INFO] __main__ - SAM3 tracker model loaded successfully.
+2026-01-31 21:25:11 [INFO] __main__ - Running segmentation pipeline...
+2026-01-31 21:25:11 [INFO] __main__ - Image preprocessed. Shape: (1024, 1024)
+2026-01-31 21:25:11 [INFO] __main__ - Tiling enabled. Creating tile grid...
+2026-01-31 21:25:11 [INFO] __main__ - Created 25 tiles with padding bottom=0, right=0
+2026-01-31 21:25:11 [DEBUG] __main__ - Processing tile 1/25: (0, 0) to (256, 256)
+2026-01-31 21:25:12 [DEBUG] __main__ -   Tile 1: Found 105 candidate points
