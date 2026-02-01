@@ -9,9 +9,9 @@ Workflow:
   4) Consolidate masks and write an overlay output with per-bubble colors.
 
 Usage (copy/paste):
-  python bubbly_flows/tests/bubble_frst_sam3_mask.py \\
-    --input bubbly_flows/tests/img6001.png \\
-    --output result.png \\
+  python bubbly_flows/tests/bubble_frst_sam3_mask.py \
+    --input bubbly_flows/tests/img6001.png \
+    --output result.png \
     --text_prompt "micro-sized bubbles"
 
 Flag overview:
