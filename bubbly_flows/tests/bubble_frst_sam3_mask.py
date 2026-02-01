@@ -209,21 +209,6 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Output rendering mode (default: overlay)",
     )
-    parser.add_argument("--enable_candidates", action="store_true", help="Force enable candidate detection")
-    parser.add_argument("--disable_candidates", action="store_true", help="Force disable candidate detection")
-    parser.add_argument("--enable_tiling", action="store_true", help="Force enable tiling")
-    parser.add_argument("--disable_tiling", action="store_true", help="Force disable tiling")
-    parser.add_argument("--enable_hole_fill", action="store_true", help="Force enable hole filling")
-    parser.add_argument("--disable_hole_fill", action="store_true", help="Force disable hole filling")
-    parser.add_argument("--enable_consolidation", action="store_true", help="Force enable consolidation")
-    parser.add_argument("--disable_consolidation", action="store_true", help="Force disable consolidation")
-    parser.add_argument(
-        "--output_mode",
-        choices=["cutout", "overlay"],
-        default=None,
-        help="Output rendering mode (default: overlay)",
-    )
-
     # FRST parameters (mirrors classical_test.py defaults)
     parser.add_argument("--r_min", type=int, default=4, help="Min radius (px)")
     parser.add_argument("--r_max", type=int, default=25, help="Max radius (px)")
