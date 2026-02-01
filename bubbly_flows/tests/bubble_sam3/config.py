@@ -25,6 +25,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "local_files_only": True,
         "points_per_batch": 128,
         "multimask_output": False,
+        "pcs_enable": True,
+        "pcs_text_prompt": "bubbles",
+        "pcs_threshold": 0.5,
+        "pcs_mask_threshold": 0.5,
     },
     "preprocess": {
         "enable_contrast_norm": True,

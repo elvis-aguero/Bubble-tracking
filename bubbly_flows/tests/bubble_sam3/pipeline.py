@@ -6,7 +6,13 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 from PIL import Image
 
-from .backend import Sam3PointBackend, TransformersMaskGenerator, segment_everything, segment_with_points
+from .backend import (
+    Sam3ConceptBackend,
+    Sam3PointBackend,
+    TransformersMaskGenerator,
+    segment_everything,
+    segment_with_points,
+)
 from .candidates import detect_candidates
 from .postprocess import Instance, consolidate_instances, fill_holes, maybe_convex_hull, resize_mask_to_shape, mask_bbox
 from .preprocess import preprocess_gray
@@ -18,6 +24,7 @@ def run_pipeline(
     cfg: Dict[str, Any],
     sam_backend: Sam3PointBackend,
     fallback_generator: Optional[TransformersMaskGenerator],
+    pcs_backend: Optional[Sam3ConceptBackend] = None,
 ) -> Tuple[List[Instance], Dict[str, Any], Optional[TransformersMaskGenerator]]:
     logger = logging.getLogger(__name__)
     debug: Dict[str, Any] = {
@@ -120,6 +127,46 @@ def run_pipeline(
 
             bbox = (bx0 + x0, by0 + y0, bx1 + x0, by1 + y0)
             instances.append(Instance(mask=cropped, score=score, area=area, bbox=bbox))
+
+    pcs_enable = bool(cfg["sam"].get("pcs_enable", True))
+    if pcs_enable:
+        if pcs_backend is None:
+            pcs_backend = Sam3ConceptBackend(cfg["device"], cfg["sam"])
+        prompt = str(cfg["sam"].get("pcs_text_prompt", "bubbles"))
+        pcs_threshold = float(cfg["sam"].get("pcs_threshold", 0.5))
+        pcs_mask_threshold = float(cfg["sam"].get("pcs_mask_threshold", 0.5))
+
+        pcs_masks, pcs_scores, pcs_boxes = pcs_backend.segment_by_text(
+            image, prompt, pcs_threshold, pcs_mask_threshold
+        )
+        pcs_produced = len(pcs_masks)
+        pcs_survived = 0
+        pcs_added = 0
+
+        for mask, score, box in zip(pcs_masks, pcs_scores, pcs_boxes):
+            if mask.shape != (h, w):
+                mask = resize_mask_to_shape(mask, (h, w))
+            x0, y0, x1, y1 = box
+            x0 = max(0, min(x0, w))
+            x1 = max(0, min(x1, w))
+            y0 = max(0, min(y0, h))
+            y1 = max(0, min(y1, h))
+            if x1 <= x0 or y1 <= y0:
+                continue
+            crop = mask[y0:y1, x0:x1]
+            area = int(crop.sum())
+            if area <= 0:
+                continue
+            pcs_survived += 1
+            pcs_added += 1
+            instances.append(Instance(mask=crop, score=score, area=area, bbox=(x0, y0, x1, y1)))
+
+        logger.info(
+            "PCS produced %d masks; %d survived filtering; %d added before consolidation",
+            pcs_produced,
+            pcs_survived,
+            pcs_added,
+        )
 
     logger.info(f"Total instances before consolidation: {len(instances)}")
     consolidated = consolidate_instances(instances, cfg, (h, w))

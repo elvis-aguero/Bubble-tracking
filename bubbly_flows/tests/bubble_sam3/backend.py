@@ -149,6 +149,129 @@ class Sam3PointBackend:
         return all_masks, all_scores
 
 
+class Sam3ConceptBackend:
+    _MODEL_CACHE: Dict[Tuple[str, str], Any] = {}
+    _PROCESSOR_CACHE: Dict[Tuple[str, str], Any] = {}
+
+    def __init__(self, device: str, sam_cfg: Dict[str, Any]) -> None:
+        self.device = device
+        self.use_fp16 = bool(sam_cfg.get("use_fp16", True))
+        self.model_name = str(sam_cfg.get("model_name", "facebook/sam3"))
+        self.local_files_only = bool(sam_cfg.get("local_files_only", True))
+        self.model, self.processor = self._load_concept()
+
+    def _load_concept(self):
+        try:
+            from transformers import Sam3Model, Sam3Processor
+        except ImportError as exc:
+            raise RuntimeError(
+                "transformers with Sam3Processor/Sam3Model is required for PCS text prompting."
+            ) from exc
+
+        cache_key = (self.model_name, self.device)
+        if cache_key in self._MODEL_CACHE and cache_key in self._PROCESSOR_CACHE:
+            return self._MODEL_CACHE[cache_key], self._PROCESSOR_CACHE[cache_key]
+
+        logger = logging.getLogger(__name__)
+        try:
+            processor = Sam3Processor.from_pretrained(
+                self.model_name, local_files_only=self.local_files_only
+            )
+            model = Sam3Model.from_pretrained(
+                self.model_name, local_files_only=self.local_files_only
+            )
+        except OSError as exc:
+            if not self.local_files_only:
+                raise
+            logger.warning(
+                "SAM3 PCS model not found in local cache; retrying with downloads enabled."
+            )
+            processor = Sam3Processor.from_pretrained(
+                self.model_name, local_files_only=False
+            )
+            model = Sam3Model.from_pretrained(
+                self.model_name, local_files_only=False
+            )
+
+        if hasattr(model, "to"):
+            model = model.to(self.device)
+        if hasattr(model, "eval"):
+            model.eval()
+
+        self._MODEL_CACHE[cache_key] = model
+        self._PROCESSOR_CACHE[cache_key] = processor
+        return model, processor
+
+    def _infer(self, fn, *args, **kwargs):
+        with torch.inference_mode():
+            if self.device == "cuda" and self.use_fp16:
+                with torch.autocast(device_type="cuda", dtype=torch.float16):
+                    return fn(*args, **kwargs)
+            return fn(*args, **kwargs)
+
+    def segment_by_text(
+        self,
+        image: Image.Image,
+        text_prompt: str,
+        threshold: float,
+        mask_threshold: float,
+    ) -> Tuple[List[np.ndarray], List[Optional[float]], List[Tuple[int, int, int, int]]]:
+        if not text_prompt:
+            return [], [], []
+
+        inputs = self.processor(images=image, text=text_prompt, return_tensors="pt")
+        target_sizes = inputs["original_sizes"].tolist()
+        if hasattr(inputs, "to"):
+            inputs = inputs.to(self.device)
+        else:
+            for key, value in list(inputs.items()):
+                if torch.is_tensor(value):
+                    inputs[key] = value.to(self.device)
+
+        outputs = self._infer(self.model, **inputs)
+        results = self.processor.post_process_instance_segmentation(
+            outputs,
+            threshold=float(threshold),
+            mask_threshold=float(mask_threshold),
+            target_sizes=target_sizes,
+        )[0]
+
+        masks = normalize_masks(results.get("masks"))
+        scores = normalize_scores(results.get("scores"), len(masks))
+        boxes = _normalize_boxes(results.get("boxes"))
+
+        if len(scores) < len(masks):
+            scores.extend([None] * (len(masks) - len(scores)))
+        if len(boxes) < len(masks):
+            boxes.extend([(0, 0, 0, 0)] * (len(masks) - len(boxes)))
+        elif len(boxes) > len(masks):
+            boxes = boxes[: len(masks)]
+
+        return masks, scores, boxes
+
+
+def _normalize_boxes(boxes: Any) -> List[Tuple[int, int, int, int]]:
+    if boxes is None:
+        return []
+    if torch.is_tensor(boxes):
+        arr = boxes.detach().cpu().numpy()
+    else:
+        arr = np.array(boxes)
+    if arr.ndim == 1:
+        arr = arr.reshape(1, -1)
+    out: List[Tuple[int, int, int, int]] = []
+    for box in arr:
+        if len(box) < 4:
+            continue
+        x0, y0, x1, y1 = box[:4]
+        x0_i = int(np.floor(x0))
+        y0_i = int(np.floor(y0))
+        x1_i = int(np.ceil(x1))
+        y1_i = int(np.ceil(y1))
+        out.append((x0_i, y0_i, x1_i, y1_i))
+    return out
+
+
 class TransformersMaskGenerator:
     def __init__(self, device: str, model_name: str) -> None:
         try:

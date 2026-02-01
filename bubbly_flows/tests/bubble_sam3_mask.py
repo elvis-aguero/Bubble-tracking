@@ -93,7 +93,7 @@ from typing import Any
 import numpy as np
 from PIL import Image
 
-from bubble_sam3.backend import Sam3PointBackend, TransformersMaskGenerator
+from bubble_sam3.backend import Sam3ConceptBackend, Sam3PointBackend, TransformersMaskGenerator
 from bubble_sam3.config import apply_cli_overrides, ensure_hf_home, load_config
 from bubble_sam3.outputs import (
     build_rgba_cutout,
@@ -230,10 +230,17 @@ def main() -> None:
     logger.info(f"Loading SAM3 tracker model on {device}...")
     sam_backend = Sam3PointBackend(device, cfg["sam"])
     logger.info("SAM3 tracker model loaded successfully.")
+    pcs_backend: Sam3ConceptBackend | None = None
+    if cfg["sam"].get("pcs_enable", True):
+        logger.info(f"Loading SAM3 PCS model on {device}...")
+        pcs_backend = Sam3ConceptBackend(device, cfg["sam"])
+        logger.info("SAM3 PCS model loaded successfully.")
     fallback_generator: TransformersMaskGenerator | None = None
 
     logger.info("Running segmentation pipeline...")
-    instances, debug, fallback_generator = run_pipeline(image, cfg, sam_backend, fallback_generator)
+    instances, debug, fallback_generator = run_pipeline(
+        image, cfg, sam_backend, fallback_generator, pcs_backend
+    )
     logger.info(f"Pipeline completed. Found {len(instances)} bubble instances.")
 
     image_rgb = np.array(image)

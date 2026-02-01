@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import math
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
@@ -146,21 +147,7 @@ def mask_iou(
     mask_b: np.ndarray,
     bbox_b: Tuple[int, int, int, int],
 ) -> float:
-    x0 = max(bbox_a[0], bbox_b[0])
-    y0 = max(bbox_a[1], bbox_b[1])
-    x1 = min(bbox_a[2], bbox_b[2])
-    y1 = min(bbox_a[3], bbox_b[3])
-    if x1 <= x0 or y1 <= y0:
-        return 0.0
-    ax0 = x0 - bbox_a[0]
-    ay0 = y0 - bbox_a[1]
-    ax1 = x1 - bbox_a[0]
-    ay1 = y1 - bbox_a[1]
-    bx0 = x0 - bbox_b[0]
-    by0 = y0 - bbox_b[1]
-    bx1 = x1 - bbox_b[0]
-    by1 = y1 - bbox_b[1]
-    inter = np.logical_and(mask_a[ay0:ay1, ax0:ax1], mask_b[by0:by1, bx0:bx1]).sum()
+    inter = mask_intersection_area(mask_a, bbox_a, mask_b, bbox_b)
     if inter == 0:
         return 0.0
     union = mask_a.sum() + mask_b.sum() - inter
@@ -169,18 +156,18 @@ def mask_iou(
     return float(inter) / float(union)
 
 
-def mask_containment(
+def mask_intersection_area(
     mask_a: np.ndarray,
     bbox_a: Tuple[int, int, int, int],
     mask_b: np.ndarray,
     bbox_b: Tuple[int, int, int, int],
-) -> float:
+) -> int:
     x0 = max(bbox_a[0], bbox_b[0])
     y0 = max(bbox_a[1], bbox_b[1])
     x1 = min(bbox_a[2], bbox_b[2])
     y1 = min(bbox_a[3], bbox_b[3])
     if x1 <= x0 or y1 <= y0:
-        return 0.0
+        return 0
     ax0 = x0 - bbox_a[0]
     ay0 = y0 - bbox_a[1]
     ax1 = x1 - bbox_a[0]
@@ -189,11 +176,25 @@ def mask_containment(
     by0 = y0 - bbox_b[1]
     bx1 = x1 - bbox_b[0]
     by1 = y1 - bbox_b[1]
-    inter = np.logical_and(mask_a[ay0:ay1, ax0:ax1], mask_b[by0:by1, bx0:bx1]).sum()
-    smaller = min(mask_a.sum(), mask_b.sum())
-    if smaller == 0:
-        return 0.0
-    return float(inter) / float(smaller)
+    return int(
+        np.logical_and(mask_a[ay0:ay1, ax0:ax1], mask_b[by0:by1, bx0:bx1]).sum()
+    )
+
+
+def mask_containment(
+    mask_a: np.ndarray,
+    bbox_a: Tuple[int, int, int, int],
+    mask_b: np.ndarray,
+    bbox_b: Tuple[int, int, int, int],
+) -> Tuple[float, float]:
+    inter = mask_intersection_area(mask_a, bbox_a, mask_b, bbox_b)
+    if inter == 0:
+        return 0.0, 0.0
+    area_a = mask_a.sum()
+    area_b = mask_b.sum()
+    if area_a == 0 or area_b == 0:
+        return 0.0, 0.0
+    return float(inter) / float(area_a), float(inter) / float(area_b)
 
 
 def consolidate_instances(instances: List[Instance], cfg: Dict[str, Any], image_shape: Tuple[int, int]) -> List[Instance]:
@@ -240,20 +241,33 @@ def consolidate_instances(instances: List[Instance], cfg: Dict[str, Any], image_
 
     sorted_instances = sorted(filtered, key=score_key, reverse=True)
     kept: List[Instance] = []
+    replacement_count = 0
 
     for inst in sorted_instances:
         drop = False
-        for kept_inst in kept:
+        to_remove: List[int] = []
+        for idx, kept_inst in enumerate(kept):
             iou = mask_iou(inst.mask, inst.bbox, kept_inst.mask, kept_inst.bbox)
             if iou >= iou_thresh:
                 drop = True
                 break
-            containment = mask_containment(inst.mask, inst.bbox, kept_inst.mask, kept_inst.bbox)
-            if containment >= containment_thresh:
-                if score_key(inst) <= score_key(kept_inst):
-                    drop = True
-                    break
-        if not drop:
-            kept.append(inst)
+            containment_a_in_b, containment_b_in_a = mask_containment(
+                inst.mask, inst.bbox, kept_inst.mask, kept_inst.bbox
+            )
+            if containment_a_in_b >= containment_thresh:
+                drop = True
+                break
+            if containment_b_in_a >= containment_thresh:
+                to_remove.append(idx)
+        if drop:
+            continue
+        if to_remove:
+            for idx in reversed(to_remove):
+                kept.pop(idx)
+            replacement_count += len(to_remove)
+        kept.append(inst)
 
+    logging.getLogger(__name__).info(
+        "Consolidation replacements due to containment: %d", replacement_count
+    )
     return kept
