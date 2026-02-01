@@ -6,20 +6,24 @@ Workflow:
   1) Detect bubble centers with FRST (from classical_test.py).
   2) Use centers as positive points for SAM3 tracker segmentation.
   3) Optionally run PCS text prompting (e.g., "tiny bubbles") to add masks.
-  4) Consolidate masks and write an overlay output with per-bubble colors.
+  4) Produce three outputs:
+     - FRST + micro prompt masks
+     - Big-bubble prompt masks only
+     - Consolidated masks from both pipelines
 
 Usage (copy/paste):
   python bubbly_flows/tests/bubble_frst_sam3_mask.py \
     --input bubbly_flows/tests/img6001.png \
     --output result.png \
-    --text_prompt "micro-sized bubbles"
+    --frst_text_prompt "micro-sized bubbles" \
+    --big_text_prompt "bubbles"
 
 Flag overview:
   Core:
     --input --output --config --device --seed
   SAM3:
     --sam_model --points_per_batch --multimask_output --allow_download
-    --text_prompt --disable_pcs
+    --frst_text_prompt --big_text_prompt --text_prompt --disable_pcs
   Pipeline:
     --enable_candidates/--disable_candidates
     --enable_tiling/--disable_tiling
@@ -35,6 +39,8 @@ Flag overview:
 Notes:
   - Default output is an overlay with per-instance colors.
   - output_mode=cutout produces an RGBA cutout (alpha = union of masks).
+  - Output files are derived from --output:
+      <stem>_frst.png, <stem>_big.png, and the combined result at --output.
 """
 
 from __future__ import annotations
@@ -170,14 +176,38 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--multimask_output", action="store_true", help="Enable multiple masks per point")
     parser.add_argument("--allow_download", action="store_true", help="Allow SAM3 model downloads if cache miss")
     parser.add_argument(
+        "--frst_text_prompt",
+        default="micro-sized bubbles",
+        help="PCS text prompt for FRST pipeline (e.g., 'micro-sized bubbles')",
+    )
+    parser.add_argument(
+        "--big_text_prompt",
+        default="bubbles",
+        help="PCS text prompt for large bubbles only (e.g., 'bubbles')",
+    )
+    parser.add_argument(
         "--text_prompt",
-        default="tiny bubbles",
-        help="PCS text prompt (e.g., 'tiny bubbles' or 'micro-sized bubbles')",
+        default=None,
+        help="Deprecated alias for --frst_text_prompt",
     )
     parser.add_argument(
         "--disable_pcs",
         action="store_true",
         help="Disable PCS text prompting (only use point prompts)",
+    )
+    parser.add_argument("--enable_candidates", action="store_true", help="Force enable candidate detection")
+    parser.add_argument("--disable_candidates", action="store_true", help="Force disable candidate detection")
+    parser.add_argument("--enable_tiling", action="store_true", help="Force enable tiling")
+    parser.add_argument("--disable_tiling", action="store_true", help="Force disable tiling")
+    parser.add_argument("--enable_hole_fill", action="store_true", help="Force enable hole filling")
+    parser.add_argument("--disable_hole_fill", action="store_true", help="Force disable hole filling")
+    parser.add_argument("--enable_consolidation", action="store_true", help="Force enable consolidation")
+    parser.add_argument("--disable_consolidation", action="store_true", help="Force disable consolidation")
+    parser.add_argument(
+        "--output_mode",
+        choices=["cutout", "overlay"],
+        default=None,
+        help="Output rendering mode (default: overlay)",
     )
     parser.add_argument("--enable_candidates", action="store_true", help="Force enable candidate detection")
     parser.add_argument("--disable_candidates", action="store_true", help="Force disable candidate detection")
@@ -252,18 +282,63 @@ def build_instances_from_masks(
     return instances
 
 
+def build_instances_from_pcs(
+    masks: Sequence[np.ndarray],
+    scores: Sequence[Optional[float]],
+    boxes: Sequence[Tuple[int, int, int, int]],
+    image_shape: Tuple[int, int],
+) -> List[Instance]:
+    h, w = image_shape
+    instances: List[Instance] = []
+    for mask, score, box in zip(masks, scores, boxes):
+        if mask is None:
+            continue
+        if mask.shape != (h, w):
+            mask = resize_mask_to_shape(mask, (h, w))
+        x0, y0, x1, y1 = box
+        x0 = max(0, min(x0, w))
+        x1 = max(0, min(x1, w))
+        y0 = max(0, min(y0, h))
+        y1 = max(0, min(y1, h))
+        if x1 <= x0 or y1 <= y0:
+            continue
+        crop = mask[y0:y1, x0:x1]
+        area = int(crop.sum())
+        if area <= 0:
+            continue
+        instances.append(Instance(mask=crop, score=score, area=area, bbox=(x0, y0, x1, y1)))
+    return instances
+
+
+def derive_output_paths(output_path: str) -> Tuple[str, str, str]:
+    base = Path(output_path)
+    if not base.suffix:
+        base = base.with_suffix(".png")
+    stem = base.stem
+    suffix = base.suffix
+    frst_path = str(base.with_name(f"{stem}_frst{suffix}"))
+    big_path = str(base.with_name(f"{stem}_big{suffix}"))
+    combined_path = str(base)
+    return frst_path, big_path, combined_path
+
+
 def main() -> None:
     args = parse_args()
 
     ensure_hf_home()
     cfg = load_config(args.config)
     cfg = apply_cli_overrides(cfg, args)
-    cfg["sam"]["pcs_text_prompt"] = args.text_prompt
+    if args.text_prompt:
+        args.frst_text_prompt = args.text_prompt
+    cfg["sam"]["pcs_text_prompt"] = args.frst_text_prompt
     cfg["sam"]["pcs_enable"] = bool(cfg["sam"].get("pcs_enable", True)) and not args.disable_pcs
 
     output_path = resolve_output_path(args.input, args.output)
-    json_path, csv_path = resolve_output_paths(output_path, cfg)
-    ensure_output_dir(output_path)
+    frst_out, big_out, combined_out = derive_output_paths(output_path)
+    json_path, csv_path = resolve_output_paths(combined_out, cfg)
+    ensure_output_dir(frst_out)
+    ensure_output_dir(big_out)
+    ensure_output_dir(combined_out)
     if json_path:
         ensure_output_dir(json_path)
     if csv_path:
@@ -300,58 +375,65 @@ def main() -> None:
     masks, scores = segment_with_points(sam_backend, image, points_xy)
     logger.info("SAM3 produced %d point-prompted masks", len(masks))
 
-    instances = build_instances_from_masks(masks, scores, (h, w), cfg)
+    frst_instances = build_instances_from_masks(masks, scores, (h, w), cfg)
 
-    if cfg["sam"].get("pcs_enable", True) and args.text_prompt:
+    pcs_backend: Optional[Sam3ConceptBackend] = None
+    if cfg["sam"].get("pcs_enable", True) and args.frst_text_prompt:
         pcs_backend = Sam3ConceptBackend(cfg["device"], cfg["sam"])
         pcs_threshold = float(cfg["sam"].get("pcs_threshold", 0.5))
         pcs_mask_threshold = float(cfg["sam"].get("pcs_mask_threshold", 0.5))
         pcs_masks, pcs_scores, pcs_boxes = pcs_backend.segment_by_text(
-            image, args.text_prompt, pcs_threshold, pcs_mask_threshold
+            image, args.frst_text_prompt, pcs_threshold, pcs_mask_threshold
         )
-        logger.info("PCS produced %d text-prompted masks", len(pcs_masks))
+        logger.info("PCS produced %d micro-text masks", len(pcs_masks))
+        frst_instances.extend(
+            build_instances_from_pcs(pcs_masks, pcs_scores, pcs_boxes, (h, w))
+        )
 
-        pcs_instances: List[Instance] = []
-        for mask, score, box in zip(pcs_masks, pcs_scores, pcs_boxes):
-            if mask is None:
-                continue
-            if mask.shape != (h, w):
-                mask = resize_mask_to_shape(mask, (h, w))
-            x0, y0, x1, y1 = box
-            x0 = max(0, min(x0, w))
-            x1 = max(0, min(x1, w))
-            y0 = max(0, min(y0, h))
-            y1 = max(0, min(y1, h))
-            if x1 <= x0 or y1 <= y0:
-                continue
-            crop = mask[y0:y1, x0:x1]
-            area = int(crop.sum())
-            if area <= 0:
-                continue
-            pcs_instances.append(Instance(mask=crop, score=score, area=area, bbox=(x0, y0, x1, y1)))
-        instances.extend(pcs_instances)
+    big_instances: List[Instance] = []
+    if cfg["sam"].get("pcs_enable", True) and args.big_text_prompt:
+        if pcs_backend is None:
+            pcs_backend = Sam3ConceptBackend(cfg["device"], cfg["sam"])
+        pcs_threshold = float(cfg["sam"].get("pcs_threshold", 0.5))
+        pcs_mask_threshold = float(cfg["sam"].get("pcs_mask_threshold", 0.5))
+        pcs_masks, pcs_scores, pcs_boxes = pcs_backend.segment_by_text(
+            image, args.big_text_prompt, pcs_threshold, pcs_mask_threshold
+        )
+        logger.info("PCS produced %d big-bubble text masks", len(pcs_masks))
+        big_instances = build_instances_from_pcs(pcs_masks, pcs_scores, pcs_boxes, (h, w))
 
-    logger.info("Total instances before consolidation: %d", len(instances))
-    instances = consolidate_instances(instances, cfg, (h, w))
-    logger.info("Total instances after consolidation: %d", len(instances))
+    combined_instances = consolidate_instances(
+        frst_instances + big_instances, cfg, (h, w)
+    )
+    logger.info(
+        "Instances: FRST=%d, BIG=%d, COMBINED=%d",
+        len(frst_instances),
+        len(big_instances),
+        len(combined_instances),
+    )
 
     output_mode = str(cfg["output"].get("output_mode", "overlay")).lower()
-    if output_mode == "cutout":
-        rgba = build_rgba_cutout(image_rgb, instances)
-        Image.fromarray(rgba, mode="RGBA").save(output_path)
-        logger.info("Saved cutout to %s", output_path)
-    else:
-        overlay = build_rgba_overlay(
-            image_rgb,
-            instances,
-            alpha=int(cfg["output"].get("overlay_alpha", 128)),
-            colormap=cfg["output"].get("overlay_colormap", "tab20"),
-        )
-        Image.fromarray(overlay, mode="RGBA").save(output_path)
-        logger.info("Saved overlay to %s", output_path)
+    def _save_instances(instances: List[Instance], out_path: str, label: str) -> None:
+        if output_mode == "cutout":
+            rgba = build_rgba_cutout(image_rgb, instances)
+            Image.fromarray(rgba, mode="RGBA").save(out_path)
+            logger.info("Saved %s cutout to %s", label, out_path)
+        else:
+            overlay = build_rgba_overlay(
+                image_rgb,
+                instances,
+                alpha=int(cfg["output"].get("overlay_alpha", 128)),
+                colormap=cfg["output"].get("overlay_colormap", "tab20"),
+            )
+            Image.fromarray(overlay, mode="RGBA").save(out_path)
+            logger.info("Saved %s overlay to %s", label, out_path)
+
+    _save_instances(frst_instances, frst_out, "FRST")
+    _save_instances(big_instances, big_out, "BIG")
+    _save_instances(combined_instances, combined_out, "COMBINED")
 
     save_instance_outputs(
-        instances,
+        combined_instances,
         args.input,
         (h, w),
         json_path,
