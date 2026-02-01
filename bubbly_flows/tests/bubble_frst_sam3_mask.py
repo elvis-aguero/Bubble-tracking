@@ -7,6 +7,34 @@ Workflow:
   2) Use centers as positive points for SAM3 tracker segmentation.
   3) Optionally run PCS text prompting (e.g., "tiny bubbles") to add masks.
   4) Consolidate masks and write an overlay output with per-bubble colors.
+
+Usage (copy/paste):
+  python bubbly_flows/tests/bubble_frst_sam3_mask.py \\
+    --input bubbly_flows/tests/img6001.png \\
+    --output result.png \\
+    --text_prompt "micro-sized bubbles"
+
+Flag overview:
+  Core:
+    --input --output --config --device --seed
+  SAM3:
+    --sam_model --points_per_batch --multimask_output --allow_download
+    --text_prompt --disable_pcs
+  Pipeline:
+    --enable_candidates/--disable_candidates
+    --enable_tiling/--disable_tiling
+    --enable_hole_fill/--disable_hole_fill
+    --enable_consolidation/--disable_consolidation
+    --output_mode overlay|cutout
+  Output:
+    --debug_dir --output_json --no_output_json --output_csv --include_rle
+  FRST:
+    --r_min --r_max --r_step --alpha --mag_percentile
+    --peak_percentile --nms_size --border --max_peaks
+
+Notes:
+  - Default output is an overlay with per-instance colors.
+  - output_mode=cutout produces an RGBA cutout (alpha = union of masks).
 """
 
 from __future__ import annotations
@@ -32,6 +60,7 @@ from classical_test import frst_symmetry_map, pick_peaks
 from bubble_sam3.backend import Sam3ConceptBackend, Sam3PointBackend, segment_with_points
 from bubble_sam3.config import apply_cli_overrides, ensure_hf_home, load_config
 from bubble_sam3.outputs import (
+    build_rgba_cutout,
     build_rgba_overlay,
     ensure_output_dir,
     resolve_output_paths,
@@ -149,6 +178,20 @@ def parse_args() -> argparse.Namespace:
         "--disable_pcs",
         action="store_true",
         help="Disable PCS text prompting (only use point prompts)",
+    )
+    parser.add_argument("--enable_candidates", action="store_true", help="Force enable candidate detection")
+    parser.add_argument("--disable_candidates", action="store_true", help="Force disable candidate detection")
+    parser.add_argument("--enable_tiling", action="store_true", help="Force enable tiling")
+    parser.add_argument("--disable_tiling", action="store_true", help="Force disable tiling")
+    parser.add_argument("--enable_hole_fill", action="store_true", help="Force enable hole filling")
+    parser.add_argument("--disable_hole_fill", action="store_true", help="Force disable hole filling")
+    parser.add_argument("--enable_consolidation", action="store_true", help="Force enable consolidation")
+    parser.add_argument("--disable_consolidation", action="store_true", help="Force disable consolidation")
+    parser.add_argument(
+        "--output_mode",
+        choices=["cutout", "overlay"],
+        default=None,
+        help="Output rendering mode (default: overlay)",
     )
 
     # FRST parameters (mirrors classical_test.py defaults)
@@ -292,14 +335,20 @@ def main() -> None:
     instances = consolidate_instances(instances, cfg, (h, w))
     logger.info("Total instances after consolidation: %d", len(instances))
 
-    overlay = build_rgba_overlay(
-        image_rgb,
-        instances,
-        alpha=int(cfg["output"].get("overlay_alpha", 128)),
-        colormap=cfg["output"].get("overlay_colormap", "tab20"),
-    )
-    Image.fromarray(overlay, mode="RGBA").save(output_path)
-    logger.info("Saved overlay to %s", output_path)
+    output_mode = str(cfg["output"].get("output_mode", "overlay")).lower()
+    if output_mode == "cutout":
+        rgba = build_rgba_cutout(image_rgb, instances)
+        Image.fromarray(rgba, mode="RGBA").save(output_path)
+        logger.info("Saved cutout to %s", output_path)
+    else:
+        overlay = build_rgba_overlay(
+            image_rgb,
+            instances,
+            alpha=int(cfg["output"].get("overlay_alpha", 128)),
+            colormap=cfg["output"].get("overlay_colormap", "tab20"),
+        )
+        Image.fromarray(overlay, mode="RGBA").save(output_path)
+        logger.info("Saved overlay to %s", output_path)
 
     save_instance_outputs(
         instances,
