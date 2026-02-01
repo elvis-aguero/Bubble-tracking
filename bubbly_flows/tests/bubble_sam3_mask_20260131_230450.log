@@ -1,0 +1,218 @@
+2026-01-31 23:04:50 [INFO] root - Logging initialized. Log file: ./bubble_sam3_mask_20260131_230450.log
+2026-01-31 23:04:50 [INFO] __main__ - ================================================================================
+2026-01-31 23:04:50 [INFO] __main__ - SAM3 Bubble Segmentation Pipeline Started
+2026-01-31 23:04:50 [INFO] __main__ - ================================================================================
+2026-01-31 23:04:50 [INFO] __main__ - Input image: img6001.png
+2026-01-31 23:04:50 [INFO] __main__ - Output path: result.png
+2026-01-31 23:04:50 [INFO] __main__ - Config file: config.jsonc
+2026-01-31 23:04:50 [INFO] __main__ - Device: default
+2026-01-31 23:04:50 [INFO] __main__ - Loading configuration...
+2026-01-31 23:04:50 [DEBUG] __main__ - Configuration: {
+  "device": "cuda",
+  "seed": 0,
+  "sam": {
+    "backend": "tracker",
+    "model_name": "facebook/sam3",
+    "confidence_threshold": 0.4,
+    "use_fp16": true,
+    "local_files_only": true,
+    "points_per_batch": 128,
+    "multimask_output": false,
+    "pcs_enable": true,
+    "pcs_text_prompt": "bubbles",
+    "pcs_threshold": 0.5,
+    "pcs_mask_threshold": 0.5
+  },
+  "preprocess": {
+    "enable_contrast_norm": true,
+    "contrast_method": "clahe",
+    "clahe_clip_limit": 0.03,
+    "clahe_kernel_size": 64,
+    "rescale_percentiles": [
+      2,
+      98
+    ],
+    "gamma": 1.0,
+    "invert_gray": false
+  },
+  "candidates": {
+    "enable_candidates": true,
+    "method": "log+dog",
+    "min_diameter_px": 10,
+    "max_diameter_px": 200,
+    "log_min_sigma": null,
+    "log_max_sigma": null,
+    "log_num_sigma": 10,
+    "log_threshold": 0.02,
+    "dog_min_sigma": null,
+    "dog_max_sigma": null,
+    "dog_sigma_ratio": 1.6,
+    "dog_threshold": 0.02,
+    "hough_dp": 1.2,
+    "hough_minDist": 8,
+    "hough_param1": 100,
+    "hough_param2": 30,
+    "hough_minRadius": null,
+    "hough_maxRadius": null,
+    "max_candidates_per_image": 2000,
+    "dedup_centers": true,
+    "dedup_radius_px": 4.0,
+    "fallback_on_empty_candidates": true
+  },
+  "tiling": {
+    "enable_tiling": true,
+    "tile_size": 256,
+    "tile_h": null,
+    "tile_w": null,
+    "tile_overlap": 64,
+    "pad_mode": "reflect",
+    "min_coverage_for_keep": 0.5
+  },
+  "hole_fill": {
+    "enable_hole_fill": true,
+    "hole_fill_method": "binary_fill_holes",
+    "closing_radius": 2,
+    "min_hole_area_px": 0,
+    "fill_only_if_ringlike": false,
+    "ringlike_threshold": 0.15
+  },
+  "postprocess": {
+    "enable_consolidation": true,
+    "iou_dedup_thresh": 0.5,
+    "containment_thresh": 0.9,
+    "min_area_px": 60,
+    "max_area_fraction": 0.2,
+    "border_exclusion_px": 1,
+    "circularity_min": 0.0,
+    "solidity_min": 0.0,
+    "enable_convex_hull": false
+  },
+  "fallback": {
+    "mode": "grid",
+    "grid_spacing_px": 24,
+    "grid_jitter_px": 0,
+    "max_points": 4096
+  },
+  "output": {
+    "output_mode": "overlay",
+    "overlay_alpha": 128,
+    "overlay_colormap": "tab20",
+    "write_json": true,
+    "json_path": null,
+    "write_csv": false,
+    "csv_path": null,
+    "include_rle": false
+  },
+  "debug": {
+    "debug_dir": "."
+  }
+}
+2026-01-31 23:04:51 [INFO] __main__ - Setting random seed to 0
+2026-01-31 23:04:51 [INFO] __main__ - Loading image from img6001.png
+2026-01-31 23:04:51 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-01-31 23:04:51 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-01-31 23:04:51 [INFO] __main__ - Image size: (1024, 1024)
+2026-01-31 23:04:51 [INFO] __main__ - Loading SAM3 tracker model on cuda...
+2026-01-31 23:04:59 [INFO] __main__ - SAM3 tracker model loaded successfully.
+2026-01-31 23:04:59 [INFO] __main__ - Loading SAM3 PCS model on cuda...
+2026-01-31 23:05:01 [INFO] __main__ - SAM3 PCS model loaded successfully.
+2026-01-31 23:05:01 [INFO] __main__ - Running segmentation pipeline...
+2026-01-31 23:05:01 [INFO] bubble_sam3.pipeline - Image preprocessed. Shape: (1024, 1024)
+2026-01-31 23:05:01 [INFO] bubble_sam3.pipeline - Tiling enabled. Creating tile grid...
+2026-01-31 23:05:01 [INFO] bubble_sam3.pipeline - Created 25 tiles with padding bottom=0, right=0
+2026-01-31 23:05:01 [DEBUG] bubble_sam3.pipeline - Processing tile 1/25: (0, 0) to (256, 256)
+2026-01-31 23:05:02 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:03 [DEBUG] bubble_sam3.pipeline -   Tile 1: Found 105 candidate points
+2026-01-31 23:05:04 [DEBUG] bubble_sam3.pipeline - Processing tile 2/25: (192, 0) to (448, 256)
+2026-01-31 23:05:05 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:05 [DEBUG] bubble_sam3.pipeline -   Tile 2: Found 138 candidate points
+2026-01-31 23:05:06 [DEBUG] bubble_sam3.pipeline - Processing tile 3/25: (384, 0) to (640, 256)
+2026-01-31 23:05:07 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:08 [DEBUG] bubble_sam3.pipeline -   Tile 3: Found 178 candidate points
+2026-01-31 23:05:09 [DEBUG] bubble_sam3.pipeline - Processing tile 4/25: (576, 0) to (832, 256)
+2026-01-31 23:05:10 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:11 [DEBUG] bubble_sam3.pipeline -   Tile 4: Found 162 candidate points
+2026-01-31 23:05:12 [DEBUG] bubble_sam3.pipeline - Processing tile 5/25: (768, 0) to (1024, 256)
+2026-01-31 23:05:12 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:13 [DEBUG] bubble_sam3.pipeline -   Tile 5: Found 146 candidate points
+2026-01-31 23:05:14 [DEBUG] bubble_sam3.pipeline - Processing tile 6/25: (0, 192) to (256, 448)
+2026-01-31 23:05:15 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:16 [DEBUG] bubble_sam3.pipeline -   Tile 6: Found 169 candidate points
+2026-01-31 23:05:17 [DEBUG] bubble_sam3.pipeline - Processing tile 7/25: (192, 192) to (448, 448)
+2026-01-31 23:05:18 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:19 [DEBUG] bubble_sam3.pipeline -   Tile 7: Found 202 candidate points
+2026-01-31 23:05:19 [DEBUG] bubble_sam3.pipeline - Processing tile 8/25: (384, 192) to (640, 448)
+2026-01-31 23:05:20 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:21 [DEBUG] bubble_sam3.pipeline -   Tile 8: Found 195 candidate points
+2026-01-31 23:05:22 [DEBUG] bubble_sam3.pipeline - Processing tile 9/25: (576, 192) to (832, 448)
+2026-01-31 23:05:23 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:24 [DEBUG] bubble_sam3.pipeline -   Tile 9: Found 220 candidate points
+2026-01-31 23:05:25 [DEBUG] bubble_sam3.pipeline - Processing tile 10/25: (768, 192) to (1024, 448)
+2026-01-31 23:05:26 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:27 [DEBUG] bubble_sam3.pipeline -   Tile 10: Found 164 candidate points
+2026-01-31 23:05:28 [DEBUG] bubble_sam3.pipeline - Processing tile 11/25: (0, 384) to (256, 640)
+2026-01-31 23:05:29 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:30 [DEBUG] bubble_sam3.pipeline -   Tile 11: Found 142 candidate points
+2026-01-31 23:05:31 [DEBUG] bubble_sam3.pipeline - Processing tile 12/25: (192, 384) to (448, 640)
+2026-01-31 23:05:32 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:33 [DEBUG] bubble_sam3.pipeline -   Tile 12: Found 180 candidate points
+2026-01-31 23:05:34 [DEBUG] bubble_sam3.pipeline - Processing tile 13/25: (384, 384) to (640, 640)
+2026-01-31 23:05:35 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:36 [DEBUG] bubble_sam3.pipeline -   Tile 13: Found 139 candidate points
+2026-01-31 23:05:37 [DEBUG] bubble_sam3.pipeline - Processing tile 14/25: (576, 384) to (832, 640)
+2026-01-31 23:05:38 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:39 [DEBUG] bubble_sam3.pipeline -   Tile 14: Found 187 candidate points
+2026-01-31 23:05:40 [DEBUG] bubble_sam3.pipeline - Processing tile 15/25: (768, 384) to (1024, 640)
+2026-01-31 23:05:41 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:42 [DEBUG] bubble_sam3.pipeline -   Tile 15: Found 193 candidate points
+2026-01-31 23:05:43 [DEBUG] bubble_sam3.pipeline - Processing tile 16/25: (0, 576) to (256, 832)
+2026-01-31 23:05:44 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:45 [DEBUG] bubble_sam3.pipeline -   Tile 16: Found 105 candidate points
+2026-01-31 23:05:45 [DEBUG] bubble_sam3.pipeline - Processing tile 17/25: (192, 576) to (448, 832)
+2026-01-31 23:05:46 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:48 [DEBUG] bubble_sam3.pipeline -   Tile 17: Found 190 candidate points
+2026-01-31 23:05:49 [DEBUG] bubble_sam3.pipeline - Processing tile 18/25: (384, 576) to (640, 832)
+2026-01-31 23:05:50 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:51 [DEBUG] bubble_sam3.pipeline -   Tile 18: Found 231 candidate points
+2026-01-31 23:05:52 [DEBUG] bubble_sam3.pipeline - Processing tile 19/25: (576, 576) to (832, 832)
+2026-01-31 23:05:53 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:54 [DEBUG] bubble_sam3.pipeline -   Tile 19: Found 214 candidate points
+2026-01-31 23:05:55 [DEBUG] bubble_sam3.pipeline - Processing tile 20/25: (768, 576) to (1024, 832)
+2026-01-31 23:05:56 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:05:58 [DEBUG] bubble_sam3.pipeline -   Tile 20: Found 196 candidate points
+2026-01-31 23:05:59 [DEBUG] bubble_sam3.pipeline - Processing tile 21/25: (0, 768) to (256, 1024)
+2026-01-31 23:05:59 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:06:00 [DEBUG] bubble_sam3.pipeline -   Tile 21: Found 73 candidate points
+2026-01-31 23:06:00 [DEBUG] bubble_sam3.pipeline - Processing tile 22/25: (192, 768) to (448, 1024)
+2026-01-31 23:06:01 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:06:02 [DEBUG] bubble_sam3.pipeline -   Tile 22: Found 97 candidate points
+2026-01-31 23:06:02 [DEBUG] bubble_sam3.pipeline - Processing tile 23/25: (384, 768) to (640, 1024)
+2026-01-31 23:06:03 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:06:04 [DEBUG] bubble_sam3.pipeline -   Tile 23: Found 191 candidate points
+2026-01-31 23:06:05 [DEBUG] bubble_sam3.pipeline - Processing tile 24/25: (576, 768) to (832, 1024)
+2026-01-31 23:06:06 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:06:07 [DEBUG] bubble_sam3.pipeline -   Tile 24: Found 162 candidate points
+2026-01-31 23:06:08 [DEBUG] bubble_sam3.pipeline - Processing tile 25/25: (768, 768) to (1024, 1024)
+2026-01-31 23:06:08 [WARNING] bubble_sam3.candidates - Candidate detection 'hough' failed: OpenCV is required for Hough circle detection.
+2026-01-31 23:06:09 [DEBUG] bubble_sam3.pipeline -   Tile 25: Found 115 candidate points
+2026-01-31 23:06:10 [INFO] bubble_sam3.pipeline - PCS produced 64 masks; 64 survived filtering; 64 added before consolidation
+2026-01-31 23:06:10 [INFO] bubble_sam3.pipeline - Total instances before consolidation: 4142
+2026-01-31 23:06:11 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 0
+2026-01-31 23:06:11 [INFO] bubble_sam3.pipeline - Total instances after consolidation: 179
+2026-01-31 23:06:11 [INFO] __main__ - Pipeline completed. Found 179 bubble instances.
+2026-01-31 23:06:11 [INFO] __main__ - Building output with 179 masks...
+2026-01-31 23:06:11 [INFO] __main__ - Using overlay output mode (colored mask overlay)
+2026-01-31 23:06:11 [INFO] __main__ - Saving output to result.png
+2026-01-31 23:06:11 [INFO] __main__ - Output saved successfully.
+2026-01-31 23:06:11 [INFO] __main__ - Saving instance JSON to result.json
+2026-01-31 23:06:11 [INFO] __main__ - Saving debug outputs...
+2026-01-31 23:06:11 [INFO] bubble_sam3.outputs - Saving debug outputs to .
+2026-01-31 23:06:11 [DEBUG] bubble_sam3.outputs - Saving candidate points visualization (4094 points)
+2026-01-31 23:06:12 [DEBUG] bubble_sam3.outputs - Saving tile grid visualization (25 tiles)
+2026-01-31 23:06:12 [DEBUG] bubble_sam3.outputs - Saving hole fill before/after visualization
+2026-01-31 23:06:12 [DEBUG] bubble_sam3.outputs - Saving PCS overlay with candidate centers
+2026-01-31 23:06:12 [DEBUG] bubble_sam3.outputs - Saving consolidated overlay visualization (179 masks)
+2026-01-31 23:06:12 [INFO] bubble_sam3.outputs - Debug outputs saved successfully.
+2026-01-31 23:06:12 [INFO] __main__ - ================================================================================
+2026-01-31 23:06:12 [INFO] __main__ - Pipeline completed successfully!
+2026-01-31 23:06:12 [INFO] __main__ - ================================================================================
