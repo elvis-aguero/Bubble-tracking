@@ -15,7 +15,7 @@ Usage (copy/paste):
   python bubbly_flows/tests/bubble_frst_sam3_mask.py \
     --input bubbly_flows/tests/img6001.png \
     --output result.png \
-    --frst_text_prompt "micro-sized bubbles" \
+    --frst_text_prompt "tiny bubbles" \
     --big_text_prompt "bubbles"
 
 Flag overview:
