@@ -1,0 +1,7 @@
+
+EnvironmentLocationNotFound: Not a conda environment: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly-train-env
+
+Traceback (most recent call last):
+  File "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/scripts/train.py", line 5, in <module>
+    import torch
+ModuleNotFoundError: No module named 'torch'

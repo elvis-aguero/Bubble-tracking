@@ -1,0 +1,22 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 232342
+##  Job Name : train_gold_seed_v00_20260130_164221
+##  Nodelist : gpu2264
+##      CPUs : 
+##  Mem/Node : 32768 MB
+## Directory : /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
+##   Job Started : Fri Jan 30 04:42:26 PM EST 2026
+###############################################################################
+Job ID: 232342
+Node: gpu2264
+Dataset: gold_seed_v00
+STARTING TRAINING: train_gold_seed_v00_20260130_164221
+Dataset: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/microsam/datasets/gold_seed_v00
+Epochs:  100
+--------------------------------
+Found 124 images for training.
+Using device: cpu
+WARNING: Training on CPU will be extremely slow.
+Checkpoints will be saved to: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/microsam/models/train_gold_seed_v00_20260130_164221
+Starting MicroSAM training...
+CRITICAL TRAINING ERROR: module 'micro_sam.training' has no attribute 'train_sam'

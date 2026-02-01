@@ -1,0 +1,8 @@
+/var/spool/slurmd/job232304/slurm_script: line 18: /users/eaguerov/.conda/envs/bubbly-train-env/etc/profile.d/conda.sh: No such file or directory
+
+CondaError: Run 'conda init' before 'conda activate'
+
+Traceback (most recent call last):
+  File "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/scripts/train.py", line 5, in <module>
+    import torch
+ModuleNotFoundError: No module named 'torch'

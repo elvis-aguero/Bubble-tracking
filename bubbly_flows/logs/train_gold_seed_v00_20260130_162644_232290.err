@@ -1,0 +1,5 @@
+/var/spool/slurmd/job232290/slurm_script: line 18: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly-train-env/bin/activate: No such file or directory
+Traceback (most recent call last):
+  File "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/scripts/train.py", line 5, in <module>
+    import torch
+ModuleNotFoundError: No module named 'torch'
