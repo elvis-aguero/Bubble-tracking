@@ -101,11 +101,21 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "enable": True,
         "radius": 5,
         "percentile": 99.0,
-        "area_min": 5,
+        "area_min": 30,
         "area_max": 120,
         "watershed": True,
         "watershed_min_area": None,
         "watershed_fg_thresh": 0.5,
+        "blob_method": "dog",  # dog | log
+        "blob_min_sigma": 1.3,
+        "blob_max_sigma": 2.8,
+        "blob_num_sigma": 10,
+        "blob_threshold": 0.05,
+        "blob_overlap": 0.5,
+        "patch_radius": 6,
+        "patch_percentile": 90.0,
+        "patch_use_otsu": False,
+        "fallback_global_cc": False,
     },
     "output": {
         "output_mode": "overlay",  # cutout | overlay

@@ -91,8 +91,6 @@ from bubble_sam3.postprocess import (
     resize_mask_to_shape,
 )
 from bubble_sam3.tiling import create_tiles, pad_image
-from big_bubble_prompt_fb import run_big_prompt as run_big_prompt_fb
-from big_bubble_prompt_hf import run_big_prompt as run_big_prompt_hf
 from frst_point_backend_fb import FrstPointBackendFB
 from frst_point_backend_hf import FrstPointBackendHF
 
@@ -271,6 +269,12 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Foreground threshold fraction for distance transform (0-1)",
     )
+    parser.add_argument(
+        "--blackhat_method",
+        choices=["adaptive", "morph"],
+        default="adaptive",
+        help="Black-hat detection method: adaptive (default) or morph (legacy)",
+    )
     return parser.parse_args()
 
 
@@ -395,24 +399,102 @@ def _watershed_split_component(
     return masks or [comp_mask]
 
 
-def build_blackhat_instances(
-    gray_u8: np.ndarray,
-    radius: int,
-    percentile: float,
+def _sigma_ratio(min_sigma: float, max_sigma: float, num_sigma: int) -> float:
+    if num_sigma <= 1 or min_sigma <= 0 or max_sigma <= 0 or max_sigma <= min_sigma:
+        return 1.6
+    return float((max_sigma / min_sigma) ** (1.0 / float(num_sigma - 1)))
+
+
+def _detect_blobs(
+    blackhat_f: np.ndarray,
+    method: str,
+    min_sigma: float,
+    max_sigma: float,
+    num_sigma: int,
+    threshold: float,
+    overlap: float,
+) -> np.ndarray:
+    try:
+        from skimage.feature import blob_dog, blob_log
+    except ImportError as exc:
+        raise RuntimeError("scikit-image is required for LoG/DoG blob detection.") from exc
+
+    method = str(method or "dog").lower()
+    if method == "log":
+        return blob_log(
+            blackhat_f,
+            min_sigma=float(min_sigma),
+            max_sigma=float(max_sigma),
+            num_sigma=int(num_sigma),
+            threshold=float(threshold),
+            overlap=float(overlap),
+        )
+    sigma_ratio = _sigma_ratio(float(min_sigma), float(max_sigma), int(num_sigma))
+    return blob_dog(
+        blackhat_f,
+        min_sigma=float(min_sigma),
+        max_sigma=float(max_sigma),
+        sigma_ratio=float(sigma_ratio),
+        threshold=float(threshold),
+        overlap=float(overlap),
+    )
+
+
+def _mask_from_center(
+    blackhat_u8: np.ndarray,
+    center_xy: Tuple[float, float],
+    patch_radius: int,
+    patch_percentile: float,
+    patch_use_otsu: bool,
+) -> Tuple[Optional[np.ndarray], Tuple[int, int]]:
+    h, w = blackhat_u8.shape
+    cx = int(round(center_xy[0]))
+    cy = int(round(center_xy[1]))
+    if cx < 0 or cy < 0 or cx >= w or cy >= h:
+        return None, (0, 0)
+    pr = max(1, int(patch_radius))
+    x0 = max(0, cx - pr)
+    x1 = min(w, cx + pr + 1)
+    y0 = max(0, cy - pr)
+    y1 = min(h, cy + pr + 1)
+    patch = blackhat_u8[y0:y1, x0:x1]
+    if patch.size == 0:
+        return None, (0, 0)
+
+    if patch_use_otsu:
+        otsu_thresh, _ = cv2.threshold(patch, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        thresh = float(otsu_thresh)
+    else:
+        thresh = float(np.percentile(patch, patch_percentile))
+
+    bw = patch >= thresh
+    cy_l = cy - y0
+    cx_l = cx - x0
+    if cy_l < 0 or cx_l < 0 or cy_l >= bw.shape[0] or cx_l >= bw.shape[1]:
+        return None, (0, 0)
+    if not bw[cy_l, cx_l]:
+        return None, (0, 0)
+
+    bw_u8 = bw.astype(np.uint8)
+    num, labels = cv2.connectedComponents(bw_u8, connectivity=8)
+    if num <= 1:
+        return None, (0, 0)
+    lbl = labels[cy_l, cx_l]
+    if lbl == 0:
+        return None, (0, 0)
+    comp = labels == lbl
+    return comp, (x0, y0)
+
+
+def _blackhat_global_cc(
+    blackhat_u8: np.ndarray,
     area_min: int,
     area_max: int,
     enable_watershed: bool,
     watershed_min_area: int,
     watershed_fg_thresh: float,
 ) -> List[Instance]:
-    radius = max(1, int(radius))
-    k = 2 * radius + 1
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
-    blackhat = cv2.morphologyEx(gray_u8, cv2.MORPH_BLACKHAT, kernel)
-    thresh = float(np.percentile(blackhat, percentile))
-    bw = blackhat >= thresh
-    bw_u8 = (bw.astype(np.uint8) * 255)
-
+    bw_u8 = blackhat_u8
     num, labels, stats, _ = cv2.connectedComponentsWithStats(bw_u8, connectivity=8)
     instances: List[Instance] = []
 
@@ -424,7 +506,7 @@ def build_blackhat_instances(
         if enable_watershed and area >= watershed_min_area:
             submasks = _watershed_split_component(
                 comp_mask,
-                gray_u8[y : y + h, x : x + w],
+                blackhat_u8[y : y + h, x : x + w],
                 fg_thresh=watershed_fg_thresh,
             )
         else:
@@ -452,6 +534,189 @@ def build_blackhat_instances(
                     bbox=(x + lx0, y + ly0, x + lx1, y + ly1),
                 )
             )
+
+    return instances
+
+
+
+def build_legacy_morph_instances(
+    gray_u8: np.ndarray,
+    radius: int,
+    percentile: float,
+    area_min: int,
+    area_max: int,
+    enable_watershed: bool,
+    watershed_min_area: int,
+    watershed_fg_thresh: float,
+    blob_method: str,
+    blob_min_sigma: float,
+    blob_max_sigma: float,
+    blob_num_sigma: int,
+    blob_threshold: float,
+    blob_overlap: float,
+    patch_radius: int,
+    patch_percentile: float,
+    patch_use_otsu: bool,
+    fallback_global_cc: bool,
+) -> List[Instance]:
+    """Legacy: Morphological Black-Hat + LoG/DoG blobs."""
+    radius = max(1, int(radius))
+    k = 2 * radius + 1
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
+    blackhat = cv2.morphologyEx(gray_u8, cv2.MORPH_BLACKHAT, kernel)
+    blackhat_f = blackhat.astype(np.float32) / 255.0
+
+    blobs = _detect_blobs(
+        blackhat_f,
+        method=blob_method,
+        min_sigma=blob_min_sigma,
+        max_sigma=blob_max_sigma,
+        num_sigma=blob_num_sigma,
+        threshold=blob_threshold,
+        overlap=blob_overlap,
+    )
+
+    instances: List[Instance] = []
+    for blob in blobs:
+        if len(blob) < 3:
+            continue
+        y, x, sigma = float(blob[0]), float(blob[1]), float(blob[2])
+        pr = max(int(patch_radius), int(round(3.0 * sigma)))
+        comp_mask, origin = _mask_from_center(
+            blackhat,
+            (x, y),
+            patch_radius=pr,
+            patch_percentile=patch_percentile,
+            patch_use_otsu=patch_use_otsu,
+        )
+        if comp_mask is None:
+            continue
+        ox, oy = origin
+        area = int(comp_mask.sum())
+        if area < area_min or area > area_max:
+            continue
+        if enable_watershed and area >= watershed_min_area:
+            submasks = _watershed_split_component(
+                comp_mask,
+                blackhat[oy : oy + comp_mask.shape[0], ox : ox + comp_mask.shape[1]],
+                fg_thresh=watershed_fg_thresh,
+            )
+        else:
+            submasks = [comp_mask]
+        for submask in submasks:
+            if not np.any(submask):
+                continue
+            sub_area = int(submask.sum())
+            if sub_area < area_min or sub_area > area_max:
+                continue
+            bbox_local = mask_bbox(submask)
+            if bbox_local == (0, 0, 0, 0):
+                continue
+            lx0, ly0, lx1, ly1 = bbox_local
+            crop = submask[ly0:ly1, lx0:lx1]
+            crop_area = int(crop.sum())
+            if crop_area <= 0:
+                continue
+            instances.append(
+                Instance(
+                    mask=crop,
+                    score=None,
+                    area=crop_area,
+                    bbox=(ox + lx0, oy + ly0, ox + lx1, oy + ly1),
+                )
+            )
+
+    if instances or not fallback_global_cc:
+        return instances
+
+    thresh = float(np.percentile(blackhat, percentile))
+    bw = blackhat >= thresh
+    bw_u8 = (bw.astype(np.uint8) * 255)
+    return _blackhat_global_cc(
+        bw_u8,
+        area_min=area_min,
+        area_max=area_max,
+        enable_watershed=enable_watershed,
+        watershed_min_area=watershed_min_area,
+        watershed_fg_thresh=watershed_fg_thresh,
+    )
+
+
+def build_adaptive_instances(
+    gray_raw: np.ndarray,
+    area_min: int = 20,
+    area_max: int = 350,
+    circularity_min: float = 0.4,
+    solidity_min: float = 0.75,
+    intensity_max: float = 160.0,
+    debug_dir: Optional[str] = None,
+) -> List[Instance]:
+    """
+    Adaptive Threshold detection (ported from detect_bubbles.py).
+    Standard "Black Hat" / Small Bubble pipeline v2.
+    """
+    # 1. Preprocessing: Flatten noise (std GaussianBlur)
+    blur = cv2.GaussianBlur(gray_raw, (3,3), 0)
+    
+    # 2. Adaptive Thresholding
+    # Block Size 31: Covers largest expected bubble (~15px radius) with margin
+    # C = 7: High sensitivity constant to separate bubble from background and shrink mask
+    thresh = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, 
+                                   cv2.THRESH_BINARY_INV, 31, 7)
+    
+    # 3. Refinement: Morph Open (3x3) to remove salt noise
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
+    opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+    
+    if debug_dir:
+        os.makedirs(debug_dir, exist_ok=True)
+        cv2.imwrite(os.path.join(debug_dir, "adaptive_thresh.png"), thresh)
+        cv2.imwrite(os.path.join(debug_dir, "adaptive_open.png"), opening)
+    
+    # 4. Extraction & Filtering
+    cnts, _ = cv2.findContours(opening, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    instances: List[Instance] = []
+    
+    h, w = gray_raw.shape
+    
+    for c in cnts:
+        area = cv2.contourArea(c)
+        if area < area_min or area > area_max: continue
+        
+        perimeter = cv2.arcLength(c, True)
+        if perimeter == 0: continue
+        circularity = 4 * np.pi * (area / (perimeter * perimeter))
+        if circularity < circularity_min: continue
+
+        hull = cv2.convexHull(c)
+        hull_area = cv2.contourArea(hull)
+        if hull_area == 0: continue
+        solidity = float(area) / hull_area
+        if solidity < solidity_min: continue
+
+        # Intensity Filter
+        c_mask = np.zeros_like(gray_raw, dtype=np.uint8)
+        cv2.drawContours(c_mask, [c], -1, 255, -1)
+        mean_val = cv2.mean(gray_raw, mask=c_mask)[0]
+        if mean_val > intensity_max: continue
+        
+        # Build Instance
+        # Need bounding box
+        x, y, cw, ch = cv2.boundingRect(c)
+        # Create mask crop
+        crop = c_mask[y:y+ch, x:x+cw]
+        crop_bool = crop > 0
+        
+        # Ensure it's not empty
+        if not np.any(crop_bool): continue
+        
+        instances.append(Instance(
+            mask=crop_bool,
+            score=None, # No score for hard threshold
+            area=int(area),
+            bbox=(x, y, x+cw, y+ch)
+        ))
 
     return instances
 
@@ -627,11 +892,13 @@ def main() -> None:
         if points_xy:
             save_candidate_viz(image_rgb, points_xy, os.path.join(args.debug_dir, "frst_centers.png"))
 
-    if args.frst_backend == "fb":
-        frst_backend = FrstPointBackendFB(cfg)
-    else:
-        frst_backend = FrstPointBackendHF(cfg)
-    logger.info("FRST backend: %s", args.frst_backend)
+    frst_backend = None
+    if not args.disable_candidates:
+        if args.frst_backend == "fb":
+            frst_backend = FrstPointBackendFB(cfg)
+        else:
+            frst_backend = FrstPointBackendHF(cfg)
+        logger.info("FRST backend: %s", args.frst_backend)
     tile_size = max(1, int(round(8.0 * float(args.r_max))))
     tile_overlap = max(0, int(round(2.5 * float(args.r_max))))
     tile_cfg = {"tiling": {"tile_size": tile_size, "tile_overlap": tile_overlap}}
@@ -654,115 +921,175 @@ def main() -> None:
     total_masks = 0
     frst_instances: List[Instance] = []
 
-    if points_xy:
-        centers_arr = np.array(points_xy, dtype=np.float32)
-        xs = centers_arr[:, 0]
-        ys = centers_arr[:, 1]
-    else:
-        xs = np.array([], dtype=np.float32)
-        ys = np.array([], dtype=np.float32)
+    # Only run FRST/SAM3 if candidate points exist and not explicitly disabled
+    # (Actually we always run it if enabled, just might have 0 points)
+    if not args.disable_candidates:
+        if points_xy:
+            centers_arr = np.array(points_xy, dtype=np.float32)
+            xs = centers_arr[:, 0]
+            ys = centers_arr[:, 1]
+        else:
+            xs = np.array([], dtype=np.float32)
+            ys = np.array([], dtype=np.float32)
 
-    for idx, (x0, y0, x1, y1) in enumerate(tiles):
-        in_tile = (xs >= x0) & (xs < x1) & (ys >= y0) & (ys < y1)
-        if not in_tile.any():
-            continue
-        tile_points = [(float(x - x0), float(y - y0)) for x, y in zip(xs[in_tile], ys[in_tile])]
-        tile_rgb = padded_rgb[y0:y1, x0:x1]
-        tile_pil = Image.fromarray(tile_rgb)
-        obj_points, obj_labels = build_object_point_prompts(
-            tile_points,
-            tile_w=int(tile_rgb.shape[1]),
-            tile_h=int(tile_rgb.shape[0]),
-            knn_k=3,
-            hex_radius=1.5 * float(args.r_max),
-        )
-        masks, scores = frst_backend.segment_tile(tile_pil, obj_points, obj_labels)
-        total_masks += len(masks)
-        tile_instances, discarded = build_tile_instances_from_masks(
-            masks,
-            scores,
-            (tile_rgb.shape[0], tile_rgb.shape[1]),
-            (x0, y0),
-            (h, w),
-            cfg,
+        for idx, (x0, y0, x1, y1) in enumerate(tiles):
+            in_tile = (xs >= x0) & (xs < x1) & (ys >= y0) & (ys < y1)
+            if not in_tile.any():
+                continue
+            tile_points = [(float(x - x0), float(y - y0)) for x, y in zip(xs[in_tile], ys[in_tile])]
+            tile_rgb = padded_rgb[y0:y1, x0:x1]
+            tile_pil = Image.fromarray(tile_rgb)
+            obj_points, obj_labels = build_object_point_prompts(
+                tile_points,
+                tile_w=int(tile_rgb.shape[1]),
+                tile_h=int(tile_rgb.shape[0]),
+                knn_k=3,
+                hex_radius=1.5 * float(args.r_max),
+            )
+            masks, scores = frst_backend.segment_tile(tile_pil, obj_points, obj_labels)
+            total_masks += len(masks)
+            tile_instances, discarded = build_tile_instances_from_masks(
+                masks,
+                scores,
+                (tile_rgb.shape[0], tile_rgb.shape[1]),
+                (x0, y0),
+                (h, w),
+                cfg,
+                area_limit,
+            )
+            total_discarded += discarded
+            frst_instances.extend(tile_instances)
+            logger.info(
+                "Tile %d/%d: points=%d masks=%d discarded_large=%d",
+                idx + 1,
+                len(tiles),
+                len(tile_points),
+                len(masks),
+                discarded,
+            )
+
+        logger.info(
+            "Point pass totals: masks=%d discarded_large=%d (limit=%d px)",
+            total_masks,
+            total_discarded,
             area_limit,
         )
-        total_discarded += discarded
-        frst_instances.extend(tile_instances)
-        logger.info(
-            "Tile %d/%d: points=%d masks=%d discarded_large=%d",
-            idx + 1,
-            len(tiles),
-            len(tile_points),
-            len(masks),
-            discarded,
-        )
 
-    logger.info(
-        "Point pass totals: masks=%d discarded_large=%d (limit=%d px)",
-        total_masks,
-        total_discarded,
-        area_limit,
-    )
-
+    # --- Black-hat (Adaptive vs Morph) Selection ---
     blackhat_cfg = cfg.get("blackhat", {})
     blackhat_enable = bool(blackhat_cfg.get("enable", True))
     if args.enable_blackhat:
         blackhat_enable = True
     if args.disable_blackhat:
         blackhat_enable = False
+    
+    # Check method (cli override? not yet standard, assume adaptive default logic)
+    # The user asked for "adaptive" to be the main/default.
+    # We will use the args or cfg to determine.
+    # We'll use the 'blackhat_method' key if present in config, default to 'adaptive'.
+    # CLI arg not explicit in parse_args above, let's just stick to logic:
+    # If blackhat enabled, run Adaptive unless specifically configured for morph?
+    # User said "The default should be adaptive + FRST + SAM. Nothing else."
+    
     blackhat_instances: List[Instance] = []
+    blackhat_method = args.blackhat_method # Use CLI argument
+    
     if blackhat_enable:
-        bh_radius = args.blackhat_radius if args.blackhat_radius is not None else int(
-            blackhat_cfg.get("radius", 4)
-        )
-        bh_percentile = (
-            args.blackhat_percentile
-            if args.blackhat_percentile is not None
-            else float(blackhat_cfg.get("percentile", 99.5))
-        )
-        bh_area_min = args.blackhat_area_min if args.blackhat_area_min is not None else int(
-            blackhat_cfg.get("area_min", 8)
-        )
-        bh_area_max = args.blackhat_area_max if args.blackhat_area_max is not None else int(
-            blackhat_cfg.get("area_max", 120)
-        )
-        bh_watershed = bool(blackhat_cfg.get("watershed", False))
-        if args.blackhat_watershed:
-            bh_watershed = True
-        if args.blackhat_no_watershed:
-            bh_watershed = False
+        if blackhat_method == "adaptive":
+            logger.info("Running Adaptive Threshold (new Black-hat) detection...")
+            # Use parameters from detect_bubbles.py or cfg
+            # detect_bubbles params: area 20-350, circ 0.4, sol 0.75, inten 160
+            
+            bh_area_min = 20
+            bh_area_max = 350
+            if args.blackhat_area_min is not None: bh_area_min = args.blackhat_area_min
+            if args.blackhat_area_max is not None: bh_area_max = args.blackhat_area_max
+            
+            # Additional params could be exposed via config
+            # min_circularity, min_solidity, max_intensity
+            
+            blackhat_instances = build_adaptive_instances(
+                gray_raw,
+                area_min=bh_area_min,
+                area_max=bh_area_max,
+                debug_dir=args.debug_dir
+            )
+            logger.info(f"Adaptive Threshold found {len(blackhat_instances)} instances.")
+            
+        else:
+            # Legacy Path
+            logger.info("Running Legacy Morphological Black-hat detection...")
+            bh_radius = args.blackhat_radius if args.blackhat_radius is not None else int(
+                blackhat_cfg.get("radius", 4)
+            )
+            bh_percentile = (
+                args.blackhat_percentile
+                if args.blackhat_percentile is not None
+                else float(blackhat_cfg.get("percentile", 99.5))
+            )
+            bh_area_min = args.blackhat_area_min if args.blackhat_area_min is not None else int(
+                blackhat_cfg.get("area_min", 8)
+            )
+            bh_area_max = args.blackhat_area_max if args.blackhat_area_max is not None else int(
+                blackhat_cfg.get("area_max", 120)
+            )
+            bh_watershed = bool(blackhat_cfg.get("watershed", False))
+            if args.blackhat_watershed:
+                bh_watershed = True
+            if args.blackhat_no_watershed:
+                bh_watershed = False
 
-        expected_area = math.pi * float(max(1, bh_radius)) ** 2
-        default_ws_min = int(round(2.0 * expected_area))
-        bh_ws_min_area = args.blackhat_watershed_min_area if args.blackhat_watershed_min_area is not None else int(
-            blackhat_cfg.get("watershed_min_area", default_ws_min) or default_ws_min
-        )
-        bh_ws_fg = (
-            args.blackhat_watershed_fg_thresh
-            if args.blackhat_watershed_fg_thresh is not None
-            else float(blackhat_cfg.get("watershed_fg_thresh", 0.5))
-        )
+            expected_area = math.pi * float(max(1, bh_radius)) ** 2
+            default_ws_min = int(round(2.0 * expected_area))
+            bh_ws_min_area = args.blackhat_watershed_min_area if args.blackhat_watershed_min_area is not None else int(
+                blackhat_cfg.get("watershed_min_area", default_ws_min) or default_ws_min
+            )
+            bh_ws_fg = (
+                args.blackhat_watershed_fg_thresh
+                if args.blackhat_watershed_fg_thresh is not None
+                else float(blackhat_cfg.get("watershed_fg_thresh", 0.5))
+            )
+            bh_blob_method = str(blackhat_cfg.get("blob_method", "dog"))
+            bh_blob_min_sigma = float(blackhat_cfg.get("blob_min_sigma", 1.3))
+            bh_blob_max_sigma = float(blackhat_cfg.get("blob_max_sigma", 2.8))
+            bh_blob_num_sigma = int(blackhat_cfg.get("blob_num_sigma", 10))
+            bh_blob_threshold = float(blackhat_cfg.get("blob_threshold", 0.01))
+            bh_blob_overlap = float(blackhat_cfg.get("blob_overlap", 0.5))
+            bh_patch_radius = int(blackhat_cfg.get("patch_radius", 6))
+            bh_patch_percentile = float(blackhat_cfg.get("patch_percentile", 90.0))
+            bh_patch_otsu = bool(blackhat_cfg.get("patch_use_otsu", False))
+            bh_fallback_cc = bool(blackhat_cfg.get("fallback_global_cc", False))
 
-        blackhat_instances = build_blackhat_instances(
-            gray_raw,
-            radius=bh_radius,
-            percentile=bh_percentile,
-            area_min=bh_area_min,
-            area_max=bh_area_max,
-            enable_watershed=bh_watershed,
-            watershed_min_area=bh_ws_min_area,
-            watershed_fg_thresh=bh_ws_fg,
-        )
-        logger.info(
-            "Black-hat masks: %d (radius=%d, pct=%.2f, area=[%d,%d], watershed=%s)",
-            len(blackhat_instances),
-            bh_radius,
-            bh_percentile,
-            bh_area_min,
-            bh_area_max,
-            "on" if bh_watershed else "off",
-        )
+            blackhat_instances = build_legacy_morph_instances(
+                gray_raw,
+                radius=bh_radius,
+                percentile=bh_percentile,
+                area_min=bh_area_min,
+                area_max=bh_area_max,
+                enable_watershed=bh_watershed,
+                watershed_min_area=bh_ws_min_area,
+                watershed_fg_thresh=bh_ws_fg,
+                blob_method=bh_blob_method,
+                blob_min_sigma=bh_blob_min_sigma,
+                blob_max_sigma=bh_blob_max_sigma,
+                blob_num_sigma=bh_blob_num_sigma,
+                blob_threshold=bh_blob_threshold,
+                blob_overlap=bh_blob_overlap,
+                patch_radius=bh_patch_radius,
+                patch_percentile=bh_patch_percentile,
+                patch_use_otsu=bh_patch_otsu,
+                fallback_global_cc=bh_fallback_cc,
+            )
+            logger.info(
+                "Legacy Black-hat masks: %d (radius=%d, pct=%.2f, area=[%d,%d], watershed=%s, blob=%s)",
+                len(blackhat_instances),
+                bh_radius,
+                bh_percentile,
+                bh_area_min,
+                bh_area_max,
+                "on" if bh_watershed else "off",
+                bh_blob_method,
+            )
 
     pcs_backend: Optional[Sam3ConceptBackend] = None
     if cfg["sam"].get("pcs_enable", True) and args.frst_text_prompt:
@@ -780,8 +1107,10 @@ def main() -> None:
     big_instances: List[Instance] = []
     if cfg["sam"].get("pcs_enable", True) and args.big_text_prompt:
         if args.big_backend == "hf":
+            from big_bubble_prompt_hf import run_big_prompt as run_big_prompt_hf
             big_instances = run_big_prompt_hf(image, args.big_text_prompt, cfg)
         else:
+            from big_bubble_prompt_fb import run_big_prompt as run_big_prompt_fb
             big_instances = run_big_prompt_fb(image, args.big_text_prompt, cfg)
         logger.info("Big-prompt (%s) produced %d masks", args.big_backend, len(big_instances))
 
@@ -791,7 +1120,7 @@ def main() -> None:
         frst_instances + blackhat_instances + big_instances, cfg, (h, w)
     )
     logger.info(
-        "Instances: FRST=%d, BLACKHAT=%d, BIG=%d, COMBINED=%d",
+        "Instances: FRST=%d, ADAPTIVE=%d, BIG=%d, COMBINED=%d",
         len(frst_instances),
         len(blackhat_instances),
         len(big_instances),
@@ -815,7 +1144,7 @@ def main() -> None:
             logger.info("Saved %s overlay to %s", label, out_path)
 
     _save_instances(frst_instances, frst_out, "FRST")
-    _save_instances(blackhat_instances, blackhat_out, "BLACKHAT")
+    _save_instances(blackhat_instances, blackhat_out, "ADAPTIVE")
     _save_instances(big_instances, big_out, "BIG")
     _save_instances(combined_instances, combined_out, "COMBINED")
 
@@ -835,3 +1164,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

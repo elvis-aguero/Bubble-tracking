@@ -1,0 +1,4 @@
+2026-02-02 14:54:16 [INFO] root - Logging initialized. Log file: /Users/eaguerov/Documents/Github/Bubble-tracking/bubbly_flows/tests/logs/bubble_frst_sam3_20260202_145416.log
+2026-02-02 14:54:20 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-02 14:54:20 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-02 14:54:21 [INFO] __main__ - FRST detected 338 centers

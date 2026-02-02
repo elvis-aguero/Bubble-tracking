@@ -1,0 +1,15 @@
+2026-02-02 14:54:39 [INFO] root - Logging initialized. Log file: /Users/eaguerov/Documents/Github/Bubble-tracking/bubbly_flows/tests/logs/bubble_frst_sam3_20260202_145439.log
+2026-02-02 14:54:39 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-02 14:54:39 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-02 14:54:40 [INFO] __main__ - FRST detected 338 centers
+2026-02-02 14:54:40 [INFO] __main__ - Point-tiling enabled: tile_size=200, overlap=62, tiles=49
+2026-02-02 14:54:40 [INFO] __main__ - Negative prompts enabled: knn_k=3, hex_radius=37.50 px
+2026-02-02 14:54:40 [INFO] __main__ - Running Adaptive Threshold (new Black-hat) detection...
+2026-02-02 14:54:41 [INFO] __main__ - Adaptive Threshold found 554 instances.
+2026-02-02 14:55:01 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 0
+2026-02-02 14:55:01 [INFO] __main__ - Instances: FRST=0, ADAPTIVE=554, BIG=0, COMBINED=233
+2026-02-02 14:55:01 [INFO] __main__ - Saved FRST overlay to /Users/eaguerov/Documents/Github/Bubble-tracking/bubbly_flows/tests/output/result_test_frst.png
+2026-02-02 14:55:02 [INFO] __main__ - Saved ADAPTIVE overlay to /Users/eaguerov/Documents/Github/Bubble-tracking/bubbly_flows/tests/output/result_test_blackhat.png
+2026-02-02 14:55:02 [INFO] __main__ - Saved BIG overlay to /Users/eaguerov/Documents/Github/Bubble-tracking/bubbly_flows/tests/output/result_test_big.png
+2026-02-02 14:55:03 [INFO] __main__ - Saved COMBINED overlay to /Users/eaguerov/Documents/Github/Bubble-tracking/bubbly_flows/tests/output/result_test.png
+2026-02-02 14:55:03 [INFO] __main__ - Saved JSON to /Users/eaguerov/Documents/Github/Bubble-tracking/bubbly_flows/tests/output/result_test.json
