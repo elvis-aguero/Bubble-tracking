@@ -405,6 +405,21 @@ def build_instances_from_pcs(
     return instances
 
 
+def apply_convex_hull(instances: List[Instance]) -> List[Instance]:
+    """Apply convex hull to each instance mask (bbox-local)."""
+    try:
+        from skimage.morphology import convex_hull_image
+    except ImportError as exc:
+        raise RuntimeError("scikit-image is required for convex hull computation.") from exc
+
+    for inst in instances:
+        if inst.mask is None:
+            continue
+        inst.mask = convex_hull_image(inst.mask)
+        inst.area = int(inst.mask.sum())
+    return instances
+
+
 def derive_output_paths(output_path: str) -> Tuple[str, str, str]:
     base = Path(output_path)
     if not base.suffix:
@@ -560,6 +575,8 @@ def main() -> None:
         else:
             big_instances = run_big_prompt_fb(image, args.big_text_prompt, cfg)
         logger.info("Big-prompt (%s) produced %d masks", args.big_backend, len(big_instances))
+
+    frst_instances = apply_convex_hull(frst_instances)
 
     combined_instances = consolidate_instances(
         frst_instances + big_instances, cfg, (h, w)
