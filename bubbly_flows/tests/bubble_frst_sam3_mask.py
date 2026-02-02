@@ -656,22 +656,23 @@ def build_adaptive_instances(
     circularity_min: float = 0.4,
     solidity_min: float = 0.75,
     intensity_max: float = 160.0,
+    watershed_min_area: int = 50, # Min area to try splitting
+    watershed_fg_thresh: float = 0.5,
     debug_dir: Optional[str] = None,
 ) -> List[Instance]:
     """
     Adaptive Threshold detection (ported from detect_bubbles.py).
     Standard "Black Hat" / Small Bubble pipeline v2.
+    Includes Watershed splitting for fused bubbles.
     """
-    # 1. Preprocessing: Flatten noise (std GaussianBlur)
+    # 1. Preprocessing
     blur = cv2.GaussianBlur(gray_raw, (3,3), 0)
     
     # 2. Adaptive Thresholding
-    # Block Size 31: Covers largest expected bubble (~15px radius) with margin
-    # C = 7: High sensitivity constant to separate bubble from background and shrink mask
     thresh = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, 
                                    cv2.THRESH_BINARY_INV, 31, 7)
     
-    # 3. Refinement: Morph Open (3x3) to remove salt noise
+    # 3. Refinement
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
     opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
     
@@ -684,46 +685,84 @@ def build_adaptive_instances(
     cnts, _ = cv2.findContours(opening, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
     instances: List[Instance] = []
-    
     h, w = gray_raw.shape
     
     for c in cnts:
-        area = cv2.contourArea(c)
-        if area < area_min or area > area_max: continue
+        # Initial loose area check (must be at least min_area)
+        raw_area = cv2.contourArea(c)
+        # Note: Upper bound check done AFTER splitting, but we can skip huge artifacts early
+        if raw_area < area_min: continue 
         
-        perimeter = cv2.arcLength(c, True)
-        if perimeter == 0: continue
-        circularity = 4 * np.pi * (area / (perimeter * perimeter))
-        if circularity < circularity_min: continue
-
-        hull = cv2.convexHull(c)
-        hull_area = cv2.contourArea(hull)
-        if hull_area == 0: continue
-        solidity = float(area) / hull_area
-        if solidity < solidity_min: continue
-
-        # Intensity Filter
-        c_mask = np.zeros_like(gray_raw, dtype=np.uint8)
-        cv2.drawContours(c_mask, [c], -1, 255, -1)
-        mean_val = cv2.mean(gray_raw, mask=c_mask)[0]
-        if mean_val > intensity_max: continue
-        
-        # Build Instance
-        # Need bounding box
+        # Get bounding rect to crop
         x, y, cw, ch = cv2.boundingRect(c)
-        # Create mask crop
-        crop = c_mask[y:y+ch, x:x+cw]
-        crop_bool = crop > 0
         
-        # Ensure it's not empty
-        if not np.any(crop_bool): continue
+        # Create mask for this contour (relative to crop)
+        c_mask_crop = np.zeros((ch, cw), dtype=np.uint8)
+        # Offset contour to 0,0
+        c_shifted = c - [x, y]
+        cv2.drawContours(c_mask_crop, [c_shifted], -1, 255, -1)
+        c_mask_bool = c_mask_crop > 0
         
-        instances.append(Instance(
-            mask=crop_bool,
-            score=None, # No score for hard threshold
-            area=int(area),
-            bbox=(x, y, x+cw, y+ch)
-        ))
+        # Check if we should split
+        submasks = [c_mask_bool]
+        if raw_area >= watershed_min_area:
+            gray_crop = gray_raw[y:y+ch, x:x+cw]
+            submasks = _watershed_split_component(
+                c_mask_bool,
+                gray_crop,
+                fg_thresh=watershed_fg_thresh
+            )
+            
+        for submask in submasks:
+            if not np.any(submask): continue
+            
+            # --- Per-Instance Filtering ---
+            area = int(submask.sum())
+            if area < area_min or area > area_max: continue
+            
+            # Reconstruct contour for geometric checks (Circularity/Solidity)
+            # Need to find contours on the submask
+            sub_u8 = (submask.astype(np.uint8) * 255)
+            # Find external contours on the small mask
+            sub_cnts, _ = cv2.findContours(sub_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if not sub_cnts: continue
+            sub_c = sub_cnts[0] # Should be one main component
+            
+            perimeter = cv2.arcLength(sub_c, True)
+            if perimeter == 0: continue
+            circularity = 4 * np.pi * (area / (perimeter * perimeter))
+            if circularity < circularity_min: continue
+
+            hull = cv2.convexHull(sub_c)
+            hull_area = cv2.contourArea(hull)
+            if hull_area == 0: continue
+            solidity = float(area) / hull_area
+            if solidity < solidity_min: continue
+
+            # Intensity Filter
+            # Calculate mean intensity on the original image crop using the submask
+            # gray_raw crop needed again if not available
+            gray_crop_sub = gray_raw[y:y+ch, x:x+cw]
+            mean_val = cv2.mean(gray_crop_sub, mask=sub_u8)[0]
+            if mean_val > intensity_max: continue
+
+            # Build Instance
+            # Need global bbox for this sub-component
+            lx, ly, lcw, lch = cv2.boundingRect(sub_c)
+            
+            # Global coordinates
+            gx = x + lx
+            gy = y + ly
+            
+            # Final crop for instance (tight fit to sub-component)
+            final_crop = submask[ly:ly+lch, lx:lx+lcw]
+            
+            instances.append(Instance(
+                mask=final_crop,
+                score=None, 
+                area=int(area),
+                bbox=(gx, gy, gx+lcw, gy+lch)
+            ))
 
     return instances
 
