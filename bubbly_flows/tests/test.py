@@ -22,7 +22,7 @@ ENVIRONMENT SETUP (copy-paste for this environment):
     export CUDA_VISIBLE_DEVICES=0  # if needed
 
 USAGE:
-    python test2.py <image_path> <prompt> <crop>
+    python test.py <image_path> <prompt> <crop>
 
 PARAMETERS:
     image_path : Path to the input image
