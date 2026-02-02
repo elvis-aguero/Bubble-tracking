@@ -424,7 +424,7 @@ def apply_convex_hull(instances: List[Instance]) -> List[Instance]:
             continue
         hull = convex_hull_image(inst.mask)
         after_area = int(hull.sum())
-        if after_area > 2 * before_area:
+        if after_area > 1.5 * before_area:
             continue
         inst.mask = hull
         inst.area = after_area
