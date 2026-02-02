@@ -190,8 +190,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--frst_backend",
         choices=["fb", "hf"],
-        default="fb",
-        help="Backend for FRST point prompts: fb=facebookresearch (default), hf=transformers",
+        default="hf",
+        help="Backend for FRST point prompts: hf=transformers (default), fb=facebookresearch",
     )
     parser.add_argument(
         "--big_text_prompt",
@@ -582,8 +582,8 @@ def main() -> None:
     pcs_backend: Optional[Sam3ConceptBackend] = None
     if cfg["sam"].get("pcs_enable", True) and args.frst_text_prompt:
         pcs_backend = Sam3ConceptBackend(cfg["device"], cfg["sam"])
-        pcs_threshold = float(cfg["sam"].get("pcs_threshold", 0.6))
-        pcs_mask_threshold = float(cfg["sam"].get("pcs_mask_threshold", 0.6))
+        pcs_threshold = float(cfg["sam"].get("pcs_threshold", 0.9))
+        pcs_mask_threshold = float(cfg["sam"].get("pcs_mask_threshold", 0.9))
         pcs_masks, pcs_scores, pcs_boxes = pcs_backend.segment_by_text(
             image, args.frst_text_prompt, pcs_threshold, pcs_mask_threshold
         )
