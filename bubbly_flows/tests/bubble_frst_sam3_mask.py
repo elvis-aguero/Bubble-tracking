@@ -5,8 +5,9 @@ Combine FRST bubble-center detection with SAM3 point prompting.
 Workflow:
   1) Detect bubble centers with FRST (from classical_test.py).
   2) Use centers as positive points for SAM3 tracker segmentation.
-  3) Optionally run PCS text prompting (e.g., "tiny bubbles") to add masks.
-  4) Produce three outputs:
+  3) Add a classical black-hat + threshold + components tiny-mask branch.
+  4) Optionally run PCS text prompting (e.g., "tiny bubbles") to add masks.
+  5) Produce three outputs:
      - FRST + micro prompt masks
      - Big-bubble prompt masks only
      - Consolidated masks from both pipelines
@@ -35,6 +36,11 @@ Flag overview:
   FRST:
     --r_min --r_max --r_step --alpha --mag_percentile
     --peak_percentile --nms_size --border --max_peaks
+  Black-hat:
+    --enable_blackhat/--disable_blackhat
+    --blackhat_radius --blackhat_percentile --blackhat_area_min --blackhat_area_max
+    --blackhat_watershed/--blackhat_no_watershed
+    --blackhat_watershed_min_area --blackhat_watershed_fg_thresh
 
 Notes:
   - Default output is an overlay with per-instance colors.
@@ -238,6 +244,32 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--nms_size", type=int, default=7, help="NMS neighborhood size (odd)")
     parser.add_argument("--border", type=int, default=8, help="Exclude peaks within this border (px)")
     parser.add_argument("--max_peaks", type=int, default=2000, help="Max centers (0 = no cap)")
+    # Classical black-hat tiny-mask branch
+    parser.add_argument("--enable_blackhat", action="store_true", help="Enable black-hat tiny-mask branch")
+    parser.add_argument("--disable_blackhat", action="store_true", help="Disable black-hat tiny-mask branch")
+    parser.add_argument("--blackhat_radius", type=int, default=None, help="Black-hat structuring element radius (px)")
+    parser.add_argument(
+        "--blackhat_percentile",
+        type=float,
+        default=None,
+        help="Percentile threshold on black-hat response (e.g., 99.5)",
+    )
+    parser.add_argument("--blackhat_area_min", type=int, default=None, help="Min component area (px)")
+    parser.add_argument("--blackhat_area_max", type=int, default=None, help="Max component area (px)")
+    parser.add_argument("--blackhat_watershed", action="store_true", help="Enable watershed split for black-hat blobs")
+    parser.add_argument("--blackhat_no_watershed", action="store_true", help="Disable watershed split for black-hat blobs")
+    parser.add_argument(
+        "--blackhat_watershed_min_area",
+        type=int,
+        default=None,
+        help="Min area (px) to trigger watershed splitting",
+    )
+    parser.add_argument(
+        "--blackhat_watershed_fg_thresh",
+        type=float,
+        default=None,
+        help="Foreground threshold fraction for distance transform (0-1)",
+    )
     return parser.parse_args()
 
 
@@ -330,6 +362,97 @@ def build_tile_instances_from_masks(
             continue
         instances.append(Instance(mask=cropped, score=score, area=area, bbox=(gx0, gy0, gx1, gy1)))
     return instances, discarded
+
+
+def _watershed_split_component(
+    comp_mask: np.ndarray,
+    gray_crop: np.ndarray,
+    fg_thresh: float,
+) -> List[np.ndarray]:
+    comp_u8 = (comp_mask.astype(np.uint8) * 255)
+    dist = cv2.distanceTransform(comp_u8, cv2.DIST_L2, 5)
+    max_val = float(dist.max())
+    if max_val <= 0:
+        return [comp_mask]
+    _, sure_fg = cv2.threshold(dist, max_val * float(fg_thresh), 255, 0)
+    sure_fg = sure_fg.astype(np.uint8)
+    num_markers, markers = cv2.connectedComponents(sure_fg)
+    if num_markers <= 1:
+        return [comp_mask]
+    markers = markers + 1
+    markers[comp_u8 == 0] = 0
+    color = cv2.cvtColor(gray_crop, cv2.COLOR_GRAY2BGR)
+    markers = cv2.watershed(color, markers)
+    max_marker = int(markers.max())
+    if max_marker <= 1:
+        return [comp_mask]
+    masks: List[np.ndarray] = []
+    for marker_id in range(2, max_marker + 1):
+        submask = markers == marker_id
+        if np.any(submask):
+            masks.append(submask)
+    return masks or [comp_mask]
+
+
+def build_blackhat_instances(
+    gray_u8: np.ndarray,
+    radius: int,
+    percentile: float,
+    area_min: int,
+    area_max: int,
+    enable_watershed: bool,
+    watershed_min_area: int,
+    watershed_fg_thresh: float,
+) -> List[Instance]:
+    radius = max(1, int(radius))
+    k = 2 * radius + 1
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
+    blackhat = cv2.morphologyEx(gray_u8, cv2.MORPH_BLACKHAT, kernel)
+    thresh = float(np.percentile(blackhat, percentile))
+    bw = blackhat >= thresh
+    bw_u8 = (bw.astype(np.uint8) * 255)
+
+    num, labels, stats, _ = cv2.connectedComponentsWithStats(bw_u8, connectivity=8)
+    instances: List[Instance] = []
+
+    for idx in range(1, num):
+        x, y, w, h, area = [int(v) for v in stats[idx]]
+        if area < area_min or area > area_max:
+            continue
+        comp_mask = labels[y : y + h, x : x + w] == idx
+        if enable_watershed and area >= watershed_min_area:
+            submasks = _watershed_split_component(
+                comp_mask,
+                gray_u8[y : y + h, x : x + w],
+                fg_thresh=watershed_fg_thresh,
+            )
+        else:
+            submasks = [comp_mask]
+
+        for submask in submasks:
+            if not np.any(submask):
+                continue
+            sub_area = int(submask.sum())
+            if sub_area < area_min or sub_area > area_max:
+                continue
+            bbox_local = mask_bbox(submask)
+            if bbox_local == (0, 0, 0, 0):
+                continue
+            lx0, ly0, lx1, ly1 = bbox_local
+            crop = submask[ly0:ly1, lx0:lx1]
+            crop_area = int(crop.sum())
+            if crop_area <= 0:
+                continue
+            instances.append(
+                Instance(
+                    mask=crop,
+                    score=None,
+                    area=crop_area,
+                    bbox=(x + lx0, y + ly0, x + lx1, y + ly1),
+                )
+            )
+
+    return instances
 
 
 def build_object_point_prompts(
@@ -486,9 +609,9 @@ def main() -> None:
     image_rgb = np.array(image, dtype=np.uint8)
     h, w = image_rgb.shape[:2]
 
-    gray = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2GRAY)
+    gray_raw = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2GRAY)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    gray = clahe.apply(gray)
+    gray = clahe.apply(gray_raw)
 
     centers, symmetry = frst_centers(gray, args)
     points_xy = [(float(x), float(y)) for x, y in centers]
@@ -578,6 +701,65 @@ def main() -> None:
         total_discarded,
         area_limit,
     )
+
+    blackhat_cfg = cfg.get("blackhat", {})
+    blackhat_enable = bool(blackhat_cfg.get("enable", True))
+    if args.enable_blackhat:
+        blackhat_enable = True
+    if args.disable_blackhat:
+        blackhat_enable = False
+    if blackhat_enable:
+        bh_radius = args.blackhat_radius if args.blackhat_radius is not None else int(
+            blackhat_cfg.get("radius", 4)
+        )
+        bh_percentile = (
+            args.blackhat_percentile
+            if args.blackhat_percentile is not None
+            else float(blackhat_cfg.get("percentile", 99.5))
+        )
+        bh_area_min = args.blackhat_area_min if args.blackhat_area_min is not None else int(
+            blackhat_cfg.get("area_min", 8)
+        )
+        bh_area_max = args.blackhat_area_max if args.blackhat_area_max is not None else int(
+            blackhat_cfg.get("area_max", 120)
+        )
+        bh_watershed = bool(blackhat_cfg.get("watershed", False))
+        if args.blackhat_watershed:
+            bh_watershed = True
+        if args.blackhat_no_watershed:
+            bh_watershed = False
+
+        expected_area = math.pi * float(max(1, bh_radius)) ** 2
+        default_ws_min = int(round(2.0 * expected_area))
+        bh_ws_min_area = args.blackhat_watershed_min_area if args.blackhat_watershed_min_area is not None else int(
+            blackhat_cfg.get("watershed_min_area", default_ws_min) or default_ws_min
+        )
+        bh_ws_fg = (
+            args.blackhat_watershed_fg_thresh
+            if args.blackhat_watershed_fg_thresh is not None
+            else float(blackhat_cfg.get("watershed_fg_thresh", 0.5))
+        )
+
+        bh_instances = build_blackhat_instances(
+            gray_raw,
+            radius=bh_radius,
+            percentile=bh_percentile,
+            area_min=bh_area_min,
+            area_max=bh_area_max,
+            enable_watershed=bh_watershed,
+            watershed_min_area=bh_ws_min_area,
+            watershed_fg_thresh=bh_ws_fg,
+        )
+        frst_instances.extend(bh_instances)
+        logger.info(
+            "Black-hat masks: %d (radius=%d, pct=%.2f, area=[%d,%d], watershed=%s)",
+            len(bh_instances),
+            bh_radius,
+            bh_percentile,
+            bh_area_min,
+            bh_area_max,
+            "on" if bh_watershed else "off",
+        )
 
     pcs_backend: Optional[Sam3ConceptBackend] = None
     if cfg["sam"].get("pcs_enable", True) and args.frst_text_prompt:

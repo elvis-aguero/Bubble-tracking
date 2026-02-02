@@ -97,6 +97,16 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "grid_jitter_px": 0,
         "max_points": 4096,
     },
+    "blackhat": {
+        "enable": True,
+        "radius": 5,
+        "percentile": 99.0,
+        "area_min": 5,
+        "area_max": 120,
+        "watershed": True,
+        "watershed_min_area": None,
+        "watershed_fg_thresh": 0.5,
+    },
     "output": {
         "output_mode": "overlay",  # cutout | overlay
         "overlay_alpha": 128,
