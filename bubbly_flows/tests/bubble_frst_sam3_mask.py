@@ -282,6 +282,11 @@ def parse_args() -> argparse.Namespace:
         default="adaptive",
         help="Black-hat detection method: adaptive (default) or morph (legacy)",
     )
+    parser.add_argument(
+        "--blackhat_split_fused",
+        action="store_true",
+        help="Enable constrained watershed splitting for fused adaptive masks",
+    )
     return parser.parse_args()
 
 
@@ -649,6 +654,56 @@ def build_legacy_morph_instances(
     )
 
 
+def _split_fused_components(mask: np.ndarray, min_distance: int = 5) -> List[np.ndarray]:
+    """
+    Split a binary mask into multiple components using constrained watershed.
+    Uses distance transform peaks as markers.
+    """
+    if not np.any(mask):
+        return []
+
+    try:
+        from scipy import ndimage
+        from skimage.feature import peak_local_max
+        from skimage.segmentation import watershed
+    except ImportError:
+        # Fallback if deps missing (should happen only in strict envs)
+        return [mask]
+
+    # 1. Distance Transform
+    # Euclidean distance from background
+    dist = ndimage.distance_transform_edt(mask)
+    
+    # 2. Find Peaks (Centers)
+    # min_distance ensures we don't over-segment small bumps
+    coords = peak_local_max(dist, min_distance=min_distance, labels=mask)
+    
+    # If 0 or 1 peak, no split needed
+    if coords.shape[0] <= 1:
+        return [mask]
+    
+    # 3. Create Markers
+    markers = np.zeros(mask.shape, dtype=int)
+    for i, (r, c) in enumerate(coords):
+        markers[r, c] = i + 1
+        
+    # 4. Watershed
+    # Run on negative distance so peaks are valleys
+    labels = watershed(-dist, markers, mask=mask)
+    
+    # 5. Extract Individual Masks
+    # labels are 1-based indices corresponding to markers
+    # We iterate unique labels found (excluding 0 which is background)
+    unique_labels = np.unique(labels)
+    sub_masks = []
+    for lbl in unique_labels:
+        if lbl == 0: continue
+        sub_m = (labels == lbl).astype(np.uint8) * 255 # or boolean
+        # Ensure it's effectively boolean for downstream
+        sub_masks.append(sub_m > 0)
+        
+    return sub_masks
+
 def build_adaptive_instances(
     gray_raw: np.ndarray,
     area_min: int = 20,
@@ -656,6 +711,7 @@ def build_adaptive_instances(
     circularity_min: float = 0.4,
     solidity_min: float = 0.75,
     intensity_max: float = 160.0,
+    split_fused: bool = True,
     debug_dir: Optional[str] = None,
 ) -> List[Instance]:
     """
@@ -685,45 +741,92 @@ def build_adaptive_instances(
     
     instances: List[Instance] = []
     
-    h, w = gray_raw.shape
+    # h, w = gray_raw.shape # Not explicitly used if using boundingRect
     
     for c in cnts:
-        area = cv2.contourArea(c)
-        if area < area_min or area > area_max: continue
+        # Pre-filter roughly by area first to save compute?
+        # Actually filter logic is inside contour loop.
         
-        perimeter = cv2.arcLength(c, True)
-        if perimeter == 0: continue
-        circularity = 4 * np.pi * (area / (perimeter * perimeter))
-        if circularity < circularity_min: continue
-
-        hull = cv2.convexHull(c)
-        hull_area = cv2.contourArea(hull)
-        if hull_area == 0: continue
-        solidity = float(area) / hull_area
-        if solidity < solidity_min: continue
-
-        # Intensity Filter
-        c_mask = np.zeros_like(gray_raw, dtype=np.uint8)
-        cv2.drawContours(c_mask, [c], -1, 255, -1)
-        mean_val = cv2.mean(gray_raw, mask=c_mask)[0]
-        if mean_val > intensity_max: continue
+        # Split Check: Before filtering shape, we might want to split?
+        # A fused blob might have bad circularity. 
+        # BUT: Splitting is expensive. 
+        # Strategy: 
+        # 1. Create mask from contour.
+        # 2. Check if it needs splitting (maybe large area? or just always try if split_fused is True)
+        # The user wanted to address "fusing".
         
-        # Build Instance
-        # Need bounding box
+        # Create mask for this contour (Local crop to save memory)
         x, y, cw, ch = cv2.boundingRect(c)
-        # Create mask crop
-        crop = c_mask[y:y+ch, x:x+cw]
-        crop_bool = crop > 0
+        crop_mask = np.zeros((ch, cw), dtype=np.uint8)
+        # Offset contour
+        c_shifted = c - [x, y]
+        cv2.drawContours(crop_mask, [c_shifted], -1, 1, -1) # Binary 1/0
         
-        # Ensure it's not empty
-        if not np.any(crop_bool): continue
-        
-        instances.append(Instance(
-            mask=crop_bool,
-            score=None, # No score for hard threshold
-            area=int(area),
-            bbox=(x, y, x+cw, y+ch)
-        ))
+        # Split Logic
+        masks_to_process = [crop_mask > 0]
+        if split_fused:
+            # Only try splitting if area suggests it might be > 1 bubble? 
+            # Or just rely on peak finding.
+            # Min distance 2*radius? Radius ~ sqrt(20/pi) ~ 2.5. Min dist 5 is reasonable.
+             masks_to_process = _split_fused_components(crop_mask > 0, min_distance=5)
+             
+        for m_bool in masks_to_process:
+            # Re-verify filters on the (potentially split) mask
+            m_area = int(m_bool.sum())
+            if m_area < area_min or m_area > area_max: continue
+            
+            # Re-compute shape metrics from mask
+            # Need contour again for perimeter/convex hull
+            # Find contours on the crop mask
+            sub_cnts, _ = cv2.findContours(m_bool.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if not sub_cnts: continue
+            sub_c = sub_cnts[0] # Should be one
+            
+            sub_perimeter = cv2.arcLength(sub_c, True)
+            if sub_perimeter == 0: continue
+            sub_circularity = 4 * np.pi * (m_area / (sub_perimeter * sub_perimeter))
+            if sub_circularity < circularity_min: continue
+
+            sub_hull = cv2.convexHull(sub_c)
+            sub_hull_area = cv2.contourArea(sub_hull)
+            if sub_hull_area == 0: continue
+            sub_solidity = float(m_area) / sub_hull_area
+            if sub_solidity < solidity_min: continue
+            
+            # Instensity Filter (Need global pixels)
+            # Map mask back to global
+            # We can just extract pixels from global gray using the bbox
+            # Global coords for crop: y:y+ch, x:x+cw (relative to image)
+            # Use m_bool to mask
+            
+            global_crop = gray_raw[y:y+ch, x:x+cw]
+            mean_val = cv2.mean(global_crop, mask=m_bool.astype(np.uint8))[0]
+            if mean_val > intensity_max: continue
+
+            # If all passed, add instance
+            # Need Bbox of the sub-mask (relative to global)
+            ys, xs = np.where(m_bool)
+            if len(ys) == 0: continue
+            min_y, max_y = ys.min(), ys.max()
+            min_x, max_x = xs.min(), xs.max()
+            
+            # Global BBox
+            # x, y are the top-left of the original contour bbox
+            inst_x0 = x + min_x
+            inst_y0 = y + min_y
+            inst_x1 = x + max_x + 1
+            inst_y1 = y + max_y + 1
+            
+            # The instance mask should be tight to its bbox?
+            # Yes, standard 'Instance' expects mask to be h_bbox x w_bbox
+            inst_mask = m_bool[min_y:max_y+1, min_x:max_x+1]
+            
+            instances.append(Instance(
+                mask=inst_mask,
+                score=None,
+                area=m_area,
+                bbox=(inst_x0, inst_y0, inst_x1, inst_y1)
+            ))
 
     return instances
 
@@ -1019,6 +1122,7 @@ def main() -> None:
                 gray_raw,
                 area_min=bh_area_min,
                 area_max=bh_area_max,
+                split_fused=args.blackhat_split_fused,
                 debug_dir=args.debug_dir
             )
             logger.info(f"Adaptive Threshold found {len(blackhat_instances)} instances.")
