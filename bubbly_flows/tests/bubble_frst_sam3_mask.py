@@ -23,7 +23,7 @@ Flag overview:
     --input --output --config --device --seed
   SAM3:
     --sam_model --points_per_batch --multimask_output --allow_download
-    --frst_text_prompt --big_text_prompt --big_backend --text_prompt --disable_pcs
+    --frst_backend --frst_text_prompt --big_text_prompt --big_backend --text_prompt --disable_pcs
   Pipeline:
     --enable_candidates/--disable_candidates
     --enable_tiling/--disable_tiling
@@ -65,7 +65,7 @@ except ImportError as exc:
     raise RuntimeError("OpenCV is required for FRST detection. Install with: pip install opencv-python") from exc
 
 from classical_test import frst_symmetry_map, pick_peaks
-from bubble_sam3.backend import Sam3ConceptBackend, Sam3PointBackend, segment_with_object_points
+from bubble_sam3.backend import Sam3ConceptBackend
 from bubble_sam3.config import apply_cli_overrides, ensure_hf_home, load_config
 from bubble_sam3.outputs import (
     build_rgba_cutout,
@@ -86,6 +86,8 @@ from bubble_sam3.postprocess import (
 from bubble_sam3.tiling import create_tiles, pad_image
 from big_bubble_prompt_fb import run_big_prompt as run_big_prompt_fb
 from big_bubble_prompt_hf import run_big_prompt as run_big_prompt_hf
+from frst_point_backend_fb import FrstPointBackendFB
+from frst_point_backend_hf import FrstPointBackendHF
 
 try:
     import torch
@@ -184,6 +186,12 @@ def parse_args() -> argparse.Namespace:
         "--frst_text_prompt",
         default="micro-sized bubbles",
         help="PCS text prompt for FRST pipeline (e.g., 'micro-sized bubbles')",
+    )
+    parser.add_argument(
+        "--frst_backend",
+        choices=["fb", "hf"],
+        default="fb",
+        help="Backend for FRST point prompts: fb=facebookresearch (default), hf=transformers",
     )
     parser.add_argument(
         "--big_text_prompt",
@@ -493,7 +501,11 @@ def main() -> None:
         if points_xy:
             save_candidate_viz(image_rgb, points_xy, os.path.join(args.debug_dir, "frst_centers.png"))
 
-    sam_backend = Sam3PointBackend(cfg["device"], cfg["sam"])
+    if args.frst_backend == "fb":
+        frst_backend = FrstPointBackendFB(cfg)
+    else:
+        frst_backend = FrstPointBackendHF(cfg)
+    logger.info("FRST backend: %s", args.frst_backend)
     tile_size = max(1, int(round(8.0 * float(args.r_max))))
     tile_overlap = max(0, int(round(2.5 * float(args.r_max))))
     tile_cfg = {"tiling": {"tile_size": tile_size, "tile_overlap": tile_overlap}}
@@ -538,7 +550,7 @@ def main() -> None:
             knn_k=3,
             hex_radius=1.5 * float(args.r_max),
         )
-        masks, scores = segment_with_object_points(sam_backend, tile_pil, obj_points, obj_labels)
+        masks, scores = frst_backend.segment_tile(tile_pil, obj_points, obj_labels)
         total_masks += len(masks)
         tile_instances, discarded = build_tile_instances_from_masks(
             masks,
