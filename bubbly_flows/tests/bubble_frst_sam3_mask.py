@@ -8,7 +8,8 @@ Workflow:
   3) Add a classical black-hat + threshold + components tiny-mask branch.
   4) Optionally run PCS text prompting (e.g., "tiny bubbles") to add masks.
   5) Produce three outputs:
-     - FRST + micro prompt masks
+     - FRST (+ micro prompt) masks
+     - Black-hat masks
      - Big-bubble prompt masks only
      - Consolidated masks from both pipelines
 
@@ -46,7 +47,7 @@ Notes:
   - Default output is an overlay with per-instance colors.
   - output_mode=cutout produces an RGBA cutout (alpha = union of masks).
   - Output files are derived from --output:
-      <stem>_frst.png, <stem>_big.png, and the combined result at --output.
+      <stem>_frst.png, <stem>_blackhat.png, <stem>_big.png, and the combined result at --output.
   - Point prompts are tiled with tile_size=8*r_max and overlap>=2.5*r_max.
 """
 
@@ -563,16 +564,17 @@ def apply_convex_hull(instances: List[Instance]) -> List[Instance]:
     return kept
 
 
-def derive_output_paths(output_path: str) -> Tuple[str, str, str]:
+def derive_output_paths(output_path: str) -> Tuple[str, str, str, str]:
     base = Path(output_path)
     if not base.suffix:
         base = base.with_suffix(".png")
     stem = base.stem
     suffix = base.suffix
     frst_path = str(base.with_name(f"{stem}_frst{suffix}"))
+    blackhat_path = str(base.with_name(f"{stem}_blackhat{suffix}"))
     big_path = str(base.with_name(f"{stem}_big{suffix}"))
     combined_path = str(base)
-    return frst_path, big_path, combined_path
+    return frst_path, blackhat_path, big_path, combined_path
 
 
 def main() -> None:
@@ -587,9 +589,10 @@ def main() -> None:
     cfg["sam"]["pcs_enable"] = bool(cfg["sam"].get("pcs_enable", True)) and not args.disable_pcs
 
     output_path = resolve_output_path(args.input, args.output)
-    frst_out, big_out, combined_out = derive_output_paths(output_path)
+    frst_out, blackhat_out, big_out, combined_out = derive_output_paths(output_path)
     json_path, csv_path = resolve_output_paths(combined_out, cfg)
     ensure_output_dir(frst_out)
+    ensure_output_dir(blackhat_out)
     ensure_output_dir(big_out)
     ensure_output_dir(combined_out)
     if json_path:
@@ -708,6 +711,7 @@ def main() -> None:
         blackhat_enable = True
     if args.disable_blackhat:
         blackhat_enable = False
+    blackhat_instances: List[Instance] = []
     if blackhat_enable:
         bh_radius = args.blackhat_radius if args.blackhat_radius is not None else int(
             blackhat_cfg.get("radius", 4)
@@ -740,7 +744,7 @@ def main() -> None:
             else float(blackhat_cfg.get("watershed_fg_thresh", 0.5))
         )
 
-        bh_instances = build_blackhat_instances(
+        blackhat_instances = build_blackhat_instances(
             gray_raw,
             radius=bh_radius,
             percentile=bh_percentile,
@@ -750,10 +754,9 @@ def main() -> None:
             watershed_min_area=bh_ws_min_area,
             watershed_fg_thresh=bh_ws_fg,
         )
-        frst_instances.extend(bh_instances)
         logger.info(
             "Black-hat masks: %d (radius=%d, pct=%.2f, area=[%d,%d], watershed=%s)",
-            len(bh_instances),
+            len(blackhat_instances),
             bh_radius,
             bh_percentile,
             bh_area_min,
@@ -785,11 +788,12 @@ def main() -> None:
     frst_instances = apply_convex_hull(frst_instances)
 
     combined_instances = consolidate_instances(
-        frst_instances + big_instances, cfg, (h, w)
+        frst_instances + blackhat_instances + big_instances, cfg, (h, w)
     )
     logger.info(
-        "Instances: FRST=%d, BIG=%d, COMBINED=%d",
+        "Instances: FRST=%d, BLACKHAT=%d, BIG=%d, COMBINED=%d",
         len(frst_instances),
+        len(blackhat_instances),
         len(big_instances),
         len(combined_instances),
     )
@@ -811,6 +815,7 @@ def main() -> None:
             logger.info("Saved %s overlay to %s", label, out_path)
 
     _save_instances(frst_instances, frst_out, "FRST")
+    _save_instances(blackhat_instances, blackhat_out, "BLACKHAT")
     _save_instances(big_instances, big_out, "BIG")
     _save_instances(combined_instances, combined_out, "COMBINED")
 
