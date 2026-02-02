@@ -406,18 +406,30 @@ def build_instances_from_pcs(
 
 
 def apply_convex_hull(instances: List[Instance]) -> List[Instance]:
-    """Apply convex hull to each instance mask (bbox-local)."""
+    """Apply convex hull to each instance mask (bbox-local).
+
+    If hull inflates area by more than 2x, discard the instance.
+    """
     try:
         from skimage.morphology import convex_hull_image
     except ImportError as exc:
         raise RuntimeError("scikit-image is required for convex hull computation.") from exc
 
+    kept: List[Instance] = []
     for inst in instances:
         if inst.mask is None:
             continue
-        inst.mask = convex_hull_image(inst.mask)
-        inst.area = int(inst.mask.sum())
-    return instances
+        before_area = int(inst.mask.sum())
+        if before_area <= 0:
+            continue
+        hull = convex_hull_image(inst.mask)
+        after_area = int(hull.sum())
+        if after_area > 2 * before_area:
+            continue
+        inst.mask = hull
+        inst.area = after_area
+        kept.append(inst)
+    return kept
 
 
 def derive_output_paths(output_path: str) -> Tuple[str, str, str]:
@@ -558,8 +570,8 @@ def main() -> None:
     pcs_backend: Optional[Sam3ConceptBackend] = None
     if cfg["sam"].get("pcs_enable", True) and args.frst_text_prompt:
         pcs_backend = Sam3ConceptBackend(cfg["device"], cfg["sam"])
-        pcs_threshold = float(cfg["sam"].get("pcs_threshold", 0.5))
-        pcs_mask_threshold = float(cfg["sam"].get("pcs_mask_threshold", 0.5))
+        pcs_threshold = float(cfg["sam"].get("pcs_threshold", 0.6))
+        pcs_mask_threshold = float(cfg["sam"].get("pcs_mask_threshold", 0.6))
         pcs_masks, pcs_scores, pcs_boxes = pcs_backend.segment_by_text(
             image, args.frst_text_prompt, pcs_threshold, pcs_mask_threshold
         )
