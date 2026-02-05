@@ -1,0 +1,407 @@
+2026-02-04 18:06:58 [INFO] root - Logging initialized. Log file: logs/bubble_frst_sam3_20260204_180658.log
+2026-02-04 18:06:58 [INFO] __main__ - Directory mode: found 31 PNG files in .
+2026-02-04 18:06:58 [INFO] __main__ - Initializing FRST backend (hf)...
+2026-02-04 18:07:07 [INFO] __main__ - Initializing PCS backend...
+2026-02-04 18:07:09 [INFO] __main__ - --- File 1/31: ZeroG_FlightDay_Test_C1S0014_img006001.png ---
+2026-02-04 18:07:09 [INFO] __main__ - Processing: ZeroG_FlightDay_Test_C1S0014_img006001.png
+2026-02-04 18:07:09 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:07:09 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:07:09 [INFO] __main__ - FRST detected 338 centers
+2026-02-04 18:07:18 [INFO] __main__ - Point pass totals: masks=684 discarded_large=0 (limit=10000 px)
+2026-02-04 18:07:18 [INFO] __main__ - Adaptive Threshold found 777 instances.
+2026-02-04 18:07:19 [INFO] __main__ - PCS produced 64 micro-text masks
+2026-02-04 18:07:19 [DEBUG] root - Falling back to triton or CPU mask NMS implementation -- please install `torch_generic_nms` via
+	pip uninstall -y torch_generic_nms; TORCH_CUDA_ARCH_LIST="8.0 9.0" pip install git+https://github.com/ronghanghu/torch_generic_nms
+2026-02-04 18:07:26 [DEBUG] httpcore.connection - connect_tcp.started host='huggingface.co' port=443 local_address=None timeout=10 socket_options=None
+2026-02-04 18:07:26 [DEBUG] httpcore.connection - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7f2198423f80>
+2026-02-04 18:07:26 [DEBUG] httpcore.connection - start_tls.started ssl_context=<ssl.SSLContext object at 0x7f1da32ef250> server_hostname='huggingface.co' timeout=10
+2026-02-04 18:07:26 [DEBUG] httpcore.connection - start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7f1da32f2150>
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - send_request_headers.started request=<Request [b'HEAD']>
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - send_request_headers.complete
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - send_request_body.started request=<Request [b'HEAD']>
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - send_request_body.complete
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - receive_response_headers.started request=<Request [b'HEAD']>
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'text/plain; charset=utf-8'), (b'Content-Length', b'25843'), (b'Connection', b'keep-alive'), (b'Date', b'Wed, 04 Feb 2026 23:07:26 GMT'), (b'ETag', b'"3e600e765b0f1b4c52680aed9ad242c9a90f7ed1"'), (b'X-Powered-By', b'huggingface-moon'), (b'X-Request-Id', b'Root=1-6983d12e-62e2a31457da796466d0afb1;2dae337c-1210-475a-928e-1c1944017027'), (b'RateLimit', b'"resolvers";r=4999;t=157'), (b'RateLimit-Policy', b'"fixed window";"resolvers";q=5000;w=300'), (b'cross-origin-opener-policy', b'same-origin'), (b'Referrer-Policy', b'strict-origin-when-cross-origin'), (b'Access-Control-Max-Age', b'86400'), (b'Access-Control-Allow-Origin', b'https://huggingface.co'), (b'Vary', b'Origin'), (b'Access-Control-Expose-Headers', b'X-Repo-Commit,X-Request-Id,X-Error-Code,X-Error-Message,X-Total-Count,ETag,Link,Accept-Ranges,Content-Range,X-Linked-Size,X-Linked-ETag,X-Xet-Hash'), (b'X-Repo-Commit', b'3c879f39826c281e95690f02c7821c4de09afae7'), (b'Accept-Ranges', b'bytes'), (b'X-Hub-Cache', b'HIT'), (b'Content-Disposition', b'inline; filename*=UTF-8\'\'config.json; filename="config.json";'), (b'Content-Security-Policy', b"default-src 'none'; sandbox"), (b'X-Cache', b'Miss from cloudfront'), (b'Via', b'1.1 d298e3c61b79ba9798cab3920faa7aa0.cloudfront.net (CloudFront)'), (b'X-Amz-Cf-Pop', b'JFK50-P9'), (b'X-Amz-Cf-Id', b'mrx7vu_tFH2rAtX3SqyZ0RO5UZqbAAcrTNfJCuGBzeo4Sg4hqvVddg==')])
+2026-02-04 18:07:26 [INFO] httpx - HTTP Request: HEAD https://huggingface.co/facebook/sam3/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - receive_response_body.started request=<Request [b'HEAD']>
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - receive_response_body.complete
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - response_closed.started
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - response_closed.complete
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - send_request_headers.started request=<Request [b'HEAD']>
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - send_request_headers.complete
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - send_request_body.started request=<Request [b'HEAD']>
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - send_request_body.complete
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - receive_response_headers.started request=<Request [b'HEAD']>
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - receive_response_headers.complete return_value=(b'HTTP/1.1', 302, b'Found', [(b'Content-Type', b'text/plain; charset=utf-8'), (b'Content-Length', b'1319'), (b'Connection', b'keep-alive'), (b'Date', b'Wed, 04 Feb 2026 23:07:26 GMT'), (b'Location', b'https://cas-bridge.xethub.hf.co/xet-bridge-us/690d80fc9f252aa897a1dc6d/ba62acd04c1fe8f3d6096b1552e6ca28a2f7c7380f931040f5719a2bcdf844ad?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=cas%2F20260204%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260204T225026Z&X-Amz-Expires=3600&X-Amz-Signature=4e337fe859eb6d0b0a36916bd4f2a78089c31d05a4983278ad383a2e9aa23826&X-Amz-SignedHeaders=host&X-Xet-Cas-Uid=69835dd6bf0ebfe22c1df6cc&response-content-disposition=inline%3B+filename*%3DUTF-8%27%27sam3.pt%3B+filename%3D%22sam3.pt%22%3B&x-id=GetObject&Expires=1770249026&Policy=eyJTdGF0ZW1lbnQiOlt7IkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3MDI0OTAyNn19LCJSZXNvdXJjZSI6Imh0dHBzOi8vY2FzLWJyaWRnZS54ZXRodWIuaGYuY28veGV0LWJyaWRnZS11cy82OTBkODBmYzlmMjUyYWE4OTdhMWRjNmQvYmE2MmFjZDA0YzFmZThmM2Q2MDk2YjE1NTJlNmNhMjhhMmY3YzczODBmOTMxMDQwZjU3MTlhMmJjZGY4NDRhZCoifV19&Signature=FATUGBw-Fv2vbJiiNSzdlzsHlJhF6sh4AooJMnziOgzyfpu5Uu9x-nn2HDE02HPRFvRkq1QR2nYHKb1bn3-lUj%7EDGqF6uAmr9LP%7EOJOeOIblmTY8UahLmADUGgclSNzQeLqe6Cd7cNWddrk9Ge4TIjg0eSyePhuDDT5ue%7ELGcJU1Vm1WaBIeJ3tdT%7EHXJlhq8yC5kuADPnOksF-1xkHZnHMBVf5B9pCdHlZh1JWInwRqHQQBmdjVnmyLNoPcIFgpIdArcCXrCjNJA5B6oaVXazrUg%7ETnmQTLsPNomEhaPxKJPuf8h7WI9h52c6YJUWjVcI8TsClkS04eyB24-TTyOg__&Key-Pair-Id=K2L8F4GPSG1IFC'), (b'X-Powered-By', b'huggingface-moon'), (b'X-Request-Id', b'Root=1-6983d12e-3bdaf6316ed57f117d7b9aff;177b4615-e68f-4010-b0f0-91afe475b7d3'), (b'RateLimit', b'"resolvers";r=4998;t=157'), (b'RateLimit-Policy', b'"fixed window";"resolvers";q=5000;w=300'), (b'cross-origin-opener-policy', b'same-origin'), (b'Referrer-Policy', b'strict-origin-when-cross-origin'), (b'Access-Control-Max-Age', b'86400'), (b'Access-Control-Allow-Origin', b'https://huggingface.co'), (b'Vary', b'Origin, Accept'), (b'Access-Control-Expose-Headers', b'X-Repo-Commit,X-Request-Id,X-Error-Code,X-Error-Message,X-Total-Count,ETag,Link,Accept-Ranges,Content-Range,X-Linked-Size,X-Linked-ETag,X-Xet-Hash'), (b'X-Repo-Commit', b'3c879f39826c281e95690f02c7821c4de09afae7'), (b'Accept-Ranges', b'bytes'), (b'X-Hub-Cache', b'HIT'), (b'X-Linked-Size', b'3450062241'), (b'X-Linked-ETag', b'"9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e"'), (b'X-Xet-Hash', b'ba62acd04c1fe8f3d6096b1552e6ca28a2f7c7380f931040f5719a2bcdf844ad'), (b'Link', b'<https://huggingface.co/api/models/facebook/sam3/xet-read-token/3c879f39826c281e95690f02c7821c4de09afae7>; rel="xet-auth", <https://cas-server.xethub.hf.co/v1/reconstructions/ba62acd04c1fe8f3d6096b1552e6ca28a2f7c7380f931040f5719a2bcdf844ad>; rel="xet-reconstruction-info"'), (b'X-Cache', b'Miss from cloudfront'), (b'Via', b'1.1 d298e3c61b79ba9798cab3920faa7aa0.cloudfront.net (CloudFront)'), (b'X-Amz-Cf-Pop', b'JFK50-P9'), (b'X-Amz-Cf-Id', b'8kevYkdbtbz0_dik-dWfYgPxh6YIrtUycOdC4TrcHyPbmt7xL7iTZg==')])
+2026-02-04 18:07:26 [INFO] httpx - HTTP Request: HEAD https://huggingface.co/facebook/sam3/resolve/main/sam3.pt "HTTP/1.1 302 Found"
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - receive_response_body.started request=<Request [b'HEAD']>
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - receive_response_body.complete
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - response_closed.started
+2026-02-04 18:07:26 [DEBUG] httpcore.http11 - response_closed.complete
+2026-02-04 18:07:28 [INFO] __main__ - Big-prompt produced 69 masks
+2026-02-04 18:07:28 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 15
+2026-02-04 18:07:28 [INFO] __main__ - Instances: FRST=695, ADAPTIVE=777, BIG=69, COMBINED=486
+2026-02-04 18:07:28 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test_C1S0014_img006001.json
+2026-02-04 18:07:28 [INFO] __main__ - --- File 2/31: ZeroG_FlightDay_Test_C1S0014_img009542.png ---
+2026-02-04 18:07:28 [INFO] __main__ - Processing: ZeroG_FlightDay_Test_C1S0014_img009542.png
+2026-02-04 18:07:28 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:07:28 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:07:29 [INFO] __main__ - FRST detected 416 centers
+2026-02-04 18:07:38 [INFO] __main__ - Point pass totals: masks=846 discarded_large=0 (limit=10000 px)
+2026-02-04 18:07:38 [INFO] __main__ - Adaptive Threshold found 457 instances.
+2026-02-04 18:07:38 [INFO] __main__ - PCS produced 11 micro-text masks
+2026-02-04 18:07:38 [INFO] __main__ - Big-prompt produced 45 masks
+2026-02-04 18:07:39 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 4
+2026-02-04 18:07:39 [INFO] __main__ - Instances: FRST=782, ADAPTIVE=457, BIG=45, COMBINED=492
+2026-02-04 18:07:39 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test_C1S0014_img009542.json
+2026-02-04 18:07:39 [INFO] __main__ - --- File 3/31: ZeroG_FlightDay_Test_C1S0014_img018008.png ---
+2026-02-04 18:07:39 [INFO] __main__ - Processing: ZeroG_FlightDay_Test_C1S0014_img018008.png
+2026-02-04 18:07:39 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:07:39 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:07:40 [INFO] __main__ - FRST detected 247 centers
+2026-02-04 18:07:48 [INFO] __main__ - Point pass totals: masks=521 discarded_large=0 (limit=10000 px)
+2026-02-04 18:07:48 [INFO] __main__ - Adaptive Threshold found 480 instances.
+2026-02-04 18:07:48 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:07:48 [INFO] __main__ - Big-prompt produced 40 masks
+2026-02-04 18:07:49 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 2
+2026-02-04 18:07:49 [INFO] __main__ - Instances: FRST=477, ADAPTIVE=480, BIG=40, COMBINED=444
+2026-02-04 18:07:49 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test_C1S0014_img018008.json
+2026-02-04 18:07:49 [INFO] __main__ - --- File 4/31: ZeroG_FlightDay_Test_C1S0014_img018351.png ---
+2026-02-04 18:07:49 [INFO] __main__ - Processing: ZeroG_FlightDay_Test_C1S0014_img018351.png
+2026-02-04 18:07:49 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:07:49 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:07:49 [INFO] __main__ - FRST detected 342 centers
+2026-02-04 18:07:58 [INFO] __main__ - Point pass totals: masks=685 discarded_large=0 (limit=10000 px)
+2026-02-04 18:07:58 [INFO] __main__ - Adaptive Threshold found 681 instances.
+2026-02-04 18:07:58 [INFO] __main__ - PCS produced 1 micro-text masks
+2026-02-04 18:07:58 [INFO] __main__ - Big-prompt produced 25 masks
+2026-02-04 18:07:59 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 0
+2026-02-04 18:07:59 [INFO] __main__ - Instances: FRST=629, ADAPTIVE=681, BIG=25, COMBINED=568
+2026-02-04 18:07:59 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test_C1S0014_img018351.json
+2026-02-04 18:07:59 [INFO] __main__ - --- File 5/31: ZeroG_FlightDay_Test_C1S0014_img019391.png ---
+2026-02-04 18:07:59 [INFO] __main__ - Processing: ZeroG_FlightDay_Test_C1S0014_img019391.png
+2026-02-04 18:07:59 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:07:59 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:08:00 [INFO] __main__ - FRST detected 465 centers
+2026-02-04 18:08:08 [INFO] __main__ - Point pass totals: masks=976 discarded_large=0 (limit=10000 px)
+2026-02-04 18:08:08 [INFO] __main__ - Adaptive Threshold found 1292 instances.
+2026-02-04 18:08:09 [INFO] __main__ - PCS produced 7 micro-text masks
+2026-02-04 18:08:09 [INFO] __main__ - Big-prompt produced 11 masks
+2026-02-04 18:08:10 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 2
+2026-02-04 18:08:10 [INFO] __main__ - Instances: FRST=806, ADAPTIVE=1292, BIG=11, COMBINED=770
+2026-02-04 18:08:10 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test_C1S0014_img019391.json
+2026-02-04 18:08:10 [INFO] __main__ - --- File 6/31: ZeroG_FlightDay_Test_C1S0019_img003593.png ---
+2026-02-04 18:08:10 [INFO] __main__ - Processing: ZeroG_FlightDay_Test_C1S0019_img003593.png
+2026-02-04 18:08:10 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:08:10 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:08:11 [INFO] __main__ - FRST detected 177 centers
+2026-02-04 18:08:17 [INFO] __main__ - Point pass totals: masks=355 discarded_large=0 (limit=10000 px)
+2026-02-04 18:08:17 [INFO] __main__ - Adaptive Threshold found 768 instances.
+2026-02-04 18:08:17 [INFO] __main__ - PCS produced 2 micro-text masks
+2026-02-04 18:08:18 [INFO] __main__ - Big-prompt produced 1 masks
+2026-02-04 18:08:18 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 0
+2026-02-04 18:08:18 [INFO] __main__ - Instances: FRST=291, ADAPTIVE=768, BIG=1, COMBINED=437
+2026-02-04 18:08:18 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test_C1S0019_img003593.json
+2026-02-04 18:08:18 [INFO] __main__ - --- File 7/31: ZeroG_FlightDay_Test_C1S0019_img003850.png ---
+2026-02-04 18:08:18 [INFO] __main__ - Processing: ZeroG_FlightDay_Test_C1S0019_img003850.png
+2026-02-04 18:08:18 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:08:18 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:08:19 [INFO] __main__ - FRST detected 259 centers
+2026-02-04 18:08:26 [INFO] __main__ - Point pass totals: masks=548 discarded_large=0 (limit=10000 px)
+2026-02-04 18:08:26 [INFO] __main__ - Adaptive Threshold found 815 instances.
+2026-02-04 18:08:26 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:08:27 [INFO] __main__ - Big-prompt produced 17 masks
+2026-02-04 18:08:27 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 2
+2026-02-04 18:08:27 [INFO] __main__ - Instances: FRST=505, ADAPTIVE=815, BIG=17, COMBINED=574
+2026-02-04 18:08:28 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test_C1S0019_img003850.json
+2026-02-04 18:08:28 [INFO] __main__ - --- File 8/31: ZeroG_FlightDay_Test_C1S0019_img006886.png ---
+2026-02-04 18:08:28 [INFO] __main__ - Processing: ZeroG_FlightDay_Test_C1S0019_img006886.png
+2026-02-04 18:08:28 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:08:28 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:08:28 [INFO] __main__ - FRST detected 183 centers
+2026-02-04 18:08:34 [INFO] __main__ - Point pass totals: masks=405 discarded_large=0 (limit=10000 px)
+2026-02-04 18:08:34 [INFO] __main__ - Adaptive Threshold found 490 instances.
+2026-02-04 18:08:34 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:08:34 [INFO] __main__ - Big-prompt produced 0 masks
+2026-02-04 18:08:34 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 0
+2026-02-04 18:08:34 [INFO] __main__ - Instances: FRST=323, ADAPTIVE=490, BIG=0, COMBINED=341
+2026-02-04 18:08:35 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test_C1S0019_img006886.json
+2026-02-04 18:08:35 [INFO] __main__ - --- File 9/31: ZeroG_FlightDay_Test_C1S0019_img011890.png ---
+2026-02-04 18:08:35 [INFO] __main__ - Processing: ZeroG_FlightDay_Test_C1S0019_img011890.png
+2026-02-04 18:08:35 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:08:35 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:08:35 [INFO] __main__ - FRST detected 327 centers
+2026-02-04 18:08:43 [INFO] __main__ - Point pass totals: masks=670 discarded_large=0 (limit=10000 px)
+2026-02-04 18:08:43 [INFO] __main__ - Adaptive Threshold found 442 instances.
+2026-02-04 18:08:43 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:08:44 [INFO] __main__ - Big-prompt produced 0 masks
+2026-02-04 18:08:44 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 1
+2026-02-04 18:08:44 [INFO] __main__ - Instances: FRST=588, ADAPTIVE=442, BIG=0, COMBINED=447
+2026-02-04 18:08:44 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test_C1S0019_img011890.json
+2026-02-04 18:08:44 [INFO] __main__ - --- File 10/31: ZeroG_FlightDay_Test_C1S0019_img016774.png ---
+2026-02-04 18:08:44 [INFO] __main__ - Processing: ZeroG_FlightDay_Test_C1S0019_img016774.png
+2026-02-04 18:08:44 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:08:44 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:08:45 [INFO] __main__ - FRST detected 255 centers
+2026-02-04 18:08:52 [INFO] __main__ - Point pass totals: masks=553 discarded_large=0 (limit=10000 px)
+2026-02-04 18:08:52 [INFO] __main__ - Adaptive Threshold found 670 instances.
+2026-02-04 18:08:52 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:08:53 [INFO] __main__ - Big-prompt produced 0 masks
+2026-02-04 18:08:53 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 1
+2026-02-04 18:08:53 [INFO] __main__ - Instances: FRST=508, ADAPTIVE=670, BIG=0, COMBINED=500
+2026-02-04 18:08:53 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test_C1S0019_img016774.json
+2026-02-04 18:08:53 [INFO] __main__ - --- File 11/31: ZeroG_FlightDay_Test_C1S0024_img003664.png ---
+2026-02-04 18:08:53 [INFO] __main__ - Processing: ZeroG_FlightDay_Test_C1S0024_img003664.png
+2026-02-04 18:08:53 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:08:53 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:08:54 [INFO] __main__ - FRST detected 201 centers
+2026-02-04 18:09:01 [INFO] __main__ - Point pass totals: masks=422 discarded_large=0 (limit=10000 px)
+2026-02-04 18:09:01 [INFO] __main__ - Adaptive Threshold found 880 instances.
+2026-02-04 18:09:02 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:09:02 [INFO] __main__ - Big-prompt produced 43 masks
+2026-02-04 18:09:02 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 5
+2026-02-04 18:09:02 [INFO] __main__ - Instances: FRST=342, ADAPTIVE=880, BIG=43, COMBINED=564
+2026-02-04 18:09:03 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test_C1S0024_img003664.json
+2026-02-04 18:09:03 [INFO] __main__ - --- File 12/31: ZeroG_FlightDay_Test_C1S0024_img004966.png ---
+2026-02-04 18:09:03 [INFO] __main__ - Processing: ZeroG_FlightDay_Test_C1S0024_img004966.png
+2026-02-04 18:09:03 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:09:03 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:09:03 [INFO] __main__ - FRST detected 259 centers
+2026-02-04 18:09:09 [INFO] __main__ - Point pass totals: masks=548 discarded_large=0 (limit=10000 px)
+2026-02-04 18:09:09 [INFO] __main__ - Adaptive Threshold found 525 instances.
+2026-02-04 18:09:09 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:09:09 [INFO] __main__ - Big-prompt produced 0 masks
+2026-02-04 18:09:10 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 0
+2026-02-04 18:09:10 [INFO] __main__ - Instances: FRST=423, ADAPTIVE=525, BIG=0, COMBINED=375
+2026-02-04 18:09:10 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test_C1S0024_img004966.json
+2026-02-04 18:09:10 [INFO] __main__ - --- File 13/31: ZeroG_FlightDay_Test_C1S0024_img011620.png ---
+2026-02-04 18:09:10 [INFO] __main__ - Processing: ZeroG_FlightDay_Test_C1S0024_img011620.png
+2026-02-04 18:09:10 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:09:10 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:09:10 [INFO] __main__ - FRST detected 373 centers
+2026-02-04 18:09:18 [INFO] __main__ - Point pass totals: masks=777 discarded_large=0 (limit=10000 px)
+2026-02-04 18:09:18 [INFO] __main__ - Adaptive Threshold found 506 instances.
+2026-02-04 18:09:19 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:09:19 [INFO] __main__ - Big-prompt produced 0 masks
+2026-02-04 18:09:20 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 1
+2026-02-04 18:09:20 [INFO] __main__ - Instances: FRST=629, ADAPTIVE=506, BIG=0, COMBINED=533
+2026-02-04 18:09:20 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test_C1S0024_img011620.json
+2026-02-04 18:09:20 [INFO] __main__ - --- File 14/31: ZeroG_FlightDay_Test_C1S0024_img014500.png ---
+2026-02-04 18:09:20 [INFO] __main__ - Processing: ZeroG_FlightDay_Test_C1S0024_img014500.png
+2026-02-04 18:09:20 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:09:20 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:09:20 [INFO] __main__ - FRST detected 311 centers
+2026-02-04 18:09:28 [INFO] __main__ - Point pass totals: masks=639 discarded_large=0 (limit=10000 px)
+2026-02-04 18:09:28 [INFO] __main__ - Adaptive Threshold found 396 instances.
+2026-02-04 18:09:29 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:09:29 [INFO] __main__ - Big-prompt produced 2 masks
+2026-02-04 18:09:29 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 1
+2026-02-04 18:09:29 [INFO] __main__ - Instances: FRST=572, ADAPTIVE=396, BIG=2, COMBINED=452
+2026-02-04 18:09:29 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test_C1S0024_img014500.json
+2026-02-04 18:09:29 [INFO] __main__ - --- File 15/31: ZeroG_FlightDay_Test_C1S0024_img017272.png ---
+2026-02-04 18:09:29 [INFO] __main__ - Processing: ZeroG_FlightDay_Test_C1S0024_img017272.png
+2026-02-04 18:09:29 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:09:29 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:09:30 [INFO] __main__ - FRST detected 299 centers
+2026-02-04 18:09:38 [INFO] __main__ - Point pass totals: masks=660 discarded_large=0 (limit=10000 px)
+2026-02-04 18:09:38 [INFO] __main__ - Adaptive Threshold found 962 instances.
+2026-02-04 18:09:38 [INFO] __main__ - PCS produced 11 micro-text masks
+2026-02-04 18:09:38 [INFO] __main__ - Big-prompt produced 13 masks
+2026-02-04 18:09:39 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 2
+2026-02-04 18:09:39 [INFO] __main__ - Instances: FRST=591, ADAPTIVE=962, BIG=13, COMBINED=645
+2026-02-04 18:09:39 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test_C1S0024_img017272.json
+2026-02-04 18:09:39 [INFO] __main__ - --- File 16/31: ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.png ---
+2026-02-04 18:09:39 [INFO] __main__ - Processing: ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.png
+2026-02-04 18:09:39 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:09:39 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:09:40 [INFO] __main__ - FRST detected 121 centers
+2026-02-04 18:09:47 [INFO] __main__ - Point pass totals: masks=174 discarded_large=1 (limit=10000 px)
+2026-02-04 18:09:47 [INFO] __main__ - Adaptive Threshold found 82 instances.
+2026-02-04 18:09:47 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:09:47 [INFO] __main__ - Big-prompt produced 0 masks
+2026-02-04 18:09:48 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 0
+2026-02-04 18:09:48 [INFO] __main__ - Instances: FRST=86, ADAPTIVE=82, BIG=0, COMBINED=76
+2026-02-04 18:09:48 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.json
+2026-02-04 18:09:48 [INFO] __main__ - --- File 17/31: ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.png ---
+2026-02-04 18:09:48 [INFO] __main__ - Processing: ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.png
+2026-02-04 18:09:48 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:09:48 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:09:48 [INFO] __main__ - FRST detected 345 centers
+2026-02-04 18:09:57 [INFO] __main__ - Point pass totals: masks=696 discarded_large=0 (limit=10000 px)
+2026-02-04 18:09:57 [INFO] __main__ - Adaptive Threshold found 1028 instances.
+2026-02-04 18:09:57 [INFO] __main__ - PCS produced 18 micro-text masks
+2026-02-04 18:09:57 [INFO] __main__ - Big-prompt produced 29 masks
+2026-02-04 18:09:58 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 7
+2026-02-04 18:09:58 [INFO] __main__ - Instances: FRST=635, ADAPTIVE=1028, BIG=29, COMBINED=641
+2026-02-04 18:09:58 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.json
+2026-02-04 18:09:58 [INFO] __main__ - --- File 18/31: ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070.png ---
+2026-02-04 18:09:58 [INFO] __main__ - Processing: ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070.png
+2026-02-04 18:09:58 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:09:58 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:09:59 [INFO] __main__ - FRST detected 351 centers
+2026-02-04 18:10:08 [INFO] __main__ - Point pass totals: masks=713 discarded_large=0 (limit=10000 px)
+2026-02-04 18:10:08 [INFO] __main__ - Adaptive Threshold found 850 instances.
+2026-02-04 18:10:08 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:10:08 [INFO] __main__ - Big-prompt produced 36 masks
+2026-02-04 18:10:09 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 5
+2026-02-04 18:10:09 [INFO] __main__ - Instances: FRST=658, ADAPTIVE=850, BIG=36, COMBINED=618
+2026-02-04 18:10:09 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070.json
+2026-02-04 18:10:09 [INFO] __main__ - --- File 19/31: ZeroG_FlightDay_Test__C1S0004_IMG_S0001006210.png ---
+2026-02-04 18:10:09 [INFO] __main__ - Processing: ZeroG_FlightDay_Test__C1S0004_IMG_S0001006210.png
+2026-02-04 18:10:09 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:10:09 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:10:10 [INFO] __main__ - FRST detected 274 centers
+2026-02-04 18:10:18 [INFO] __main__ - Point pass totals: masks=558 discarded_large=0 (limit=10000 px)
+2026-02-04 18:10:18 [INFO] __main__ - Adaptive Threshold found 586 instances.
+2026-02-04 18:10:18 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:10:19 [INFO] __main__ - Big-prompt produced 40 masks
+2026-02-04 18:10:19 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 5
+2026-02-04 18:10:19 [INFO] __main__ - Instances: FRST=493, ADAPTIVE=586, BIG=40, COMBINED=491
+2026-02-04 18:10:19 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test__C1S0004_IMG_S0001006210.json
+2026-02-04 18:10:19 [INFO] __main__ - --- File 20/31: ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062.png ---
+2026-02-04 18:10:19 [INFO] __main__ - Processing: ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062.png
+2026-02-04 18:10:19 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:10:19 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:10:20 [INFO] __main__ - FRST detected 281 centers
+2026-02-04 18:10:28 [INFO] __main__ - Point pass totals: masks=613 discarded_large=0 (limit=10000 px)
+2026-02-04 18:10:28 [INFO] __main__ - Adaptive Threshold found 355 instances.
+2026-02-04 18:10:28 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:10:28 [INFO] __main__ - Big-prompt produced 0 masks
+2026-02-04 18:10:29 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 1
+2026-02-04 18:10:29 [INFO] __main__ - Instances: FRST=571, ADAPTIVE=355, BIG=0, COMBINED=396
+2026-02-04 18:10:29 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062.json
+2026-02-04 18:10:29 [INFO] __main__ - --- File 21/31: ZeroG_FlightDay_Test__C1S0007_IMG_S0001004046.png ---
+2026-02-04 18:10:29 [INFO] __main__ - Processing: ZeroG_FlightDay_Test__C1S0007_IMG_S0001004046.png
+2026-02-04 18:10:29 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:10:29 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:10:29 [INFO] __main__ - FRST detected 311 centers
+2026-02-04 18:10:38 [INFO] __main__ - Point pass totals: masks=584 discarded_large=0 (limit=10000 px)
+2026-02-04 18:10:38 [INFO] __main__ - Adaptive Threshold found 769 instances.
+2026-02-04 18:10:38 [INFO] __main__ - PCS produced 27 micro-text masks
+2026-02-04 18:10:38 [INFO] __main__ - Big-prompt produced 13 masks
+2026-02-04 18:10:39 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 3
+2026-02-04 18:10:39 [INFO] __main__ - Instances: FRST=504, ADAPTIVE=769, BIG=13, COMBINED=464
+2026-02-04 18:10:39 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test__C1S0007_IMG_S0001004046.json
+2026-02-04 18:10:39 [INFO] __main__ - --- File 22/31: ZeroG_FlightDay_Test__C1S0007_IMG_S0001004784.png ---
+2026-02-04 18:10:39 [INFO] __main__ - Processing: ZeroG_FlightDay_Test__C1S0007_IMG_S0001004784.png
+2026-02-04 18:10:39 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:10:39 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:10:39 [INFO] __main__ - FRST detected 242 centers
+2026-02-04 18:10:47 [INFO] __main__ - Point pass totals: masks=492 discarded_large=0 (limit=10000 px)
+2026-02-04 18:10:47 [INFO] __main__ - Adaptive Threshold found 729 instances.
+2026-02-04 18:10:47 [INFO] __main__ - PCS produced 35 micro-text masks
+2026-02-04 18:10:48 [INFO] __main__ - Big-prompt produced 48 masks
+2026-02-04 18:10:48 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 9
+2026-02-04 18:10:48 [INFO] __main__ - Instances: FRST=487, ADAPTIVE=729, BIG=48, COMBINED=499
+2026-02-04 18:10:48 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test__C1S0007_IMG_S0001004784.json
+2026-02-04 18:10:48 [INFO] __main__ - --- File 23/31: ZeroG_FlightDay_Test__C1S0007_IMG_S0001005160.png ---
+2026-02-04 18:10:48 [INFO] __main__ - Processing: ZeroG_FlightDay_Test__C1S0007_IMG_S0001005160.png
+2026-02-04 18:10:48 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:10:48 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:10:49 [INFO] __main__ - FRST detected 271 centers
+2026-02-04 18:10:57 [INFO] __main__ - Point pass totals: masks=537 discarded_large=0 (limit=10000 px)
+2026-02-04 18:10:57 [INFO] __main__ - Adaptive Threshold found 721 instances.
+2026-02-04 18:10:57 [INFO] __main__ - PCS produced 24 micro-text masks
+2026-02-04 18:10:58 [INFO] __main__ - Big-prompt produced 37 masks
+2026-02-04 18:10:58 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 8
+2026-02-04 18:10:58 [INFO] __main__ - Instances: FRST=515, ADAPTIVE=721, BIG=37, COMBINED=539
+2026-02-04 18:10:58 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test__C1S0007_IMG_S0001005160.json
+2026-02-04 18:10:58 [INFO] __main__ - --- File 24/31: ZeroG_FlightDay_Test__C1S0007_IMG_S0001015957.png ---
+2026-02-04 18:10:58 [INFO] __main__ - Processing: ZeroG_FlightDay_Test__C1S0007_IMG_S0001015957.png
+2026-02-04 18:10:58 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:10:58 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:10:59 [INFO] __main__ - FRST detected 331 centers
+2026-02-04 18:11:08 [INFO] __main__ - Point pass totals: masks=658 discarded_large=0 (limit=10000 px)
+2026-02-04 18:11:08 [INFO] __main__ - Adaptive Threshold found 379 instances.
+2026-02-04 18:11:08 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:11:08 [INFO] __main__ - Big-prompt produced 25 masks
+2026-02-04 18:11:09 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 6
+2026-02-04 18:11:09 [INFO] __main__ - Instances: FRST=601, ADAPTIVE=379, BIG=25, COMBINED=454
+2026-02-04 18:11:09 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test__C1S0007_IMG_S0001015957.json
+2026-02-04 18:11:09 [INFO] __main__ - --- File 25/31: ZeroG_FlightDay_Test__C1S0007_IMG_S0001018294.png ---
+2026-02-04 18:11:09 [INFO] __main__ - Processing: ZeroG_FlightDay_Test__C1S0007_IMG_S0001018294.png
+2026-02-04 18:11:09 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:11:09 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:11:09 [INFO] __main__ - FRST detected 374 centers
+2026-02-04 18:11:17 [INFO] __main__ - Point pass totals: masks=781 discarded_large=0 (limit=10000 px)
+2026-02-04 18:11:17 [INFO] __main__ - Adaptive Threshold found 1104 instances.
+2026-02-04 18:11:18 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:11:18 [INFO] __main__ - Big-prompt produced 6 masks
+2026-02-04 18:11:19 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 0
+2026-02-04 18:11:19 [INFO] __main__ - Instances: FRST=648, ADAPTIVE=1104, BIG=6, COMBINED=679
+2026-02-04 18:11:19 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test__C1S0007_IMG_S0001018294.json
+2026-02-04 18:11:19 [INFO] __main__ - --- File 26/31: ZeroG_FlightDay_Test__C1S0007_IMG_S0001021062.png ---
+2026-02-04 18:11:19 [INFO] __main__ - Processing: ZeroG_FlightDay_Test__C1S0007_IMG_S0001021062.png
+2026-02-04 18:11:19 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:11:19 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:11:19 [INFO] __main__ - FRST detected 381 centers
+2026-02-04 18:11:27 [INFO] __main__ - Point pass totals: masks=784 discarded_large=0 (limit=10000 px)
+2026-02-04 18:11:27 [INFO] __main__ - Adaptive Threshold found 1690 instances.
+2026-02-04 18:11:27 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:11:27 [INFO] __main__ - Big-prompt produced 0 masks
+2026-02-04 18:11:28 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 0
+2026-02-04 18:11:28 [INFO] __main__ - Instances: FRST=531, ADAPTIVE=1690, BIG=0, COMBINED=672
+2026-02-04 18:11:28 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test__C1S0007_IMG_S0001021062.json
+2026-02-04 18:11:28 [INFO] __main__ - --- File 27/31: ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002.png ---
+2026-02-04 18:11:28 [INFO] __main__ - Processing: ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002.png
+2026-02-04 18:11:28 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:11:28 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:11:29 [INFO] __main__ - FRST detected 182 centers
+2026-02-04 18:11:36 [INFO] __main__ - Point pass totals: masks=391 discarded_large=0 (limit=10000 px)
+2026-02-04 18:11:37 [INFO] __main__ - Adaptive Threshold found 148 instances.
+2026-02-04 18:11:37 [INFO] __main__ - PCS produced 35 micro-text masks
+2026-02-04 18:11:37 [INFO] __main__ - Big-prompt produced 65 masks
+2026-02-04 18:11:37 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 1
+2026-02-04 18:11:37 [INFO] __main__ - Instances: FRST=258, ADAPTIVE=148, BIG=65, COMBINED=145
+2026-02-04 18:11:37 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002.json
+2026-02-04 18:11:37 [INFO] __main__ - --- File 28/31: ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.png ---
+2026-02-04 18:11:37 [INFO] __main__ - Processing: ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.png
+2026-02-04 18:11:37 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:11:37 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:11:38 [INFO] __main__ - FRST detected 383 centers
+2026-02-04 18:11:47 [INFO] __main__ - Point pass totals: masks=760 discarded_large=0 (limit=10000 px)
+2026-02-04 18:11:47 [INFO] __main__ - Adaptive Threshold found 899 instances.
+2026-02-04 18:11:47 [INFO] __main__ - PCS produced 40 micro-text masks
+2026-02-04 18:11:48 [INFO] __main__ - Big-prompt produced 42 masks
+2026-02-04 18:11:48 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 9
+2026-02-04 18:11:48 [INFO] __main__ - Instances: FRST=722, ADAPTIVE=899, BIG=42, COMBINED=581
+2026-02-04 18:11:49 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.json
+2026-02-04 18:11:49 [INFO] __main__ - --- File 29/31: ZeroG_FlightDay_Test__C1S0010_IMG_S0001010418.png ---
+2026-02-04 18:11:49 [INFO] __main__ - Processing: ZeroG_FlightDay_Test__C1S0010_IMG_S0001010418.png
+2026-02-04 18:11:49 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:11:49 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:11:49 [INFO] __main__ - FRST detected 368 centers
+2026-02-04 18:11:58 [INFO] __main__ - Point pass totals: masks=755 discarded_large=0 (limit=10000 px)
+2026-02-04 18:11:58 [INFO] __main__ - Adaptive Threshold found 498 instances.
+2026-02-04 18:11:58 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:11:58 [INFO] __main__ - Big-prompt produced 26 masks
+2026-02-04 18:11:59 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 4
+2026-02-04 18:11:59 [INFO] __main__ - Instances: FRST=675, ADAPTIVE=498, BIG=26, COMBINED=482
+2026-02-04 18:11:59 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test__C1S0010_IMG_S0001010418.json
+2026-02-04 18:11:59 [INFO] __main__ - --- File 30/31: ZeroG_FlightDay_Test__C1S0010_IMG_S0001016148.png ---
+2026-02-04 18:11:59 [INFO] __main__ - Processing: ZeroG_FlightDay_Test__C1S0010_IMG_S0001016148.png
+2026-02-04 18:11:59 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:11:59 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:11:59 [INFO] __main__ - FRST detected 436 centers
+2026-02-04 18:12:09 [INFO] __main__ - Point pass totals: masks=877 discarded_large=0 (limit=10000 px)
+2026-02-04 18:12:09 [INFO] __main__ - Adaptive Threshold found 479 instances.
+2026-02-04 18:12:09 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:12:09 [INFO] __main__ - Big-prompt produced 50 masks
+2026-02-04 18:12:10 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 5
+2026-02-04 18:12:10 [INFO] __main__ - Instances: FRST=779, ADAPTIVE=479, BIG=50, COMBINED=557
+2026-02-04 18:12:10 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test__C1S0010_IMG_S0001016148.json
+2026-02-04 18:12:10 [INFO] __main__ - --- File 31/31: ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655.png ---
+2026-02-04 18:12:10 [INFO] __main__ - Processing: ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655.png
+2026-02-04 18:12:10 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-04 18:12:10 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-04 18:12:11 [INFO] __main__ - FRST detected 350 centers
+2026-02-04 18:12:19 [INFO] __main__ - Point pass totals: masks=715 discarded_large=1 (limit=10000 px)
+2026-02-04 18:12:19 [INFO] __main__ - Adaptive Threshold found 947 instances.
+2026-02-04 18:12:20 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-04 18:12:20 [INFO] __main__ - Big-prompt produced 24 masks
+2026-02-04 18:12:21 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 2
+2026-02-04 18:12:21 [INFO] __main__ - Instances: FRST=618, ADAPTIVE=947, BIG=24, COMBINED=637
+2026-02-04 18:12:21 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/workspaces/seed_v03/images/output/ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655.json
+2026-02-04 18:12:21 [INFO] __main__ - All tasks completed.
+2026-02-04 18:12:21 [DEBUG] httpcore.connection - close.started
+2026-02-04 18:12:21 [DEBUG] httpcore.connection - close.complete
