@@ -1,0 +1,22 @@
+{
+  "info": {
+    "prompt": "round object",
+    "crop": 1.0,
+    "image_path": "bubbly_flows/tests/img6001.png",
+    "original_size": [
+      1024,
+      1024
+    ],
+    "cropped_size": [
+      1024,
+      1024
+    ],
+    "crop_box": [
+      0,
+      0,
+      1024,
+      1024
+    ]
+  },
+  "annotations": []
+}

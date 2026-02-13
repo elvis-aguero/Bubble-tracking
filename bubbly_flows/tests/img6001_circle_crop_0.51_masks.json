@@ -1,0 +1,265 @@
+{
+  "info": {
+    "prompt": "circle",
+    "crop": 0.51,
+    "image_path": "bubbly_flows/tests/img6001.png",
+    "original_size": [
+      1024,
+      1024
+    ],
+    "cropped_size": [
+      522,
+      522
+    ],
+    "crop_box": [
+      251,
+      251,
+      773,
+      773
+    ]
+  },
+  "annotations": [
+    {
+      "id": 0,
+      "image_id": 0,
+      "category_id": 1,
+      "category_name": "circle",
+      "bbox": [
+        196.71768188476562,
+        136.99063110351562,
+        31.163497924804688,
+        31.6854248046875
+      ],
+      "area": 786.0,
+      "segmentation": {
+        "size": [
+          522,
+          522
+        ],
+        "counts": "VbT3:m?5M3L3N2N2O1N1O2O1N10001O000000000000O2O001N1O2O1N2N2N3M3L4KZge4"
+      },
+      "score": 0.43519309163093567,
+      "iscrowd": 0
+    },
+    {
+      "id": 1,
+      "image_id": 0,
+      "category_id": 1,
+      "category_name": "circle",
+      "bbox": [
+        293.0635681152344,
+        143.2385711669922,
+        61.2843017578125,
+        63.23905944824219
+      ],
+      "area": 3061.0,
+      "segmentation": {
+        "size": [
+          522,
+          522
+        ],
+        "counts": "n`e49l?:H6J5L3N3L3N3L3N2N1O2N2N101N2N101N101O0O101O000O100000000001O0000000000001O0O101O000O2O0O101N2N1O2N2N2N3M2N2N3L3M4L5J6H^_e2"
+      },
+      "score": 0.4523850381374359,
+      "iscrowd": 0
+    },
+    {
+      "id": 2,
+      "image_id": 0,
+      "category_id": 1,
+      "category_name": "circle",
+      "bbox": [
+        97.3140640258789,
+        37.749671936035156,
+        32.23133087158203,
+        32.58068084716797
+      ],
+      "area": 853.0,
+      "segmentation": {
+        "size": [
+          522,
+          522
+        ],
+        "counts": "o_a13R`09J5K3N2N3M101N2N101N100000001O0000O10001O000O2O0O2O1N2N2N2M4M3KRiW6"
+      },
+      "score": 0.43123987317085266,
+      "iscrowd": 0
+    },
+    {
+      "id": 3,
+      "image_id": 0,
+      "category_id": 1,
+      "category_name": "circle",
+      "bbox": [
+        227.00987243652344,
+        340.99798583984375,
+        40.50431823730469,
+        39.680450439453125
+      ],
+      "area": 1269.0,
+      "segmentation": {
+        "size": [
+          522,
+          522
+        ],
+        "counts": "SRd3:m?6K4L4M2N2N2N2N2O0O2O0O101N10000O10000000O1000001N101O0O101N2O0O2N2N1O2M3N3L4K8HYTQ4"
+      },
+      "score": 0.4213191270828247,
+      "iscrowd": 0
+    },
+    {
+      "id": 4,
+      "image_id": 0,
+      "category_id": 1,
+      "category_name": "circle",
+      "bbox": [
+        38.13180923461914,
+        443.6027526855469,
+        30.306438446044922,
+        30.211395263671875
+      ],
+      "area": 738.0,
+      "segmentation": {
+        "size": [
+          522,
+          522
+        ],
+        "counts": "Sjc07P`06K4M2N3M2N101N2O0O101O00000000000000O101O0O2N101N2N2N2N4K5I^_V7"
+      },
+      "score": 0.40377601981163025,
+      "iscrowd": 0
+    },
+    {
+      "id": 5,
+      "image_id": 0,
+      "category_id": 1,
+      "category_name": "circle",
+      "bbox": [
+        122.19950866699219,
+        315.441162109375,
+        54.75260925292969,
+        62.89227294921875
+      ],
+      "area": 2670.0,
+      "segmentation": {
+        "size": [
+          522,
+          522
+        ],
+        "counts": "k`n11T`0>C7Z@]O\\?l0M3L4L4M2N3M2N2N2O1N1O2O1N2O0O10000O101O0000O010000000O2O000O100O2O0O101N101N2N1O2N2N2M3N2M4M4K4L5K5K7EYa_5"
+      },
+      "score": 0.4067022204399109,
+      "iscrowd": 0
+    },
+    {
+      "id": 6,
+      "image_id": 0,
+      "category_id": 1,
+      "category_name": "circle",
+      "bbox": [
+        193.9324188232422,
+        193.07510375976562,
+        25.496841430664062,
+        26.094772338867188
+      ],
+      "area": 535.0,
+      "segmentation": {
+        "size": [
+          522,
+          522
+        ],
+        "counts": "nRS3:n?4M3M2M3O0O2N10000O101OO1000001O0O1O2O1N1O2N3M3L8GPhi4"
+      },
+      "score": 0.4096836447715759,
+      "iscrowd": 0
+    },
+    {
+      "id": 7,
+      "image_id": 0,
+      "category_id": 1,
+      "category_name": "circle",
+      "bbox": [
+        99.9470443725586,
+        340.89703369140625,
+        22.21758270263672,
+        22.238525390625
+      ],
+      "area": 385.0,
+      "segmentation": {
+        "size": [
+          522,
+          522
+        ],
+        "counts": "UZc16R`04M3L3N2O1N100O2O000000000001N101N2O1N2M4KWb[6"
+      },
+      "score": 0.40024611353874207,
+      "iscrowd": 0
+    },
+    {
+      "id": 8,
+      "image_id": 0,
+      "category_id": 1,
+      "category_name": "circle",
+      "bbox": [
+        130.11708068847656,
+        60.04794692993164,
+        28.646591186523438,
+        28.416095733642578
+      ],
+      "area": 652.0,
+      "segmentation": {
+        "size": [
+          522,
+          522
+        ],
+        "counts": "lZR25Q`08J3N3M2N2N101N101O000O2O0000000000O2O0O101N2N2N2N2N3L5JZoh5"
+      },
+      "score": 0.42993804812431335,
+      "iscrowd": 0
+    },
+    {
+      "id": 9,
+      "image_id": 0,
+      "category_id": 1,
+      "category_name": "circle",
+      "bbox": [
+        444.65618896484375,
+        228.6513214111328,
+        40.15277099609375,
+        37.63423156738281
+      ],
+      "area": 1186.0,
+      "segmentation": {
+        "size": [
+          522,
+          522
+        ],
+        "counts": "dRS77Q`07J4K4M3L3O1N2N101N101N100O10000000O10000O100000000O2O001O001N101O1N2N2N2M4L5KRdb0"
+      },
+      "score": 0.4035243093967438,
+      "iscrowd": 0
+    },
+    {
+      "id": 10,
+      "image_id": 0,
+      "category_id": 1,
+      "category_name": "circle",
+      "bbox": [
+        137.1494140625,
+        231.7523956298828,
+        42.30183410644531,
+        41.68400573730469
+      ],
+      "area": 1374.0,
+      "segmentation": {
+        "size": [
+          522,
+          522
+        ],
+        "counts": "dRV25P`0:I4L3M4M2N2O1N101N2N101N2O000O2O00000000000000000001N101O0O2O0O2O1N1O2N2N3M2M4M3L8EUS^5"
+      },
+      "score": 0.4422401487827301,
+      "iscrowd": 0
+    }
+  ]
+}

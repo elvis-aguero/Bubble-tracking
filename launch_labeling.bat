@@ -16,11 +16,19 @@ if not exist "bubbly_flows" (
     exit /b 1
 )
 
-REM Try to find bash (sh.exe) which usually comes with Git for Windows
-where sh >nul 2>nul
-if %ERRORLEVEL% EQU 0 (
-    echo [1/2] Found bash/sh. Running script via bash...
-    sh bubbly_flows/scripts/xanylabel.sh
+REM Resolve a real bash.exe (Git Bash / WSL bash in PATH / manual install)
+set "BASH_EXE="
+where bash >nul 2>nul
+if %ERRORLEVEL% EQU 0 set "BASH_EXE=bash"
+
+if not defined BASH_EXE if exist "%ProgramFiles%\Git\bin\bash.exe" set "BASH_EXE=%ProgramFiles%\Git\bin\bash.exe"
+if not defined BASH_EXE if exist "%ProgramW6432%\Git\bin\bash.exe" set "BASH_EXE=%ProgramW6432%\Git\bin\bash.exe"
+if not defined BASH_EXE if exist "%ProgramFiles(x86)%\Git\bin\bash.exe" set "BASH_EXE=%ProgramFiles(x86)%\Git\bin\bash.exe"
+if not defined BASH_EXE if exist "%LocalAppData%\Programs\Git\bin\bash.exe" set "BASH_EXE=%LocalAppData%\Programs\Git\bin\bash.exe"
+
+if defined BASH_EXE (
+    echo [1/2] Found bash. Running launcher script...
+    "%BASH_EXE%" "%SOURCE_DIR%bubbly_flows\scripts\xanylabel.sh"
     goto end
 )
 
@@ -39,8 +47,9 @@ if %ERRORLEVEL% EQU 0 (
     goto end
 )
 
-echo ERROR: Neither 'bash' (sh.exe) nor 'python' was found in your PATH.
-echo Please install Git for Windows (includes bash) or Python to use this launcher.
+echo ERROR: Could not find a compatible launcher runtime.
+echo - Preferred: Install Git for Windows (bash.exe), then re-run this file.
+echo - Fallback: Install Python and create x-labeling-env as described in USER_GUIDE.md.
 pause
 
 :end

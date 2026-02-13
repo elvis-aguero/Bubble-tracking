@@ -12,6 +12,12 @@ from PIL import Image, ImageDraw
 
 from .postprocess import Instance
 
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+
+
 _TAB20_COLORS_RAW: List[Tuple[int, int, int]] = [
     (31, 119, 180), (174, 199, 232), (255, 127, 14), (255, 187, 120),
     (44, 160, 44), (152, 223, 138), (214, 39, 40), (255, 152, 150),
@@ -118,8 +124,11 @@ def save_instance_outputs(
     image_shape: Tuple[int, int],
     output_json: Optional[str],
     output_csv: Optional[str],
+
     include_rle: bool,
+    class_label: str = "bubble",
 ) -> None:
+
     if not output_json and not output_csv:
         return
 
@@ -134,7 +143,9 @@ def save_instance_outputs(
             "bbox_xyxy": [int(v) for v in inst.bbox],
             "centroid_xy": [cx, cy],
             "radius_equiv_px": float(math.sqrt(inst.area / math.pi)) if inst.area > 0 else 0.0,
+            "label": class_label,
         }
+
         if include_rle:
             full_mask = materialize_full_mask(inst.mask, inst.bbox, (h, w))
             rle = encode_mask_rle(full_mask)
@@ -163,7 +174,9 @@ def save_instance_outputs(
             "centroid_x",
             "centroid_y",
             "radius_equiv_px",
+            "label",
         ]
+
         with open(output_csv, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
@@ -182,8 +195,97 @@ def save_instance_outputs(
                         "centroid_x": centroid[0],
                         "centroid_y": centroid[1],
                         "radius_equiv_px": record["radius_equiv_px"],
+                        "label": record["label"],
                     }
+
                 )
+
+
+def mask_to_polygons(mask: np.ndarray) -> List[List[float]]:
+    """Convert binary mask to polygon points for LabelMe."""
+    if cv2 is None:
+        return []
+    
+    # helper to ensure binary uint8
+    mask_u8 = (mask.astype(np.uint8) * 255)
+    contours, _ = cv2.findContours(mask_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    polygons = []
+    for contour in contours:
+        # contour is shape (N, 1, 2) -> (N, 2)
+        if len(contour) < 3:
+            continue
+        # simplify slightly
+        epsilon = 0.001 * cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, epsilon, True)
+        if len(approx) < 3:
+            continue
+            
+        points = approx.reshape(-1, 2).tolist()
+        # Flatten simple invalid polygons
+        if len(points) < 3:
+            continue
+        polygons.append(points)
+        
+    # We only return the largest polygon for now to avoid multipart complexity in basic tools,
+    # or return all? LabelMe handles multiple shapes.
+    # But usually one Instance = one Shape. If multiple polys, we might need multiple shapes.
+    # For now, let's just use the largest contour to keep 1-to-1 mapping
+    if not polygons:
+        return []
+        
+    return max(polygons, key=lambda p: len(p))
+
+
+def save_labelme_json(
+    instances: List[Instance],
+    image_path: str,
+    image_shape: Tuple[int, int],
+
+    output_path: str,
+    class_label: str = "bubble",
+) -> None:
+
+    """Save instances in LabelMe JSON format."""
+    h, w = image_shape
+    shapes = []
+    
+    for idx, inst in enumerate(instances):
+        if inst.mask is None:
+            continue
+            
+        # Get polygons
+        # We need the full mask to get correct coordinates (instance mask is cropped)
+        full_mask = materialize_full_mask(inst.mask, inst.bbox, (h, w))
+        points = mask_to_polygons(full_mask)
+        
+        if not points:
+            continue
+            
+        shape = {
+            "label": class_label, # Global label for now
+
+            "points": points,
+            "group_id": None,
+            "shape_type": "polygon",
+            "flags": {}
+        }
+
+        shapes.append(shape)
+
+    data = {
+        "version": "4.5.6",
+        "flags": {},
+        "shapes": shapes,
+        "imagePath": os.path.basename(image_path),
+        "imageData": None,
+        "imageHeight": h,
+        "imageWidth": w,
+    }
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
 
 
 def save_candidate_viz(image_rgb: np.ndarray, points: List[Tuple[float, float]], out_path: str) -> None:

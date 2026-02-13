@@ -17,7 +17,7 @@ Workflow:
 Environment Setup (copy-paste for this environment):
     export HF_HOME=/users/eaguerov/scratch/hf
     export CUDA_VISIBLE_DEVICES=0  # if needed
-    0interact -q gpu -g 1 -n 4 -t 04:00:00 -m 16g
+    interact -q gpu -g 1 -n 4 -t 04:00:00 -m 16g
     eval "$(mamba shell hook --shell bash)"
 
 Usage (copy/paste):
@@ -87,8 +87,11 @@ from bubble_sam3.outputs import (
     ensure_output_dir,
     resolve_output_paths,
     save_candidate_viz,
+
     save_instance_outputs,
+    save_labelme_json,
 )
+
 from bubble_sam3.postprocess import (
     Instance,
     consolidate_instances,
@@ -107,14 +110,19 @@ except ImportError as exc:
     raise RuntimeError("torch is required for SAM3. Install with: pip install torch") from exc
 
 
-def resolve_output_path(input_path: str, output_arg: Optional[str]) -> str:
+def resolve_output_path(
+    input_path: str,
+    output_arg: Optional[str],
+    default_suffix: Optional[str] = None,
+) -> str:
     """Resolve output path relative to the input image by default."""
     in_path = Path(input_path).expanduser().resolve()
     base_dir = in_path.parent
     out_dir = base_dir / "output"
 
     if not output_arg:
-        return str(out_dir / f"{in_path.stem}_frst_sam3_overlay.png")
+        suffix = default_suffix or "_frst_sam3_overlay.png"
+        return str(out_dir / f"{in_path.stem}{suffix}")
 
     out = Path(output_arg).expanduser()
     if out.is_absolute():
@@ -188,7 +196,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--debug_dir", default=None, help="Optional directory to save debug PNGs")
     parser.add_argument("--output_json", default=None, help="Optional per-instance JSON output path")
     parser.add_argument("--no_output_json", action="store_true", help="Disable per-instance JSON output")
+    parser.add_argument("--no_analysis_json", action="store_true", help="Disable detailed analysis JSON output (keep only LabelMe JSON)")
+    parser.add_argument("--no_result_images", action="store_true", help="Disable saving result PNG images")
     parser.add_argument("--output_csv", default=None, help="Optional per-instance CSV output path")
+
     parser.add_argument("--include_rle", action="store_true", help="Include COCO RLE masks in JSON")
     parser.add_argument("--sam_model", default=None, help="Override SAM3 model name/id")
     parser.add_argument("--points_per_batch", type=int, default=None, help="Points per SAM3 tracker batch")
@@ -287,7 +298,13 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Enable constrained watershed splitting for fused adaptive masks",
     )
+    parser.add_argument(
+        "--label",
+        default="bubble",
+        help="Class label for detected instances (default: 'bubble')",
+    )
     return parser.parse_args()
+
 
 
 def frst_centers(gray_u8: np.ndarray, args: argparse.Namespace) -> Tuple[np.ndarray, np.ndarray]:
@@ -963,7 +980,8 @@ def main() -> None:
     cfg["sam"]["pcs_text_prompt"] = args.frst_text_prompt
     cfg["sam"]["pcs_enable"] = bool(cfg["sam"].get("pcs_enable", True)) and not args.disable_pcs
 
-    output_path = resolve_output_path(args.input, args.output)
+    default_suffix = ".json" if args.no_result_images else None
+    output_path = resolve_output_path(args.input, args.output, default_suffix=default_suffix)
     frst_out, blackhat_out, big_out, combined_out = derive_output_paths(output_path)
     json_path, csv_path = resolve_output_paths(combined_out, cfg)
     ensure_output_dir(frst_out)
@@ -983,7 +1001,74 @@ def main() -> None:
         args.seed = int(cfg.get("seed", 0))
     set_deterministic_seed(int(args.seed))
 
-    image = Image.open(args.input).convert("RGB")
+
+def process_single_image(
+    image_path: str,
+    args: argparse.Namespace,
+    cfg: Dict[str, Any],
+    frst_backend: Any,
+    pcs_backend: Optional[Sam3ConceptBackend],
+    # big_backend: ? -> We handle big prompt loading inside for now or pass it. 
+    # To strictly load ONCE, we should load big prompt model outside too.
+    # However, big_prompt code is currently function-based importing models inside.
+    # For now, we will focus on FRST/PCS backends which are classes.
+) -> None:
+    logger = logging.getLogger(__name__)
+    logger.info("Processing: %s", image_path)
+
+    default_suffix = ".json" if args.no_result_images else None
+    
+    # If batch mode (implied by this function being called in a loop), output handling matches single mode
+    # resolve_output_path handles the "relative to input" logic if output_arg is None.
+    # If output_arg is a directory (checked in main), we pass None here? 
+    # Actually, we need to handle the output path per image.
+    
+    # If args.output was a fixed filename, that's bad for batch.
+    # If args.output was a directory, we want <out_dir>/<stem>.suffix
+    # If args.output was None, we want <input_dir>/output/<stem>.suffix
+    
+    # Logic:
+    # We will pass specific output_arg=None to resolve_output_path if we want default behavior.
+    # If the user specified a master output directory for batch, we construct the path here.
+    
+    current_output_arg = args.output
+    if args.batch_mode_output_dir:
+        # User output path was a directory.
+        # We want to put this image's output there.
+        # Preserve name.
+        current_output_arg = str(Path(args.batch_mode_output_dir) / Path(image_path).name)
+        # But wait, resolve_output_path expects specific filename or it creates one.
+        # If we just pass the directory, resolve_output_path (lines 122+) handles it?
+        # Line 126: if out.parent == Path("."): return str(out_dir / out.name) -> intended for filename
+        # Let's simplify: pass None, and let it go to default output folder relative to image,
+        # OR if we want central output, we construct it.
+        pass
+
+    # Let's trust resolve_output_path deals with "file vs dir" if properly implemented?
+    # Current resolve_output_path logic (lines 113-132) is:
+    # If output_arg is None -> <input_parent>/output/<stem>...
+    # If output_arg is defined:
+    #    if absolute -> return it (assumes filename!)
+    #    if local filename -> <input_parent>/output/<filename>
+    #    else -> <input_parent>/<output_arg>
+    
+    # This logic assumes output_arg is a filepath, not a directory.
+    # In batch mode, if users provide --output /tmp/results, they presume it's a folder.
+    # We will handle this in main loop. output_arg passed here will be the FULL PATH.
+
+    output_path = resolve_output_path(image_path, args.current_output_path, default_suffix=default_suffix)
+    frst_out, blackhat_out, big_out, combined_out = derive_output_paths(output_path)
+    json_path, csv_path = resolve_output_paths(combined_out, cfg)
+    
+    ensure_output_dir(frst_out)
+    ensure_output_dir(blackhat_out)
+    ensure_output_dir(big_out)
+    ensure_output_dir(combined_out)
+    if json_path: ensure_output_dir(json_path)
+    if csv_path: ensure_output_dir(csv_path)
+
+    # 3. Load & Preprocess
+    image = Image.open(image_path).convert("RGB")
     image_rgb = np.array(image, dtype=np.uint8)
     h, w = image_rgb.shape[:2]
 
@@ -991,49 +1076,40 @@ def main() -> None:
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     gray = clahe.apply(gray_raw)
 
+    # 4. FRST Detection
     centers, symmetry = frst_centers(gray, args)
     points_xy = [(float(x), float(y)) for x, y in centers]
     logger.info("FRST detected %d centers", len(points_xy))
 
     if args.debug_dir:
-        os.makedirs(args.debug_dir, exist_ok=True)
+        # We need unique debug dir for batch? or just overwrite?
+        # Better to keep per-image if batch.
+        # Let's rely on global debug_dir, maybe append stem.
+        img_debug_dir = os.path.join(args.debug_dir, Path(image_path).stem)
+        os.makedirs(img_debug_dir, exist_ok=True)
+        
         sym_vis = (np.clip(symmetry, 0, 1) * 255).astype(np.uint8)
-        Image.fromarray(sym_vis, mode="L").save(os.path.join(args.debug_dir, "frst_symmetry.png"))
+        Image.fromarray(sym_vis, mode="L").save(os.path.join(img_debug_dir, "frst_symmetry.png"))
         if points_xy:
-            save_candidate_viz(image_rgb, points_xy, os.path.join(args.debug_dir, "frst_centers.png"))
+            save_candidate_viz(image_rgb, points_xy, os.path.join(img_debug_dir, "frst_centers.png"))
+    else:
+        img_debug_dir = None
 
-    frst_backend = None
-    if not args.disable_candidates:
-        if args.frst_backend == "fb":
-            frst_backend = FrstPointBackendFB(cfg)
-        else:
-            frst_backend = FrstPointBackendHF(cfg)
-        logger.info("FRST backend: %s", args.frst_backend)
+    # 5. FRST Point Prompting (Tiled)
+    frst_instances: List[Instance] = []
+    
+    # We calculate tiling
     tile_size = max(1, int(round(8.0 * float(args.r_max))))
     tile_overlap = max(0, int(round(2.5 * float(args.r_max))))
     tile_cfg = {"tiling": {"tile_size": tile_size, "tile_overlap": tile_overlap}}
     tiles, (pad_bottom, pad_right) = create_tiles(h, w, tile_cfg)
     padded_rgb = pad_image(image_rgb, pad_bottom, pad_right, mode="reflect")
-    logger.info(
-        "Point-tiling enabled: tile_size=%d, overlap=%d, tiles=%d",
-        tile_size,
-        tile_overlap,
-        len(tiles),
-    )
-    logger.info(
-        "Negative prompts enabled: knn_k=%d, hex_radius=%.2f px",
-        3,
-        1.5 * float(args.r_max),
-    )
 
     area_limit = int(round(16.0 * float(args.r_max) * float(args.r_max)))
     total_discarded = 0
     total_masks = 0
-    frst_instances: List[Instance] = []
 
-    # Only run FRST/SAM3 if candidate points exist and not explicitly disabled
-    # (Actually we always run it if enabled, just might have 0 points)
-    if not args.disable_candidates:
+    if not args.disable_candidates and frst_backend is not None:
         if points_xy:
             centers_arr = np.array(points_xy, dtype=np.float32)
             xs = centers_arr[:, 0]
@@ -1069,14 +1145,6 @@ def main() -> None:
             )
             total_discarded += discarded
             frst_instances.extend(tile_instances)
-            logger.info(
-                "Tile %d/%d: points=%d masks=%d discarded_large=%d",
-                idx + 1,
-                len(tiles),
-                len(tile_points),
-                len(masks),
-                discarded,
-            )
 
         logger.info(
             "Point pass totals: masks=%d discarded_large=%d (limit=%d px)",
@@ -1085,7 +1153,7 @@ def main() -> None:
             area_limit,
         )
 
-    # --- Black-hat (Adaptive vs Morph) Selection ---
+    # 6. Black-hat (Adaptive vs Morph) Selection
     blackhat_cfg = cfg.get("blackhat", {})
     blackhat_enable = bool(blackhat_cfg.get("enable", True))
     if args.enable_blackhat:
@@ -1093,43 +1161,27 @@ def main() -> None:
     if args.disable_blackhat:
         blackhat_enable = False
     
-    # Check method (cli override? not yet standard, assume adaptive default logic)
-    # The user asked for "adaptive" to be the main/default.
-    # We will use the args or cfg to determine.
-    # We'll use the 'blackhat_method' key if present in config, default to 'adaptive'.
-    # CLI arg not explicit in parse_args above, let's just stick to logic:
-    # If blackhat enabled, run Adaptive unless specifically configured for morph?
-    # User said "The default should be adaptive + FRST + SAM. Nothing else."
-    
     blackhat_instances: List[Instance] = []
-    blackhat_method = args.blackhat_method # Use CLI argument
+    blackhat_method = args.blackhat_method 
     
     if blackhat_enable:
         if blackhat_method == "adaptive":
-            logger.info("Running Adaptive Threshold (new Black-hat) detection...")
-            # Use parameters from detect_bubbles.py or cfg
-            # detect_bubbles params: area 20-350, circ 0.4, sol 0.75, inten 160
-            
             bh_area_min = 20
             bh_area_max = 350
             if args.blackhat_area_min is not None: bh_area_min = args.blackhat_area_min
             if args.blackhat_area_max is not None: bh_area_max = args.blackhat_area_max
-            
-            # Additional params could be exposed via config
-            # min_circularity, min_solidity, max_intensity
             
             blackhat_instances = build_adaptive_instances(
                 gray_raw,
                 area_min=bh_area_min,
                 area_max=bh_area_max,
                 split_fused=args.blackhat_split_fused,
-                debug_dir=args.debug_dir
+                debug_dir=img_debug_dir
             )
             logger.info(f"Adaptive Threshold found {len(blackhat_instances)} instances.")
             
         else:
             # Legacy Path
-            logger.info("Running Legacy Morphological Black-hat detection...")
             bh_radius = args.blackhat_radius if args.blackhat_radius is not None else int(
                 blackhat_cfg.get("radius", 4)
             )
@@ -1191,20 +1243,10 @@ def main() -> None:
                 patch_use_otsu=bh_patch_otsu,
                 fallback_global_cc=bh_fallback_cc,
             )
-            logger.info(
-                "Legacy Black-hat masks: %d (radius=%d, pct=%.2f, area=[%d,%d], watershed=%s, blob=%s)",
-                len(blackhat_instances),
-                bh_radius,
-                bh_percentile,
-                bh_area_min,
-                bh_area_max,
-                "on" if bh_watershed else "off",
-                bh_blob_method,
-            )
+            logger.info("Legacy Black-hat masks: %d", len(blackhat_instances))
 
-    pcs_backend: Optional[Sam3ConceptBackend] = None
-    if cfg["sam"].get("pcs_enable", True) and args.frst_text_prompt:
-        pcs_backend = Sam3ConceptBackend(cfg["device"], cfg["sam"])
+    # 7. PCS (Micro Text)
+    if pcs_backend:
         pcs_threshold = float(cfg["sam"].get("pcs_threshold", 0.9))
         pcs_mask_threshold = float(cfg["sam"].get("pcs_mask_threshold", 0.9))
         pcs_masks, pcs_scores, pcs_boxes = pcs_backend.segment_by_text(
@@ -1215,15 +1257,18 @@ def main() -> None:
             build_instances_from_pcs(pcs_masks, pcs_scores, pcs_boxes, (h, w))
         )
 
+    # 8. Big Bubble (Text)
     big_instances: List[Instance] = []
     if cfg["sam"].get("pcs_enable", True) and args.big_text_prompt:
+        # NOTE: This re-loads model every time currently as imports are inside.
+        # Acceptable for now as big_bubble_prompt scripts are simple.
         if args.big_backend == "hf":
             from big_bubble_prompt_hf import run_big_prompt as run_big_prompt_hf
             big_instances = run_big_prompt_hf(image, args.big_text_prompt, cfg)
         else:
             from big_bubble_prompt_fb import run_big_prompt as run_big_prompt_fb
             big_instances = run_big_prompt_fb(image, args.big_text_prompt, cfg)
-        logger.info("Big-prompt (%s) produced %d masks", args.big_backend, len(big_instances))
+        logger.info("Big-prompt produced %d masks", len(big_instances))
 
     frst_instances = apply_convex_hull(frst_instances)
 
@@ -1238,12 +1283,15 @@ def main() -> None:
         len(combined_instances),
     )
 
+    # 9. Saving Output
     output_mode = str(cfg["output"].get("output_mode", "overlay")).lower()
+    
     def _save_instances(instances: List[Instance], out_path: str, label: str) -> None:
+        if args.no_result_images:
+            return
         if output_mode == "cutout":
             rgba = build_rgba_cutout(image_rgb, instances)
             Image.fromarray(rgba, mode="RGBA").save(out_path)
-            logger.info("Saved %s cutout to %s", label, out_path)
         else:
             overlay = build_rgba_overlay(
                 image_rgb,
@@ -1252,26 +1300,149 @@ def main() -> None:
                 colormap=cfg["output"].get("overlay_colormap", "tab20"),
             )
             Image.fromarray(overlay, mode="RGBA").save(out_path)
-            logger.info("Saved %s overlay to %s", label, out_path)
+        logger.info("Saved %s to %s", label, out_path)
 
     _save_instances(frst_instances, frst_out, "FRST")
     _save_instances(blackhat_instances, blackhat_out, "ADAPTIVE")
     _save_instances(big_instances, big_out, "BIG")
     _save_instances(combined_instances, combined_out, "COMBINED")
 
-    save_instance_outputs(
-        combined_instances,
-        args.input,
-        (h, w),
-        json_path,
-        csv_path,
-        include_rle=bool(cfg["output"].get("include_rle", False)),
-    )
-    if json_path:
-        logger.info("Saved JSON to %s", json_path)
+    # JSON Outputs
+    labelme_path = json_path
+    analysis_path = None
+    if json_path and not args.no_analysis_json:
+        analysis_path = str(Path(json_path).with_name(Path(json_path).stem + "_analysis.json"))
+
+    if analysis_path:
+        save_instance_outputs(
+            combined_instances,
+            image_path,
+            (h, w),
+            analysis_path,
+            None,
+            include_rle=bool(cfg["output"].get("include_rle", False)),
+            class_label=args.label,
+        )
+        logger.info("Saved Analysis JSON to %s", analysis_path)
+    
     if csv_path:
+        save_instance_outputs(
+             combined_instances,
+             image_path,
+             (h, w),
+             None,
+             csv_path,
+             include_rle=False,
+             class_label=args.label,
+        )
         logger.info("Saved CSV to %s", csv_path)
 
+    if labelme_path:
+        save_labelme_json(combined_instances, image_path, (h, w), labelme_path, class_label=args.label)
+        logger.info("Saved LabelMe JSON to %s", labelme_path)
+
+
+def main() -> None:
+    args = parse_args()
+    ensure_hf_home()
+    
+    # 1. Config Setup
+    cfg = load_config(args.config)
+    cfg = apply_cli_overrides(cfg, args)
+    if args.text_prompt:
+        args.frst_text_prompt = args.text_prompt
+    cfg["sam"]["pcs_text_prompt"] = args.frst_text_prompt
+    cfg["sam"]["pcs_enable"] = bool(cfg["sam"].get("pcs_enable", True)) and not args.disable_pcs
+
+    if args.seed is None:
+        args.seed = int(cfg.get("seed", 0))
+    set_deterministic_seed(int(args.seed))
+
+    input_path = Path(args.input)
+    is_directory = input_path.is_dir()
+
+    # Setup Logging
+    log_dir = resolve_logs_dir(args.input) if not is_directory else str(input_path / "logs")
+    setup_logging(log_dir)
+    logger = logging.getLogger(__name__)
+
+    # 2. Determine File List
+    files_to_process = []
+    if is_directory:
+        # Find all .png files
+        files_to_process = sorted(list(input_path.rglob("*.png")))
+        logger.info("Directory mode: found %d PNG files in %s", len(files_to_process), input_path)
+        
+        # Check output argument behavior for batch
+        # If args.output is provided, we treat it as a directory to dump results?
+        # Or we error out? Standard convention: if input is dir, output should be dir.
+        if args.output:
+            if not os.path.isdir(args.output) and not os.path.exists(args.output):
+                 # Create it as a dir
+                 os.makedirs(args.output, exist_ok=True)
+            args.batch_mode_output_dir = args.output
+        else:
+            args.batch_mode_output_dir = None
+            
+    else:
+        files_to_process = [input_path]
+        args.batch_mode_output_dir = None
+        logger.info("Single file mode: %s", input_path)
+
+    if not files_to_process:
+        logger.warning("No files to process.")
+        return
+
+    # 3. Model Initialization (Run Once)
+    frst_backend = None
+    if not args.disable_candidates:
+        logger.info("Initializing FRST backend (%s)...", args.frst_backend)
+        if args.frst_backend == "fb":
+            frst_backend = FrstPointBackendFB(cfg)
+        else:
+            frst_backend = FrstPointBackendHF(cfg)
+            
+    pcs_backend: Optional[Sam3ConceptBackend] = None
+    if cfg["sam"].get("pcs_enable", True) and args.frst_text_prompt:
+        logger.info("Initializing PCS backend...")
+        pcs_backend = Sam3ConceptBackend(cfg["device"], cfg["sam"])
+
+    # 4. Processing Loop
+    for i, file_p in enumerate(files_to_process):
+        logger.info("--- File %d/%d: %s ---", i+1, len(files_to_process), file_p.name)
+        
+        # Prepare per-image args
+        # We need to construct the specific output path for this image
+        # If batch_mode_output_dir is set, use it + filename
+        # Else, pass None so it defaults to input-relative.
+        
+        if args.batch_mode_output_dir:
+            # We will pass the full desired output filename to the helper
+            # But the helper expects "output_arg" which can be a full path or just a name.
+            # We want: <batch_dir>/<stem>.suffix
+            # So let's construct it.
+            # Wait, process_single_image calls logic. Let's populate the arg.
+            args.current_output_path = str(Path(args.batch_mode_output_dir) / file_p.name)
+        elif not is_directory:
+             # Single file mode, use the user's --output directly
+             args.current_output_path = args.output
+        else:
+             # Batch mode, no explicit output dir -> defaults to local ./output/ folders per image
+             args.current_output_path = None
+             
+        try:
+            process_single_image(
+                str(file_p),
+                args,
+                cfg,
+                frst_backend,
+                pcs_backend
+            )
+        except Exception as e:
+            logger.error("Failed to process %s", file_p, exc_info=True)
+            continue
+            
+    logger.info("All tasks completed.")
 
 if __name__ == "__main__":
     main()

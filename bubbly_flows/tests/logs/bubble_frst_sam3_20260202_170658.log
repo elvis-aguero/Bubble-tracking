@@ -1,0 +1,77 @@
+2026-02-02 17:06:58 [INFO] root - Logging initialized. Log file: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/logs/bubble_frst_sam3_20260202_170658.log
+2026-02-02 17:06:58 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-02-02 17:06:58 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 41 8192
+2026-02-02 17:06:59 [INFO] __main__ - FRST detected 259 centers
+2026-02-02 17:07:08 [INFO] __main__ - FRST backend: hf
+2026-02-02 17:07:08 [INFO] __main__ - Point-tiling enabled: tile_size=200, overlap=62, tiles=49
+2026-02-02 17:07:08 [INFO] __main__ - Negative prompts enabled: knn_k=3, hex_radius=37.50 px
+2026-02-02 17:07:09 [INFO] __main__ - Tile 11/49: points=2 masks=2 discarded_large=0
+2026-02-02 17:07:09 [INFO] __main__ - Tile 12/49: points=9 masks=8 discarded_large=0
+2026-02-02 17:07:09 [INFO] __main__ - Tile 13/49: points=14 masks=14 discarded_large=0
+2026-02-02 17:07:09 [INFO] __main__ - Tile 16/49: points=1 masks=1 discarded_large=0
+2026-02-02 17:07:10 [INFO] __main__ - Tile 17/49: points=15 masks=14 discarded_large=0
+2026-02-02 17:07:10 [INFO] __main__ - Tile 18/49: points=51 masks=51 discarded_large=0
+2026-02-02 17:07:10 [INFO] __main__ - Tile 19/49: points=65 masks=65 discarded_large=0
+2026-02-02 17:07:10 [INFO] __main__ - Tile 20/49: points=40 masks=40 discarded_large=0
+2026-02-02 17:07:11 [INFO] __main__ - Tile 21/49: points=1 masks=1 discarded_large=0
+2026-02-02 17:07:11 [INFO] __main__ - Tile 23/49: points=2 masks=1 discarded_large=0
+2026-02-02 17:07:11 [INFO] __main__ - Tile 24/49: points=31 masks=31 discarded_large=0
+2026-02-02 17:07:11 [INFO] __main__ - Tile 25/49: points=72 masks=72 discarded_large=0
+2026-02-02 17:07:12 [INFO] __main__ - Tile 26/49: points=91 masks=91 discarded_large=0
+2026-02-02 17:07:12 [INFO] __main__ - Tile 27/49: points=35 masks=35 discarded_large=0
+2026-02-02 17:07:12 [INFO] __main__ - Tile 28/49: points=2 masks=1 discarded_large=0
+2026-02-02 17:07:12 [INFO] __main__ - Tile 30/49: points=1 masks=0 discarded_large=0
+2026-02-02 17:07:12 [INFO] __main__ - Tile 31/49: points=17 masks=16 discarded_large=0
+2026-02-02 17:07:13 [INFO] __main__ - Tile 32/49: points=32 masks=32 discarded_large=0
+2026-02-02 17:07:13 [INFO] __main__ - Tile 33/49: points=43 masks=43 discarded_large=0
+2026-02-02 17:07:13 [INFO] __main__ - Tile 34/49: points=16 masks=16 discarded_large=0
+2026-02-02 17:07:13 [INFO] __main__ - Tile 35/49: points=2 masks=2 discarded_large=0
+2026-02-02 17:07:13 [INFO] __main__ - Tile 37/49: points=1 masks=0 discarded_large=0
+2026-02-02 17:07:14 [INFO] __main__ - Tile 38/49: points=4 masks=3 discarded_large=0
+2026-02-02 17:07:14 [INFO] __main__ - Tile 39/49: points=4 masks=3 discarded_large=0
+2026-02-02 17:07:14 [INFO] __main__ - Tile 40/49: points=4 masks=3 discarded_large=0
+2026-02-02 17:07:14 [INFO] __main__ - Tile 41/49: points=1 masks=1 discarded_large=0
+2026-02-02 17:07:14 [INFO] __main__ - Tile 45/49: points=1 masks=1 discarded_large=0
+2026-02-02 17:07:14 [INFO] __main__ - Tile 46/49: points=2 masks=1 discarded_large=0
+2026-02-02 17:07:14 [INFO] __main__ - Point pass totals: masks=548 discarded_large=0 (limit=10000 px)
+2026-02-02 17:07:14 [INFO] __main__ - Running Adaptive Threshold (new Black-hat) detection...
+2026-02-02 17:07:15 [INFO] __main__ - Adaptive Threshold found 525 instances.
+2026-02-02 17:07:17 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-02-02 17:07:17 [DEBUG] root - Falling back to triton or CPU mask NMS implementation -- please install `torch_generic_nms` via
+	pip uninstall -y torch_generic_nms; TORCH_CUDA_ARCH_LIST="8.0 9.0" pip install git+https://github.com/ronghanghu/torch_generic_nms
+2026-02-02 17:07:24 [DEBUG] httpcore.connection - connect_tcp.started host='huggingface.co' port=443 local_address=None timeout=10 socket_options=None
+2026-02-02 17:07:24 [DEBUG] httpcore.connection - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7f9e74dd03b0>
+2026-02-02 17:07:24 [DEBUG] httpcore.connection - start_tls.started ssl_context=<ssl.SSLContext object at 0x7f9e74da3350> server_hostname='huggingface.co' timeout=10
+2026-02-02 17:07:24 [DEBUG] httpcore.connection - start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7f9e74dd02f0>
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - send_request_headers.started request=<Request [b'HEAD']>
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - send_request_headers.complete
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - send_request_body.started request=<Request [b'HEAD']>
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - send_request_body.complete
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - receive_response_headers.started request=<Request [b'HEAD']>
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'text/plain; charset=utf-8'), (b'Content-Length', b'25843'), (b'Connection', b'keep-alive'), (b'Date', b'Mon, 02 Feb 2026 22:07:24 GMT'), (b'ETag', b'"3e600e765b0f1b4c52680aed9ad242c9a90f7ed1"'), (b'X-Powered-By', b'huggingface-moon'), (b'X-Request-Id', b'Root=1-6981201c-0ad2e9327e908e4e5c6a33ce;528319f5-0d6c-463c-a707-9cbf0bc46193'), (b'RateLimit', b'"resolvers";r=4999;t=159'), (b'RateLimit-Policy', b'"fixed window";"resolvers";q=5000;w=300'), (b'cross-origin-opener-policy', b'same-origin'), (b'Referrer-Policy', b'strict-origin-when-cross-origin'), (b'Access-Control-Max-Age', b'86400'), (b'Access-Control-Allow-Origin', b'https://huggingface.co'), (b'Vary', b'Origin'), (b'Access-Control-Expose-Headers', b'X-Repo-Commit,X-Request-Id,X-Error-Code,X-Error-Message,X-Total-Count,ETag,Link,Accept-Ranges,Content-Range,X-Linked-Size,X-Linked-ETag,X-Xet-Hash'), (b'X-Repo-Commit', b'3c879f39826c281e95690f02c7821c4de09afae7'), (b'Accept-Ranges', b'bytes'), (b'X-Hub-Cache', b'HIT'), (b'Content-Disposition', b'inline; filename*=UTF-8\'\'config.json; filename="config.json";'), (b'Content-Security-Policy', b"default-src 'none'; sandbox"), (b'X-Cache', b'Miss from cloudfront'), (b'Via', b'1.1 d298e3c61b79ba9798cab3920faa7aa0.cloudfront.net (CloudFront)'), (b'X-Amz-Cf-Pop', b'JFK50-P9'), (b'X-Amz-Cf-Id', b'uxGX2V2BleS4PCXP8r1fw0SQ_iZ74aNpJDS2i_3o8IfkTncy6V_GHg==')])
+2026-02-02 17:07:24 [INFO] httpx - HTTP Request: HEAD https://huggingface.co/facebook/sam3/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - receive_response_body.started request=<Request [b'HEAD']>
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - receive_response_body.complete
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - response_closed.started
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - response_closed.complete
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - send_request_headers.started request=<Request [b'HEAD']>
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - send_request_headers.complete
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - send_request_body.started request=<Request [b'HEAD']>
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - send_request_body.complete
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - receive_response_headers.started request=<Request [b'HEAD']>
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - receive_response_headers.complete return_value=(b'HTTP/1.1', 302, b'Found', [(b'Content-Type', b'text/plain; charset=utf-8'), (b'Content-Length', b'1315'), (b'Connection', b'keep-alive'), (b'Date', b'Mon, 02 Feb 2026 22:07:24 GMT'), (b'Location', b'https://cas-bridge.xethub.hf.co/xet-bridge-us/690d80fc9f252aa897a1dc6d/ba62acd04c1fe8f3d6096b1552e6ca28a2f7c7380f931040f5719a2bcdf844ad?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=cas%2F20260202%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260202T220640Z&X-Amz-Expires=3600&X-Amz-Signature=e1884022342a55b324ee5b22d67e1c84efbc75ebca08828bd7c31c47f56cb8e4&X-Amz-SignedHeaders=host&X-Xet-Cas-Uid=6762165426fd6f7f087539b3&response-content-disposition=inline%3B+filename*%3DUTF-8%27%27sam3.pt%3B+filename%3D%22sam3.pt%22%3B&x-id=GetObject&Expires=1770073600&Policy=eyJTdGF0ZW1lbnQiOlt7IkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3MDA3MzYwMH19LCJSZXNvdXJjZSI6Imh0dHBzOi8vY2FzLWJyaWRnZS54ZXRodWIuaGYuY28veGV0LWJyaWRnZS11cy82OTBkODBmYzlmMjUyYWE4OTdhMWRjNmQvYmE2MmFjZDA0YzFmZThmM2Q2MDk2YjE1NTJlNmNhMjhhMmY3YzczODBmOTMxMDQwZjU3MTlhMmJjZGY4NDRhZCoifV19&Signature=qfnutt3ZS6nykFd%7EdpJ53dYpCDHps0bhVpVFl43Ws0AI4eWxiGmoO8KgnAP2zKPCLbDvPQrqveJ2SdXW4hwuMwjTPva5yv6aKAYcjSvM2xmDkQZRTFpnZqGKNV16G8N2Q3u6-JrLsP2BaFN3wwmFGIwZgF816IHfQzf3TsrHeEothHDHfnafpOSGlT39R5c2RS9TSvYL9u%7EY7jlJRX82htUttORwUSXZN59TnSDU0Q5ArgKCmVkIu673NATwxSSb882hwRNBKSO8XahUN8A2eNHXJyCYaIbP%7EacvWQYxi9biFp217VBGw7RRDlW6vFe019qG78illBXYMtfSKs7w-w__&Key-Pair-Id=K2L8F4GPSG1IFC'), (b'X-Powered-By', b'huggingface-moon'), (b'X-Request-Id', b'Root=1-6981201c-4f9388b93d86c8156a495266;45acae34-fcb4-45d4-8966-59b61ff3df3a'), (b'RateLimit', b'"resolvers";r=4998;t=159'), (b'RateLimit-Policy', b'"fixed window";"resolvers";q=5000;w=300'), (b'cross-origin-opener-policy', b'same-origin'), (b'Referrer-Policy', b'strict-origin-when-cross-origin'), (b'Access-Control-Max-Age', b'86400'), (b'Access-Control-Allow-Origin', b'https://huggingface.co'), (b'Vary', b'Origin, Accept'), (b'Access-Control-Expose-Headers', b'X-Repo-Commit,X-Request-Id,X-Error-Code,X-Error-Message,X-Total-Count,ETag,Link,Accept-Ranges,Content-Range,X-Linked-Size,X-Linked-ETag,X-Xet-Hash'), (b'X-Repo-Commit', b'3c879f39826c281e95690f02c7821c4de09afae7'), (b'Accept-Ranges', b'bytes'), (b'X-Hub-Cache', b'HIT'), (b'X-Linked-Size', b'3450062241'), (b'X-Linked-ETag', b'"9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e"'), (b'X-Xet-Hash', b'ba62acd04c1fe8f3d6096b1552e6ca28a2f7c7380f931040f5719a2bcdf844ad'), (b'Link', b'<https://huggingface.co/api/models/facebook/sam3/xet-read-token/3c879f39826c281e95690f02c7821c4de09afae7>; rel="xet-auth", <https://cas-server.xethub.hf.co/v1/reconstructions/ba62acd04c1fe8f3d6096b1552e6ca28a2f7c7380f931040f5719a2bcdf844ad>; rel="xet-reconstruction-info"'), (b'X-Cache', b'Miss from cloudfront'), (b'Via', b'1.1 d298e3c61b79ba9798cab3920faa7aa0.cloudfront.net (CloudFront)'), (b'X-Amz-Cf-Pop', b'JFK50-P9'), (b'X-Amz-Cf-Id', b'FXBlGmDhjlpPcDDSkGJTE8pMorB4PNQGRSOFVHJ0L_F1s0-x_KcNcQ==')])
+2026-02-02 17:07:24 [INFO] httpx - HTTP Request: HEAD https://huggingface.co/facebook/sam3/resolve/main/sam3.pt "HTTP/1.1 302 Found"
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - receive_response_body.started request=<Request [b'HEAD']>
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - receive_response_body.complete
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - response_closed.started
+2026-02-02 17:07:24 [DEBUG] httpcore.http11 - response_closed.complete
+2026-02-02 17:07:26 [INFO] __main__ - Big-prompt (fb) produced 0 masks
+2026-02-02 17:07:26 [INFO] bubble_sam3.postprocess - Consolidation replacements due to containment: 0
+2026-02-02 17:07:26 [INFO] __main__ - Instances: FRST=422, ADAPTIVE=525, BIG=0, COMBINED=376
+2026-02-02 17:07:26 [INFO] __main__ - Saved FRST overlay to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/result_frst.png
+2026-02-02 17:07:27 [INFO] __main__ - Saved ADAPTIVE overlay to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/result_blackhat.png
+2026-02-02 17:07:27 [INFO] __main__ - Saved BIG overlay to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/result_big.png
+2026-02-02 17:07:27 [INFO] __main__ - Saved COMBINED overlay to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/result.png
+2026-02-02 17:07:27 [INFO] __main__ - Saved JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/result.json
+2026-02-02 17:07:27 [DEBUG] httpcore.connection - close.started
+2026-02-02 17:07:27 [DEBUG] httpcore.connection - close.complete

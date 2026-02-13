@@ -10,3 +10,4 @@
 | 20260130-1357-auto-dependences | Enhance manage_bubbly.py to auto-install all dependencies | open | Antigravity/20260130-1357 | main | 2026-01-30 14:01 EST |
 | 20260201-1400-frst-sam3-script | Combine FRST centers with SAM3 masks | done | codex/20260201-1400 | main | 2026-02-01 16:22 EST |
 | 20260201-2200-blackhat-tiny-masks | Add black-hat tiny-mask branch | done | codex/20260201-2200 | main | 2026-02-02 08:24 EST |
+| 20260213-1100-launcher-fixes | Fix cross-platform click launchers for labeling | done | codex/20260213-1100 | main | 2026-02-13 11:00 EST |
