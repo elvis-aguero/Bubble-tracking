@@ -13,8 +13,12 @@ This repository implements a scalable, versioned human-in-the-loop annotation pi
 
 ## Quick Start (Labelers)
 
-**Mac / Linux**:
+**macOS**:
  Double-click `launch_labeling.command` in the repository root.
+
+**Linux**:
+ Double-click `launch_labeling.desktop` in the repository root.
+ (Fallback: `launch_labeling.sh` if your desktop environment blocks `.desktop` launchers.)
 
 **Windows**:
  Double-click `launch_labeling.bat` in the repository root.
@@ -107,7 +111,7 @@ Move the generated patches from your staging area into the `patches_pool`.
 
 **Step 2: Labeling**
 **Draw polygons around bubbles using the X-AnyLabeling GUI.**
-1.  Use the launcher (`launch_labeling.command / .bat`) to open the tool.
+1.  Use the launcher for your OS (`launch_labeling.command` on macOS, `launch_labeling.desktop` on Linux, `launch_labeling.bat` on Windows) to open the tool.
 2.  **Open Dir**: Navigate to `workspaces/active_batch_01/images`.
 3.  **Change Output Dir (CRITICAL)**: Go to `File > Change Output Directory` and select `workspaces/active_batch_01/labels`.
     *   *Why?* We keep JSONs separate from images to allow automated cleanup and validation.

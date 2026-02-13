@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Bubbly Flows Labeling
+Comment=Launch X-AnyLabeling
+Exec=/bin/bash -c "SCRIPT_DIR=\\\\\\$(dirname \"\\\\\\$1\"); cd \"\\\\\\$SCRIPT_DIR\" && bash bubbly_flows/scripts/xanylabel.sh" _ %k
+Icon=utilities-terminal
+Terminal=true
+Categories=Science;Development;
