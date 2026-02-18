@@ -15,4 +15,4 @@ fi
 
 # Run the labeler script
 # We use 'bash' explicitly in case the file doesn't have +x bits set somehow
-bash bubbly_flows/scripts/xanylabel.sh
+source bubbly_flows/scripts/xanylabel.sh
