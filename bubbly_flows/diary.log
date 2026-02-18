@@ -18,3 +18,5 @@
 [2026-01-30 15:22:09] submit_job: Submitted job train_gold_seed_v00_20260130_152204 (dataset: gold_seed_v00)
 [2026-01-30 15:41:30] submit_job: Submitted job train_gold_seed_v00_20260130_154126 (dataset: gold_seed_v00)
 [2026-02-04 17:51:45] create_workspace: Created workspace seed_v03
+[2026-02-14 16:00:27] create_workspace: Created workspace seed_v04
+[2026-02-14 18:35:54] export_microsam: Exported base=124, aug=372, total=496 to dryrun_aug_20260214_1835 (augmentation=on, seed=42, skipped=0)

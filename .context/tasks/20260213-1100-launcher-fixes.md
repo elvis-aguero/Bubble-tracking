@@ -15,6 +15,7 @@
 - 2026-02-13 10:59 EST: added executable `launch_labeling.sh` as Linux click launcher.
 - 2026-02-13 11:00 EST: updated `USER_GUIDE.md` launcher instructions to separate macOS/Linux/Windows paths.
 - 2026-02-13 11:10 EST: added root `launch_labeling.desktop` that resolves its own directory from `%k` and launches `bubbly_flows/scripts/xanylabel.sh`; switched Linux quick-start docs to `.desktop` first.
+- 2026-02-13 11:31 EST: simplified `launch_labeling.desktop` to fixed repo `Path` + `Exec=/bin/bash ./launch_labeling.sh` (removed brittle escaped command); updated `launch_labeling.sh` to pause on non-zero exit so terminal stays open on errors.
 
 ## Messages
 - 

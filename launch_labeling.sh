@@ -12,3 +12,9 @@ if [ ! -d "bubbly_flows" ]; then
 fi
 
 bash bubbly_flows/scripts/xanylabel.sh
+STATUS=$?
+if [ "$STATUS" -ne 0 ]; then
+    echo
+    echo "Launcher exited with error code: $STATUS"
+    read -r -p "Press Enter to close..."
+fi
