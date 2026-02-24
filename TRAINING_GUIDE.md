@@ -1,70 +1,98 @@
-# Bubble Tracking — Intern Training Guide
-## From Zero to Hero: Training Models and Assessing Performance
+# Bubble Tracking — Getting Started Guide
+## Training Models and Assessing Performance
 
-> **Audience**: New contributor who will work on training MicroSAM models and building evaluation pipelines.
+> **Who this is for**: Anyone joining the team who will work on training segmentation models and building evaluation pipelines.
 > **Platform**: Oscar HPC cluster (Brown University).
-> **Assumed starting point**: Gold annotations already exist in `bubbly_flows/annotations/gold/`.
+> **Starting point**: Human-labeled gold annotations already exist in `bubbly_flows/annotations/gold/`.
 
 ---
 
 ## Table of Contents
 
+0. [Prerequisites — Read These First](#0-prerequisites--read-these-first)
 1. [What Is This Project?](#1-what-is-this-project)
-2. [Repository Orientation](#2-repository-orientation)
+2. [How the Repository Is Organized](#2-how-the-repository-is-organized)
 3. [Environment Setup on Oscar](#3-environment-setup-on-oscar)
 4. [Understanding the Data](#4-understanding-the-data)
 5. [Step 1 — Export a Training Dataset](#5-step-1--export-a-training-dataset)
 6. [Step 2 — Train a Model](#6-step-2--train-a-model)
 7. [Step 3 — Monitor Training](#7-step-3--monitor-training)
 8. [Step 4 — Run Inference](#8-step-4--run-inference)
-9. [Step 5 — Build an Evaluation Pipeline (Your Task)](#9-step-5--build-an-evaluation-pipeline-your-task)
+9. [Step 5 — Build an Evaluation Pipeline](#9-step-5--build-an-evaluation-pipeline)
 10. [Quick Reference](#10-quick-reference)
+
+---
+
+## 0. Prerequisites — Read These First
+
+Before diving in, it helps to be comfortable with a few tools. Below are useful references — do not worry about memorizing everything, just bookmark them and come back when needed.
+
+**Oscar Cluster (Brown's HPC system)**
+- [Connecting to Oscar](https://docs.ccv.brown.edu/oscar/connecting-to-oscar) — how to log in via SSH
+- [Oscar overview and getting started](https://docs.ccv.brown.edu/oscar/getting-started)
+- [Submitting batch jobs with Slurm](https://docs.ccv.brown.edu/oscar/submitting-jobs/batch) — how to submit and manage compute jobs
+- [Oscar storage and file systems](https://docs.ccv.brown.edu/oscar/managing-files/filesystem)
+
+**Linux command line**
+- [Linux command line cheat sheet (Cheatography)](https://cheatography.com/davechild/cheat-sheets/linux-command-line/) — the basics: navigating folders, moving files, viewing files
+- [The Linux command line for beginners (Ubuntu)](https://ubuntu.com/tutorials/command-line-for-beginners) — a gentle walkthrough if you have never used a terminal before
+
+**Conda (Python environment manager)**
+- [Conda cheat sheet (official)](https://docs.conda.io/projects/conda/en/latest/user-guide/cheatsheet.html) — the commands you will actually use day to day
+
+**Git (version control)**
+- [Git basics cheat sheet (GitHub)](https://education.github.com/git-cheat-sheet-education.pdf) — useful for pulling updates and tracking your work
+
+**Segment Anything Model (SAM) — the underlying AI**
+- [SAM paper (Meta AI)](https://ai.meta.com/research/publications/segment-anything/) — what SAM is and how it works
+- [MicroSAM documentation](https://computational-cell-analytics.github.io/micro-sam/) — the scientific imaging adaptation we build on
 
 ---
 
 ## 1. What Is This Project?
 
-This project builds a machine-learning pipeline to automatically detect and segment **bubbles** in images taken during zero-gravity flight experiments. Think of it as training a model to answer: *"Where are all the bubbles in this image, and what are their exact shapes?"*
+This project builds a machine-learning pipeline to automatically detect and segment **bubbles** in images taken during zero-gravity flight experiments. The core question the model answers is: *"Where are all the bubbles in this image, and what are their exact shapes?"*
 
-The core model is **MicroSAM**, a fine-tuned version of Meta's Segment Anything Model (SAM) adapted for microscopy and scientific imaging. Fine-tuning means we take a powerful general-purpose model and specialize it on our bubble images using human-labeled training data.
+We approach this by **fine-tuning** existing models on our own labeled bubble images. Fine-tuning means taking a powerful model that was trained on general images and re-training it on our specific data so it becomes an expert at bubbles. We work with several model families:
 
-**Your role** as the new intern is to:
-- Convert existing gold-standard annotations into training datasets.
-- Submit and manage training jobs on the Oscar cluster.
-- Design and implement an evaluation pipeline to measure how well the trained models perform.
+- **MicroSAM** — a version of Meta's Segment Anything Model adapted for scientific imaging. Currently our main training target.
+- **CNN-based models** (convolutional neural networks) — classical segmentation architectures that we also benchmark.
+- Other architectures may be added over time as the project evolves.
+
+The pipeline covered in this guide handles everything from converting human annotations into a training-ready format, running the training job on the cluster, and eventually measuring how well the trained models perform.
 
 ---
 
-## 2. Repository Orientation
+## 2. How the Repository Is Organized
 
-Everything lives inside the `bubbly_flows/` subdirectory. Here is what matters for your work:
+Everything lives inside the `bubbly_flows/` folder. Here is what matters for this workflow:
 
 ```
 Bubble-tracking/
-├── environment.yml                    # Conda environment spec (your dependencies)
+├── environment.yml                    # List of all Python packages needed
 ├── bubbly_flows/
 │   ├── scripts/
-│   │   ├── manage_bubbly.py           # ← Main controller, your primary entry point
-│   │   ├── train.py                   # ← Training script (called by Slurm)
-│   │   └── inference.py               # ← Inference script (run on a single image)
+│   │   ├── manage_bubbly.py           # ← The main script you will run
+│   │   ├── train.py                   # ← Training script (launched automatically by the cluster)
+│   │   └── inference.py               # ← Run a trained model on a new image
 │   ├── annotations/
-│   │   └── gold/                      # ← Human-labeled ground truth (read-only)
+│   │   └── gold/                      # ← Human-labeled ground truth (do not edit)
 │   │       ├── gold_seed_v00/
-│   │       │   ├── labels_json/       # LabelMe JSON polygon files
-│   │       │   └── manifest.csv       # List of labeled image stems
+│   │       │   ├── labels_json/       # One annotation file per image
+│   │       │   └── manifest.csv       # List of which images were labeled
 │   │       └── gold_v00/ ...
 │   ├── microsam/
-│   │   ├── datasets/                  # ← Exported training datasets (images + masks)
-│   │   └── models/                    # ← Trained checkpoints
+│   │   ├── datasets/                  # ← Training-ready datasets (images + masks)
+│   │   └── models/                    # ← Saved model weights after training
 │   ├── data/
 │   │   └── patches_pool/images/       # Source image patches
-│   └── logs/                          # Slurm job scripts and output logs
+│   └── logs/                          # Job scripts and training output logs
 ```
 
-**Data lineage** (what feeds what):
+**How data flows through the project:**
 ```
 annotations/gold/  →  microsam/datasets/  →  microsam/models/
-   (JSON labels)       (images + TIF masks)    (checkpoints)
+ (annotation files)    (images + masks)       (trained model weights)
 ```
 
 ---
@@ -77,31 +105,31 @@ annotations/gold/  →  microsam/datasets/  →  microsam/models/
 ssh <your-username>@ssh.ccv.brown.edu
 ```
 
-Then navigate to the repository:
+Then navigate to the project folder:
 
 ```bash
 cd /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
 ```
 
-### 3.2 — Load the Anaconda Module
+### 3.2 — Load the Package Manager
 
-Oscar does not have conda available by default. You must load it first every session (or add it to your `~/.bashrc`):
+Oscar does not have conda available by default. You need to load it at the start of every session:
 
 ```bash
 module load miniforge3
 ```
 
-> **Tip**: Add `module load miniforge3` to your `~/.bashrc` so you never forget.
+> **Tip**: Add `module load miniforge3` to your `~/.bashrc` file so it loads automatically every time you log in. If you are not sure how to do this, ask a teammate.
 
-### 3.3 — Create the Conda Environment (First Time Only)
+### 3.3 — Create the Project Environment (First Time Only)
 
-The repository manages its own Python environment called `bubbly-train-env`. Create it once:
+The project uses a dedicated Python environment called `bubbly-train-env` to keep all its packages separate from everything else on the system. Create it once:
 
 ```bash
 conda env create -f environment.yml
 ```
 
-This takes 5–10 minutes. It installs PyTorch, MicroSAM, torch_em, OpenCV, and all other dependencies.
+This takes 5–10 minutes. It installs PyTorch, MicroSAM, and everything else the project needs.
 
 ### 3.4 — Activate the Environment
 
@@ -109,15 +137,15 @@ This takes 5–10 minutes. It installs PyTorch, MicroSAM, torch_em, OpenCV, and 
 conda activate bubbly-train-env
 ```
 
-You should see `(bubbly-train-env)` in your terminal prompt. You will need to do this every time you log in.
+You should see `(bubbly-train-env)` appear in your terminal prompt. You need to do this every time you log in.
 
-### 3.5 — Verify the Setup
+### 3.5 — Verify Everything Installed Correctly
 
 ```bash
-python -c "import torch; import micro_sam; print('OK', torch.__version__)"
+python -c "import torch; import micro_sam; print('All good!', torch.__version__)"
 ```
 
-If this prints `OK` and a version number, you are ready.
+If this prints `All good!` followed by a version number, you are ready to go.
 
 ---
 
@@ -125,55 +153,51 @@ If this prints `OK` and a version number, you are ready.
 
 ### 4.1 — Gold Annotations
 
-Gold annotations are the source of truth for supervised training. Each gold version is a snapshot:
+Gold annotations are the human-labeled ground truth that the models learn from. Each "gold version" is a saved snapshot of the labels at a point in time:
 
 ```
 bubbly_flows/annotations/gold/gold_seed_v00/
-├── labels_json/          # One JSON file per labeled image
+├── labels_json/          # One file per labeled image
 │   ├── SomeImage__x0320_y0640.json
 │   └── ...
-├── manifest.csv          # Tracks which images have been labeled
-└── stats.json            # Simple counts
+├── manifest.csv          # Which images are in this version
+└── stats.json            # How many labels, which workspace they came from
 ```
 
-Each JSON file is a LabelMe-format polygon annotation. Open one to see its structure:
+Each `.json` file describes where the bubbles are in one image, as a set of polygons — one polygon per bubble. You can peek inside one:
 
 ```bash
 python -c "
-import json
-import glob
+import json, glob
 jf = sorted(glob.glob('bubbly_flows/annotations/gold/*/labels_json/*.json'))[0]
 with open(jf) as f:
     d = json.load(f)
 print('Image:', d['imagePath'])
-print('Shapes:', len(d['shapes']), 'bubbles annotated')
-print('First shape keys:', list(d['shapes'][0].keys()) if d['shapes'] else 'none')
+print('Bubbles labeled:', len(d['shapes']))
 "
 ```
 
-Each `shape` in the JSON is one bubble, represented as a polygon (list of `[x, y]` points).
-
 ### 4.2 — Training Dataset Format
 
-When you export a dataset (Step 1), the pipeline converts polygon JSONs into **instance segmentation masks**:
+When you export a dataset (Step 1 below), the pipeline reads those polygon files and converts them into **pixel masks** that the training code understands:
 
-- `microsam/datasets/<name>/images/` — the image patches (PNG/TIF)
-- `microsam/datasets/<name>/labels/` — paired TIF masks where each pixel's value is the instance ID (0 = background, 1 = first bubble, 2 = second bubble, ...)
+- `microsam/datasets/<name>/images/` — the image patches
+- `microsam/datasets/<name>/labels/` — paired mask files where each pixel's value is a bubble ID (0 = background, 1 = first bubble, 2 = second bubble, ...)
 
-This is the format that `train.py` and `torch_em` expect.
+Each image file and its corresponding mask file share the same name, just with a `.tif` extension for the mask.
 
 ---
 
 ## 5. Step 1 — Export a Training Dataset
 
-Run the interactive controller:
+Run the main management script:
 
 ```bash
 conda activate bubbly-train-env
 python bubbly_flows/scripts/manage_bubbly.py
 ```
 
-You will see a menu:
+A menu will appear:
 
 ```
 ========================================
@@ -188,51 +212,51 @@ You will see a menu:
 q. Quit
 ```
 
-Select **option 4**. The script will:
+Select **option 4**. The script will walk you through:
 
-1. List available gold versions — pick the one you want (e.g. `gold_seed_v00`).
-2. Ask for a dataset name — use something descriptive like `v01_seed` or `v01_seed_aug`.
-3. Ask whether to enable augmentation — say **y** (recommended). This multiplies your training data 4× using geometric transforms, photometric jitter, and copy-paste augmentation.
-4. Ask for an augmentation seed — use `42` for reproducibility.
+1. **Choose a gold version** — pick the one you want to train from (e.g. `gold_seed_v00`).
+2. **Name the dataset** — use something descriptive like `v01_seed` or `v01_seed_aug`.
+3. **Enable augmentation?** — say **y** (recommended). This automatically creates extra training variations of each image using flips, rotations, brightness changes, and copy-paste. You end up with roughly 4× more training examples at no extra labeling cost.
+4. **Augmentation seed** — type `42`. This number makes the augmentation reproducible — using the same seed will always produce the same result.
 
-The output will be written to `bubbly_flows/microsam/datasets/<your-dataset-name>/`.
+The exported dataset will be written to `bubbly_flows/microsam/datasets/<your-dataset-name>/`.
 
-**Verify the export:**
+**Check the export worked:**
 
 ```bash
 ls bubbly_flows/microsam/datasets/<your-dataset-name>/images/ | wc -l
 ls bubbly_flows/microsam/datasets/<your-dataset-name>/labels/ | wc -l
 ```
 
-Both counts should be equal. With augmentation enabled, expect roughly 4× the number of source JSON files.
+Both numbers should match. With augmentation on, expect roughly 4× the number of original annotation files.
 
 ---
 
 ## 6. Step 2 — Train a Model
 
-From the same menu, select **option 5**. The script will:
+From the same menu, select **option 5**. The script will ask:
 
-1. List available datasets — pick the one you just exported.
-2. Ask for an experiment name — use something like `train_v01_seed_run1`.
-3. Ask for a time limit in hours — `4` is a good starting value for a first run.
+1. **Which dataset?** — pick the one you just exported.
+2. **Experiment name** — something like `train_v01_seed_run1`. Pick a name that will help you remember what this run was.
+3. **Time limit in hours** — `4` is a reasonable starting point for a first run.
 
-The script generates a Slurm job script at `bubbly_flows/logs/submit_<exp_name>.sh` and asks if you want to submit it. Say **y**.
+The script writes a job file to `bubbly_flows/logs/` and asks if you want to submit it. Say **y**.
 
 ### What Happens on the Cluster
 
-The Slurm job will:
-1. Load `miniforge3` and `cuda/11.8`.
-2. Activate `bubbly-train-env`.
-3. Run `train.py` for 100 epochs with a `vit_b` (ViT-Base) SAM backbone.
-4. Save checkpoints to `bubbly_flows/microsam/models/<exp_name>/checkpoints/<exp_name>/`.
+The cluster job will:
+1. Allocate a GPU on Oscar.
+2. Activate the `bubbly-train-env` environment.
+3. Run `train.py` for 100 passes through the training data ("epochs"), using a MicroSAM ViT-B model as the starting point.
+4. Save the best-performing model weights to `bubbly_flows/microsam/models/<your-experiment-name>/checkpoints/<your-experiment-name>/best.pt`.
 
-The best checkpoint is saved as `best.pt`.
-
-### Checking Job Status
+### Checking Whether Your Job Is Running
 
 ```bash
 squeue -u <your-username>
 ```
+
+This shows all your active jobs. Look for the job ID in the leftmost column — you will need it for the log files.
 
 ### Cancelling a Job
 
@@ -244,45 +268,47 @@ scancel <job_id>
 
 ## 7. Step 3 — Monitor Training
 
-Training logs are written to `bubbly_flows/logs/`. Two files are created per job:
+Training logs are saved in `bubbly_flows/logs/`. Two files are created per job:
 
-- `<exp_name>_<job_id>.out` — standard output (training progress, loss values)
-- `<exp_name>_<job_id>.err` — standard error (warnings, errors)
+- `<exp_name>_<job_id>.out` — the main output: training progress, loss values per epoch
+- `<exp_name>_<job_id>.err` — warnings and errors
 
-Watch a live log:
+Watch the log update in real time:
 
 ```bash
 tail -f bubbly_flows/logs/<exp_name>_<job_id>.out
 ```
+
+Press `Ctrl+C` to stop watching.
 
 **What to look for:**
 
 | What you see | What it means |
 |---|---|
 | `Using device: cuda` | GPU is active — good |
-| `Using device: cpu` | No GPU allocated — training will be extremely slow |
-| Loss decreasing over epochs | Model is learning |
-| `TRAINING COMPLETE` | Job finished successfully |
-| Any traceback in `.err` | Something went wrong — read the error |
+| `Using device: cpu` | No GPU was allocated — training will be impractically slow |
+| Loss numbers decreasing over epochs | The model is learning |
+| `TRAINING COMPLETE` | The job finished successfully |
+| Any error message in the `.err` file | Something went wrong — read the error carefully |
 
-**Common errors:**
+**Common problems:**
 
-- `CUDA driver version is insufficient` → The GPU partition was not requested. Check the `.sh` script and make sure `#SBATCH -p gpu` is present.
-- `Module not found: torch` → The conda environment was not activated correctly in the job script. Re-examine the generated `.sh` file.
+- `CUDA driver version is insufficient` → The job was not allocated a GPU. Check that the generated job file under `bubbly_flows/logs/submit_*.sh` contains `#SBATCH -p gpu`.
+- `Module not found: torch` → The environment was not activated correctly inside the job. Look at the generated `.sh` file and confirm the `conda activate bubbly-train-env` line is present.
 
 ---
 
 ## 8. Step 4 — Run Inference
 
-After training completes, you can run the model on a new image.
+Once training is done, you can run the model on a new image to see what it predicts.
 
-From the menu, select **option 6**:
+From the menu, select **option 6** and follow the prompts:
 
-1. Select the trained experiment.
-2. Enter the path to an input image.
-3. Enter the desired output path for the mask (e.g. `output/test_mask.png`).
+1. Pick the trained experiment.
+2. Give the path to an input image.
+3. Give a path where the output mask should be saved (e.g. `output/test_mask.png`).
 
-Or call `inference.py` directly:
+Or run `inference.py` directly from the terminal:
 
 ```bash
 python bubbly_flows/scripts/inference.py \
@@ -292,56 +318,62 @@ python bubbly_flows/scripts/inference.py \
     --model_type vit_b
 ```
 
-The output is a 16-bit TIF or PNG where each pixel value is the predicted instance ID (0 = background, 1 = first predicted bubble, etc.). This is the same format as the gold label masks in `microsam/datasets/*/labels/`.
+The output is a mask image where each pixel's value is the predicted bubble ID (0 = background, 1 = first bubble, 2 = second bubble, ...). This is the same format as the gold masks in `microsam/datasets/*/labels/`, which makes them easy to compare.
 
 ---
 
-## 9. Step 5 — Build an Evaluation Pipeline (Your Task)
+## 9. Step 5 — Build an Evaluation Pipeline
 
-There is no evaluation pipeline yet — building it is your primary research task. This section gives you the conceptual framework and a concrete starting point.
+There is no evaluation pipeline yet — building one is a core open task for the team. This section explains the problem, the standard approach, and gives starter code to build from.
 
-### 9.1 — What You Have
+### 9.1 — What You Have to Work With
 
-After inference on a test image you have two things to compare:
+After running inference on a test image you have two mask files to compare:
 
 | | Path | Format |
 |---|---|---|
-| **Prediction** | wherever you saved it | 16-bit TIF, pixel = predicted instance ID |
-| **Ground truth** | `microsam/datasets/<ds>/labels/<stem>.tif` | 16-bit TIF, pixel = gold instance ID |
+| **Prediction** | wherever you saved it | mask file, pixel value = predicted bubble ID |
+| **Ground truth** | `microsam/datasets/<ds>/labels/<stem>.tif` | mask file, pixel value = labeled bubble ID |
 
-The key challenge: instance IDs in prediction and ground truth are **arbitrary**. Instance "3" in the prediction might correspond to instance "7" in the ground truth. You must match them before computing any metric.
+There is one important catch: bubble IDs in the prediction and ground truth are **not aligned**. Bubble "3" in the prediction might be the same physical bubble as "7" in the ground truth. You have to figure out which predicted bubble matches which labeled bubble before you can compute any score — this is called the **matching problem**.
 
 ### 9.2 — Standard Metrics for Instance Segmentation
 
-**Intersection over Union (IoU)** — measures shape overlap between one predicted mask and one ground-truth mask:
+**Intersection over Union (IoU)** — measures how much two masks overlap. A perfect match scores 1.0; no overlap scores 0.0:
 
 ```
-IoU = |A ∩ B| / |A ∪ B|
+IoU = (pixels in both masks) / (pixels in either mask)
 ```
 
-**Average Precision (AP)** — the standard benchmark metric. At a given IoU threshold (e.g. 0.5), a predicted instance is a True Positive if it matches a ground-truth instance with IoU ≥ threshold. AP summarizes precision across all recall levels. AP@0.5 and AP@0.75 are the most common values to report.
+**F1 score** — the balance between finding all real bubbles (recall) and not crying wolf on non-bubbles (precision). A good first metric to track.
 
-**F1 / Dice score** — harmonic mean of precision and recall at a fixed IoU threshold. Easier to interpret than AP for a first pass.
+**Average Precision (AP)** — the standard rigorous benchmark. At IoU ≥ 0.5, a predicted bubble counts as correct if it overlaps enough with a labeled bubble. AP@0.5 and AP@0.75 (stricter) are the values most papers report.
 
-**Panoptic Quality (PQ)** — combines detection quality and segmentation quality into a single number. More advanced but worth knowing about.
+**Panoptic Quality (PQ)** — a single number combining how many bubbles were found and how well their shapes were drawn. More advanced, worth reading about once the basics are working.
 
-### 9.3 — Matching Instances: the Hungarian Algorithm
+### 9.3 — Solving the Matching Problem
 
-To match predicted instances to ground-truth instances, compute the IoU between every pair and solve the assignment problem:
+The standard solution is the **Hungarian algorithm** — it finds the best one-to-one assignment between predicted and labeled bubbles by maximizing total overlap:
 
 ```python
 from scipy.optimize import linear_sum_assignment
 import numpy as np
 
 def match_instances(pred_mask, gt_mask, iou_threshold=0.5):
-    """Match predicted instances to ground truth using Hungarian matching."""
+    """
+    Match predicted bubbles to labeled bubbles.
+    Returns:
+        matches  - list of (pred_id, gt_id, iou) for correct detections
+        fp_ids   - predicted bubbles with no matching label (false positives)
+        fn_ids   - labeled bubbles with no matching prediction (false negatives)
+    """
     pred_ids = [i for i in np.unique(pred_mask) if i > 0]
     gt_ids   = [i for i in np.unique(gt_mask)   if i > 0]
 
     if not pred_ids or not gt_ids:
-        return [], [], pred_ids, gt_ids  # all FP or all FN
+        return [], pred_ids, gt_ids
 
-    # Build IoU matrix: rows = predictions, cols = ground truth
+    # Build a table of IoU scores: one row per prediction, one column per label
     iou_matrix = np.zeros((len(pred_ids), len(gt_ids)), dtype=np.float32)
     for i, pid in enumerate(pred_ids):
         for j, gid in enumerate(gt_ids):
@@ -349,7 +381,7 @@ def match_instances(pred_mask, gt_mask, iou_threshold=0.5):
             union = np.logical_or( pred_mask == pid, gt_mask == gid).sum()
             iou_matrix[i, j] = inter / union if union > 0 else 0.0
 
-    # Solve assignment (minimize cost = maximize IoU)
+    # Find the best assignment (maximize IoU)
     row_ind, col_ind = linear_sum_assignment(-iou_matrix)
 
     matches, fp_ids, fn_ids = [], list(pred_ids), list(gt_ids)
@@ -359,18 +391,18 @@ def match_instances(pred_mask, gt_mask, iou_threshold=0.5):
             fp_ids.remove(pred_ids[r])
             fn_ids.remove(gt_ids[c])
 
-    return matches, iou_matrix, fp_ids, fn_ids
+    return matches, fp_ids, fn_ids
 ```
 
-### 9.4 — Computing AP@0.5
+### 9.4 — Computing Scores
 
-Once you have matches:
+Once you have the matches:
 
 ```python
 def compute_metrics(matches, fp_ids, fn_ids):
-    TP = len(matches)
-    FP = len(fp_ids)
-    FN = len(fn_ids)
+    TP = len(matches)   # correct detections
+    FP = len(fp_ids)    # predicted bubbles that don't exist in the labels
+    FN = len(fn_ids)    # labeled bubbles the model missed
 
     precision = TP / (TP + FP) if (TP + FP) > 0 else 0.0
     recall    = TP / (TP + FN) if (TP + FN) > 0 else 0.0
@@ -382,31 +414,24 @@ def compute_metrics(matches, fp_ids, fn_ids):
             "F1": f1, "mean_IoU": mean_iou}
 ```
 
-### 9.5 — Suggested Evaluation Workflow
+### 9.5 — Recommended Workflow
 
-1. **Split your dataset into train / test before exporting** — or use a held-out gold version that was never included in training. This is critical: never evaluate on training data.
-2. **Run inference on all test images** using the trained checkpoint.
-3. **Load each (prediction, ground-truth) pair** and compute metrics using the functions above.
-4. **Aggregate** metrics across all test images (mean F1, mean AP@0.5, etc.).
-5. **Visualize** — overlay predicted contours on images to spot failure modes (missed bubbles, false positives, shape errors).
+1. **Use held-out test images** — either reserve a subset of gold annotations before training, or use a gold version that was never included in any training run. Never test on images the model was trained on.
+2. **Run inference on all test images** and save the output masks.
+3. **Compare each prediction to its ground truth** using `match_instances` and `compute_metrics`.
+4. **Aggregate across all images** — report mean F1, mean AP@0.5, etc.
+5. **Visualize failures** — draw predicted bubble outlines on top of the original images to see where the model is going wrong (missed bubbles, phantom detections, bad shapes).
 
-### 9.6 — Suggested Script Location
+### 9.6 — Where to Put Your Code
 
-Create your evaluation script at:
-
-```
-bubbly_flows/scripts/evaluate.py
-```
-
-A minimal skeleton:
+Start a new file at `bubbly_flows/scripts/evaluate.py`. Here is a minimal skeleton to fill in:
 
 ```python
 #!/usr/bin/env python3
 """
 evaluate.py
 
-Compute instance segmentation metrics between a predicted mask directory
-and a ground-truth mask directory.
+Compare predicted masks against gold-standard masks and report metrics.
 
 Usage:
     python bubbly_flows/scripts/evaluate.py \
@@ -423,9 +448,12 @@ from scipy.optimize import linear_sum_assignment
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--preds", required=True, type=Path)
-    parser.add_argument("--gts",   required=True, type=Path)
-    parser.add_argument("--iou_threshold", type=float, default=0.5)
+    parser.add_argument("--preds", required=True, type=Path,
+                        help="Folder containing predicted mask files")
+    parser.add_argument("--gts",   required=True, type=Path,
+                        help="Folder containing gold-standard mask files")
+    parser.add_argument("--iou_threshold", type=float, default=0.5,
+                        help="Minimum overlap to count a detection as correct")
     args = parser.parse_args()
 
     pred_files = sorted(args.preds.glob("*.tif")) + sorted(args.preds.glob("*.png"))
@@ -433,32 +461,30 @@ def main():
 
     for pred_path in pred_files:
         gt_path = args.gts / pred_path.name
-        # Try .tif extension if .png not found
         if not gt_path.exists():
             gt_path = gt_path.with_suffix(".tif")
         if not gt_path.exists():
-            print(f"  [skip] no GT found for {pred_path.name}")
+            print(f"  [skip] no gold mask found for {pred_path.name}")
             continue
 
         pred_mask = cv2.imread(str(pred_path), cv2.IMREAD_UNCHANGED)
         gt_mask   = cv2.imread(str(gt_path),   cv2.IMREAD_UNCHANGED)
 
         if pred_mask is None or gt_mask is None:
-            print(f"  [error] could not load {pred_path.name}")
+            print(f"  [error] could not read {pred_path.name}")
             continue
 
         # TODO: call match_instances() and compute_metrics() here
-        print(f"  {pred_path.name}: loaded pred {pred_mask.shape}, gt {gt_mask.shape}")
+        print(f"  {pred_path.name}: prediction shape {pred_mask.shape}, gt shape {gt_mask.shape}")
         results.append(pred_path.name)
 
     print(f"\nProcessed {len(results)} image pairs.")
+    # TODO: print aggregated metrics
 
 
 if __name__ == "__main__":
     main()
 ```
-
-Fill in the matching and metric logic from Section 9.3–9.4 and expand from there.
 
 ---
 
@@ -468,38 +494,38 @@ Fill in the matching and metric logic from Section 9.3–9.4 and expand from the
 
 | Action | Command |
 |---|---|
-| Load conda | `module load miniforge3` |
-| Activate env | `conda activate bubbly-train-env` |
-| Run manager | `python bubbly_flows/scripts/manage_bubbly.py` |
-| Check jobs | `squeue -u <your-username>` |
-| Watch log | `tail -f bubbly_flows/logs/<job>.out` |
-| Cancel job | `scancel <job_id>` |
-| Run inference | `python bubbly_flows/scripts/inference.py --model_path ... --image ... --output ...` |
+| Load the package manager | `module load miniforge3` |
+| Activate the project environment | `conda activate bubbly-train-env` |
+| Open the management menu | `python bubbly_flows/scripts/manage_bubbly.py` |
+| Check running jobs | `squeue -u <your-username>` |
+| Watch a training log live | `tail -f bubbly_flows/logs/<job>.out` |
+| Cancel a job | `scancel <job_id>` |
+| Run inference directly | `python bubbly_flows/scripts/inference.py --model_path ... --image ... --output ...` |
 
-### Key File Paths
+### Key Locations
 
 | What | Where |
 |---|---|
-| Gold labels | `bubbly_flows/annotations/gold/<version>/labels_json/` |
-| Exported datasets | `bubbly_flows/microsam/datasets/<name>/` |
-| Model checkpoints | `bubbly_flows/microsam/models/<exp>/checkpoints/<exp>/best.pt` |
-| Slurm logs | `bubbly_flows/logs/<exp>_<job_id>.out` |
-| Diary log | `bubbly_flows/diary.log` |
+| Gold annotation files | `bubbly_flows/annotations/gold/<version>/labels_json/` |
+| Exported training datasets | `bubbly_flows/microsam/datasets/<name>/` |
+| Saved model weights | `bubbly_flows/microsam/models/<name>/checkpoints/<name>/best.pt` |
+| Training logs | `bubbly_flows/logs/<name>_<job_id>.out` |
+| Action history | `bubbly_flows/diary.log` |
 
-### Pipeline Summary
+### Pipeline at a Glance
 
 ```
-Gold JSON annotations
-        ↓  manage_bubbly.py  Option 4
-microsam/datasets/<name>/   (images + TIF masks)
-        ↓  manage_bubbly.py  Option 5  (Slurm job)
-microsam/models/<exp>/checkpoints/<exp>/best.pt
-        ↓  inference.py
-Predicted instance masks
-        ↓  evaluate.py  (your task to build)
-Metrics: F1, AP@0.5, mean IoU
+Gold annotation files  (labels_json/*.json)
+         ↓   manage_bubbly.py — Option 4
+Training dataset  (microsam/datasets/<name>/)
+         ↓   manage_bubbly.py — Option 5  →  Slurm cluster job
+Trained model weights  (microsam/models/<name>/best.pt)
+         ↓   inference.py
+Predicted masks
+         ↓   evaluate.py  (to be built)
+Performance metrics: F1, AP@0.5, mean IoU
 ```
 
 ---
 
-> **Where to go when stuck**: Read `README.md` for project structure, `USER_GUIDE.md` for the annotation workflow, and `bubbly_flows/diary.log` for a chronological record of all past pipeline actions. When in doubt, read the source of `manage_bubbly.py` — it is well commented and is the single source of truth for how data flows through the system.
+> **When stuck**: `README.md` explains the full project structure, `USER_GUIDE.md` covers the annotation workflow, and `bubbly_flows/diary.log` is a chronological record of every action taken in the pipeline. The source code of `manage_bubbly.py` is also well commented and is the best reference for understanding how data moves through the system.
