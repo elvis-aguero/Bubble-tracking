@@ -1,9 +1,8 @@
-# Bubble Tracking — Getting Started Guide
-## Training Models and Assessing Performance
+# Bubble Tracking 
+## A quick guide on training models
 
-> **Who this is for**: Anyone joining the team who will work on training segmentation models and building evaluation pipelines.
-> **Platform**: Oscar HPC cluster (Brown University).
-> **Starting point**: Human-labeled gold annotations already exist in `bubbly_flows/annotations/gold/`.
+This guide serves as a tutorial for anyone who wants to train their own models using our inrastructure in Oscar CCV to classify (segment) bubbles and evaluate their performance.
+Human-labeled annotations annotations are assumed to exist in `bubbly_flows/annotations/gold/`.
 
 ---
 
