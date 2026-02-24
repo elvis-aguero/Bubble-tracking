@@ -169,7 +169,7 @@ conda activate bubbly-train-env
 python bubbly_flows/scripts/manage_bubbly.py
 ```
 
-A menu will appear. Select option 4 (Prepare MicroSAM Dataset):
+A menu will appear. Select option 4 (Prepare Training Dataset):
 
 ```
 ========================================
@@ -178,7 +178,7 @@ A menu will appear. Select option 4 (Prepare MicroSAM Dataset):
 1. Initialize / Update Patch Pool
 2. Create New Workspace
 3. Promote Workspace to Gold (+ Cleanup)
-4. Prepare MicroSAM Dataset (Export)
+4. Prepare Training Dataset (Export)
 5. Train Model (submit job)
 6. Run Inference
 q. Quit
@@ -199,9 +199,15 @@ Both counts should match.
 
 ## 6. Step 2 — Train a Model
 
-From the same menu, select option 5. Pick the dataset you just exported, give the run a name (e.g. `train_v01_seed_run1`), and set a time limit in hours (4 is reasonable for a first run).
+From the same menu, select option 5. Pick the dataset you just exported. You will then be asked which training script to use:
 
-The script generates a Slurm job file in `bubbly_flows/logs/` and asks if you want to submit it. The job allocates a GPU, activates the environment, and runs `train.py` for 100 epochs using MicroSAM ViT-B as the starting point. The best-performing weights get saved to `bubbly_flows/microsam/models/<name>/checkpoints/<name>/best.pt`.
+- Option 1 is always the built-in MicroSAM ViT-B (`train.py`).
+- Any custom scripts named `train_<modelname>.py` in `bubbly_flows/scripts/` appear as additional options automatically.
+- A final option lets you type a path manually.
+
+Give the run a name (e.g. `microsam_v01_seed_run1`) and set a time limit in hours (4 is reasonable for a first run).
+
+The script generates a Slurm job file in `bubbly_flows/logs/` and asks if you want to submit it. The job allocates a GPU, activates the environment, and runs your selected script for 100 epochs. The best-performing weights get saved to `bubbly_flows/microsam/models/<name>/checkpoints/<name>/best.pt`.
 
 To check whether the job is running:
 
@@ -214,6 +220,53 @@ To cancel it:
 ```bash
 scancel <job_id>
 ```
+
+### Writing a custom training script
+
+To add support for a new model, place a file named `train_<modelname>.py` in `bubbly_flows/scripts/` (e.g. `train_unet.py`, `train_cellpose.py`). It will appear automatically as an option in the training menu — no other changes needed.
+
+The script must accept exactly these three command-line arguments:
+
+| Argument | Type | What it is |
+|---|---|---|
+| `--dataset PATH` | path | Root of the training dataset (has `images/` and `labels/` subdirectories) |
+| `--name STR` | string | Experiment name, used for checkpoint folder naming |
+| `--epochs INT` | int | Number of training epochs |
+
+The dataset format is fixed regardless of model: `images/<stem>.png` paired with `labels/<stem>.tif`, where each pixel value is an integer instance ID (0 = background, 1 = first bubble, 2 = second bubble, ...). This is exactly what option 4 of the menu produces.
+
+Save model weights under `bubbly_flows/microsam/models/<name>/` so the inference menu (option 6) can find them. Print training progress to stdout — Slurm captures it in the `.out` log file automatically.
+
+A minimal skeleton to start from:
+
+```python
+#!/usr/bin/env python3
+import argparse
+from pathlib import Path
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset", required=True, type=Path)
+    parser.add_argument("--name",    required=True, type=str)
+    parser.add_argument("--epochs",  type=int, default=50)
+    args = parser.parse_args()
+
+    images_dir = args.dataset / "images"
+    labels_dir = args.dataset / "labels"
+    save_dir   = Path(__file__).resolve().parent.parent / "microsam" / "models" / args.name
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    # --- your model training code here ---
+    print(f"Training {args.name} for {args.epochs} epochs.")
+    print(f"Images:  {images_dir}")
+    print(f"Labels:  {labels_dir}")
+    print(f"Output:  {save_dir}")
+
+if __name__ == "__main__":
+    main()
+```
+
+That is the entire interface. The menu and Slurm scaffolding handle everything else.
 
 ---
 

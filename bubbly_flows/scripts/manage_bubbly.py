@@ -7,7 +7,7 @@ It launches an interactive menu for day-to-day data operations:
 1. Initialize / update the patch pool from newly generated patches.
 2. Create labeling workspaces from full-frame images (default) or patch pool sources.
 3. Promote completed workspace JSON labels into a versioned Gold snapshot.
-4. Export a selected Gold snapshot to a MicroSAM-ready dataset (images + masks).
+4. Export a selected Gold snapshot to a training-ready dataset (images + masks).
 5. Submit model training jobs (Slurm).
 6. Run one-off inference with an existing trained checkpoint.
 
@@ -692,7 +692,7 @@ def promote_to_gold():
 
 # --- 4. MicroSAM Export ---
 def export_microsam_dataset():
-    print("\n[ Prepare MicroSAM Dataset ]")
+    print("\n[ Prepare Training Dataset ]")
     
     # Select Gold Version
     gold_vers = sorted([d.name for d in GOLD_DIR.iterdir() if d.is_dir()])
@@ -904,9 +904,39 @@ def submit_training_job():
         return
     ds_name = datasets[idx]
 
+    # Select Training Script
+    print("\nTraining script:")
+    print("  1. MicroSAM ViT-B (built-in: train.py)")
+    custom_scripts = sorted([
+        f for f in SCRIPTS_DIR.glob("train_*.py")
+        if f.name != "train.py"
+    ])
+    for i, s in enumerate(custom_scripts):
+        print(f"  {i+2}. {s.name}")
+    manual_opt = len(custom_scripts) + 2
+    print(f"  {manual_opt}. Enter path manually")
+
+    script_idx = input_int("Select script", 1)
+    if script_idx == 1:
+        train_script = SCRIPTS_DIR / "train.py"
+        script_label = "microsam"
+    elif 2 <= script_idx <= len(custom_scripts) + 1:
+        train_script = custom_scripts[script_idx - 2]
+        script_label = train_script.stem
+    else:
+        manual = input_str("Script path (relative to repo root, or absolute)")
+        train_script = Path(manual) if Path(manual).is_absolute() else ROOT_DIR / manual
+        if not train_script.exists():
+            print(f"Script not found: {train_script}")
+            input("Press Enter...")
+            return
+        script_label = train_script.stem
+
+    print(f"Using script: {train_script}")
+
     # Job Params
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    default_exp = f"train_{ds_name}_{timestamp}"
+    default_exp = f"{script_label}_{ds_name}_{timestamp}"
     
     exp_name = input_str("Experiment Name", default_exp)
     hours = input_int("Time limit (hours)", 4)
@@ -942,7 +972,7 @@ echo "Node: $SLURMD_NODENAME"
 echo "Dataset: {ds_name}"
 
 # Run Training
-python3 {SCRIPTS_DIR}/train.py \\
+python3 {train_script} \\
     --dataset {ds_root / ds_name} \\
     --name {exp_name} \\
     --epochs 100
@@ -963,7 +993,7 @@ python3 {SCRIPTS_DIR}/train.py \\
         ret = os.system(f"sbatch {script_path}")
         if ret == 0:
             print("Job submitted successfully.")
-            log_command("submit_job", f"Submitted job {exp_name} (dataset: {ds_name})")
+            log_command("submit_job", f"Submitted job {exp_name} (dataset: {ds_name}, script: {train_script.name})")
         else:
             print("Error submitting job (is sbatch available?).")
             log_command("submit_job_error", f"Failed to submit {exp_name}")
@@ -981,7 +1011,7 @@ def main_menu():
         print("1. Initialize / Update Patch Pool")
         print("2. Create New Workspace")
         print("3. Promote Workspace to Gold (+ Cleanup)")
-        print("4. Prepare MicroSAM Dataset (Export)")
+        print("4. Prepare Training Dataset (Export)")
         print("5. Train Model (submit job)")
         print("6. Run Inference (Stub)")
         print("q. Quit")
