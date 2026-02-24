@@ -92,7 +92,7 @@ Log in and navigate to the project:
 
 ```bash
 ssh <your-username>@ssh.ccv.brown.edu
-cd /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
+cd /path/to/repository/Bubble-tracking
 ```
 
 Oscar does not load conda by default, so you need to do this at the start of every session:
