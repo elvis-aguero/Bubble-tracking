@@ -195,6 +195,18 @@ MICROSAM_DIR = ROOT_DIR / "microsam"
 SCRIPTS_DIR = ROOT_DIR / "scripts"
 DIARY_LOG = ROOT_DIR / "diary.log"
 
+SCRATCH_MODELS_DIR = Path.home() / "scratch" / "bubble-models"
+SCRATCH_TRAINED_DIR = SCRATCH_MODELS_DIR / "trained"
+
+# Maps training script filename → required base weight path.
+# File path: checked with .exists().  Dir path (no suffix): checked with any(glob("*.h5")).
+MODEL_WEIGHTS_MAP = {
+    "train.py":           SCRATCH_MODELS_DIR / "microsam" / "models" / "vit_b.pt",
+    "train_stardist.py":  SCRATCH_MODELS_DIR / "stardist" / "hzdr_2022",
+    "train_yolov9.py":    SCRATCH_MODELS_DIR / "yolo"     / "yolov9c-seg.pt",
+    # train_maskrcnn.py uses torchvision COCO weights (auto-downloaded); no pre-flight check needed
+}
+
 VALID_EXTS = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp"}
 FULL_IMAGES_DIR = ROOT_DIR / "data" / "frames" / "images_16bit_png"
 RAW_IMAGES_DIR = ROOT_DIR / "data" / "frames" / "images_raw"
@@ -934,6 +946,16 @@ def submit_training_job():
 
     print(f"Using script: {train_script}")
 
+    # Pre-flight: verify base model weights exist in scratch
+    req = MODEL_WEIGHTS_MAP.get(train_script.name)
+    if req is not None:
+        ok = req.exists() if req.suffix else any(req.glob("*.h5"))
+        if not ok:
+            print(f"\nERROR: Base model weights not found at:\n  {req}")
+            print("  Run:  bash bubbly_flows/scripts/download_models.sh")
+            input("Press Enter to return to menu...")
+            return
+
     # Job Params
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     default_exp = f"{script_label}_{ds_name}_{timestamp}"
@@ -972,10 +994,12 @@ echo "Node: $SLURMD_NODENAME"
 echo "Dataset: {ds_name}"
 
 # Run Training
+export MICROSAM_CACHEDIR={SCRATCH_MODELS_DIR / "microsam"}
 python3 {train_script} \\
     --dataset {ds_root / ds_name} \\
     --name {exp_name} \\
-    --epochs 100
+    --epochs 100 \\
+    --save_root {SCRATCH_TRAINED_DIR}
 """
     
     # Write Script
@@ -993,7 +1017,7 @@ python3 {train_script} \\
         ret = os.system(f"sbatch {script_path}")
         if ret == 0:
             print("Job submitted successfully.")
-            log_command("submit_job", f"Submitted job {exp_name} (dataset: {ds_name}, script: {train_script.name})")
+            log_command("submit_job", f"Submitted job {exp_name} (dataset: {ds_name}, script: {train_script.name}, save: {SCRATCH_TRAINED_DIR})")
         else:
             print("Error submitting job (is sbatch available?).")
             log_command("submit_job_error", f"Failed to submit {exp_name}")

@@ -1,0 +1,26 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 586723
+##  Job Name : dryrun_stardist
+##  Nodelist : gpu2003
+##      CPUs : 
+##  Mem/Node : 32768 MB
+## Directory : /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
+##   Job Started : Wed Mar  4 03:03:45 PM EST 2026
+###############################################################################
+Job ID: 586723
+Node:   gpu2003
+Model:  stardist
+---
+STARTING StarDist TRAINING: dryrun_stardist
+Dataset:  /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/microsam/datasets/v00_train
+Epochs:   2
+Output:   /users/eaguerov/scratch/bubble-models/trained/dryrun_stardist
+--------------------------------
+Loading data ...
+  Loaded 124 pairs.
+  Split: 111 train / 13 val
+Loading HZDR 2022 pre-trained weights from:
+  /users/eaguerov/scratch/bubble-models/stardist/hzdr_2022/Models/SDmodel/stardist/weights_best.h5
+Using default values: prob_thresh=0.5, nms_thresh=0.4.
+  HZDR weights loaded.
+Starting StarDist training ...

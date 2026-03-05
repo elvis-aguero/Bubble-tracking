@@ -17,11 +17,19 @@ dependencies:
   # MicroSAM & its dependencies (elf, nifty, torch-em are dependencies of micro_sam on conda-forge)
   - micro_sam
   # PyTorch Stack (with CUDA support)
-  # Adjust cuda version if needed, typically pytorch-cuda=11.8 or 12.1 for modern clusters
-  - pytorch
-  - torchvision
-  - torchaudio
-  - pytorch-cuda=11.8
+  # Channel-pinned to pytorch channel to guarantee CUDA builds (not the CPU-only conda-forge builds)
+  - pytorch::pytorch
+  - pytorch::torchvision
+  - pytorch::torchaudio
+  - pytorch::pytorch-cuda=11.8
   # Pip fallbacks if needed
   - pip:
     - natsort
+    - tifffile
+    # StarDist (train_stardist.py)
+    - stardist
+    - tensorflow
+    - csbdeep
+    - gputools
+    # YOLOv9 (train_yolov9.py)
+    - ultralytics

@@ -13,6 +13,9 @@ def main():
     parser.add_argument("--dataset", required=True, type=Path, help="Path to dataset root (must have images/ and labels/ subdirs)")
     parser.add_argument("--name", required=True, type=str, help="Experiment name")
     parser.add_argument("--epochs", type=int, default=50)
+    parser.add_argument("--save_root", type=Path, default=None,
+                        help="Root directory for saving checkpoints. "
+                             "Defaults to bubbly_flows/microsam/models/<name>/")
     args = parser.parse_args()
 
     print(f"STARTING TRAINING: {args.name}")
@@ -48,7 +51,10 @@ def main():
     
     script_dir = Path(__file__).parent.resolve()
     repo_root = script_dir.parent
-    model_save_root = repo_root / "microsam" / "models" / args.name
+    if args.save_root:
+        model_save_root = args.save_root / args.name
+    else:
+        model_save_root = repo_root / "microsam" / "models" / args.name
     model_save_root.mkdir(parents=True, exist_ok=True)
     
     print(f"Checkpoints will be saved to: {model_save_root}")

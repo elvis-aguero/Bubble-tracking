@@ -62,7 +62,11 @@ Bubble-tracking/
 ├── bubbly_flows/
 │   ├── scripts/
 │   │   ├── manage_bubbly.py           # The main script you will run
-│   │   ├── train.py                   # Training script (launched by the cluster)
+│   │   ├── download_models.sh         # One-time weight download (run before first training)
+│   │   ├── train.py                   # MicroSAM ViT-B training
+│   │   ├── train_stardist.py          # StarDist 2D (HZDR pre-trained weights)
+│   │   ├── train_yolov9.py            # YOLOv9c-seg (COCO pre-trained weights)
+│   │   ├── train_maskrcnn.py          # Mask R-CNN ResNet-50+FPN (COCO pre-trained)
 │   │   └── inference.py               # Run a trained model on a new image
 │   ├── annotations/
 │   │   └── gold/                      # Human-labeled ground truth (do not edit)
@@ -71,18 +75,48 @@ Bubble-tracking/
 │   │       │   └── manifest.csv       # List of which images were labeled
 │   │       └── gold_v00/ ...
 │   ├── microsam/
-│   │   ├── datasets/                  # Training-ready datasets (images + masks)
-│   │   └── models/                    # Saved model weights after training
+│   │   └── datasets/                  # Training-ready datasets (images + masks)
 │   ├── data/
 │   │   └── patches_pool/images/       # Source image patches
 │   └── logs/                          # Job scripts and training output logs
+~/scratch/bubble-models/
+│   ├── microsam/models/vit_b.pt       # MicroSAM ViT-B light-microscopy weights
+│   ├── stardist/hzdr_2022/            # Hessenkemper 2022 bubble-specific StarDist
+│   ├── stardist/hzdr_bubble_column/   # Hessenkemper 2024 bubble column StarDist
+│   ├── yolo/yolov9c-seg.pt            # YOLOv9c-seg COCO weights
+│   ├── bubmask/mask_rcnn_bubble.h5    # BubMask (symlink from bubble_test_2021/)
+│   └── trained/<exp_name>/            # All post-training checkpoints land here
 ```
 
 Data flows in one direction through the project:
 ```
-annotations/gold/  →  microsam/datasets/  →  microsam/models/
- (annotation files)    (images + masks)       (trained model weights)
+annotations/gold/  →  microsam/datasets/  →  ~/scratch/bubble-models/trained/
+ (annotation files)    (images + masks)          (trained model weights)
 ```
+
+---
+
+## 2.5. Download Base Model Weights (one-time setup)
+
+Before training, you need to stage pre-trained model weights to your scratch space. Run this once:
+
+```bash
+bash bubbly_flows/scripts/download_models.sh
+```
+
+This creates `~/scratch/bubble-models/` with the following weights:
+
+| Model | Why |
+|---|---|
+| **MicroSAM vit_b_lm** | Fine-tuned on light microscopy images — best starting point for bubble fine-tuning (our primary model) |
+| **StarDist HZDR 2022** | Bubble-specific checkpoints from Hessenkemper et al. 2022; AP@0.5 ~0.91 on air-water flow |
+| **StarDist HZDR bubble column** | Second HZDR bubble-specific release (Hessenkemper et al. 2024) |
+| **YOLOv9c-seg** | Real-time ~20 fps option; no bubble-specific release from papers, so this starts from COCO weights |
+| **BubMask (Mask R-CNN)** | Kim & Park 2021; symlinked from `~/scratch/bubble_test_2021/` |
+
+The script is idempotent — safe to re-run. It prints a status summary at the end.
+
+`manage_bubbly.py` checks for the required weights before submitting any Slurm job and exits with a clear error if they are missing.
 
 ---
 
@@ -92,7 +126,7 @@ Log in and navigate to the project:
 
 ```bash
 ssh <your-username>@ssh.ccv.brown.edu
-cd /path/to/repository/Bubble-tracking
+cd /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
 ```
 
 Oscar does not load conda by default, so you need to do this at the start of every session:
@@ -103,10 +137,16 @@ module load miniforge3
 
 Adding that line to your `~/.bashrc` will save you from having to remember it each time.
 
-The first time you work with this project, create the Python environment (takes about 5–10 minutes):
+To create the Python environment for the first time (takes about 10–15 minutes):
 
 ```bash
 conda env create -f environment.yml
+```
+
+If that fails with `CondaValueError: prefix already exists`, the environment was previously created but may be incomplete. Fix it with:
+
+```bash
+conda env update --name bubbly-train-env --file environment.yml
 ```
 
 Then activate it — you will need to do this every session:
@@ -118,8 +158,10 @@ conda activate bubbly-train-env
 To verify everything installed correctly:
 
 ```bash
-python -c "import torch; import micro_sam; print('All good!', torch.__version__)"
+python -c "import torch; import micro_sam; print(torch.__version__, torch.cuda.is_available())"
 ```
+
+`torch.cuda.is_available()` will return `False` on the login node even if CUDA is properly installed — that is expected. The GPU is only available inside a Slurm job.
 
 ---
 
@@ -205,9 +247,18 @@ From the same menu, select option 5. Pick the dataset you just exported. You wil
 - Any custom scripts named `train_<modelname>.py` in `bubbly_flows/scripts/` appear as additional options automatically.
 - A final option lets you type a path manually.
 
+Four training scripts are currently available:
+
+| Script | Model | Starting weights | Notes |
+|---|---|---|---|
+| `train.py` | **MicroSAM ViT-B** | `~/scratch/bubble-models/microsam/models/vit_b.pt` (light-microscopy fine-tuned SAM) | Primary model; best domain match |
+| `train_stardist.py` | **StarDist 2D** | `~/scratch/bubble-models/stardist/hzdr_2022/` (Hessenkemper 2022, AP@0.5 ~0.91) | Fast inference; TF/Keras |
+| `train_yolov9.py` | **YOLOv9c-seg** | `~/scratch/bubble-models/yolo/yolov9c-seg.pt` (COCO) | Real-time capable; converts masks to YOLO polygon format on the fly |
+| `train_maskrcnn.py` | **Mask R-CNN** | COCO weights (auto-downloaded by torchvision) | Standard CNN baseline; pure PyTorch |
+
 Give the run a name (e.g. `microsam_v01_seed_run1`) and set a time limit in hours (4 is reasonable for a first run).
 
-The script generates a Slurm job file in `bubbly_flows/logs/` and asks if you want to submit it. The job allocates a GPU, activates the environment, and runs your selected script for 100 epochs. The best-performing weights get saved to `bubbly_flows/microsam/models/<name>/checkpoints/<name>/best.pt`.
+The script generates a Slurm job file in `bubbly_flows/logs/` and asks if you want to submit it. The job allocates a GPU, activates the environment, sets `MICROSAM_CACHEDIR`, and runs your selected script for 100 epochs. All trained weights are saved to `~/scratch/bubble-models/trained/<exp_name>/`.
 
 To check whether the job is running:
 
@@ -225,17 +276,18 @@ scancel <job_id>
 
 To add support for a new model, place a file named `train_<modelname>.py` in `bubbly_flows/scripts/` (e.g. `train_unet.py`, `train_cellpose.py`). It will appear automatically as an option in the training menu — no other changes needed.
 
-The script must accept exactly these three command-line arguments:
+The script must accept these command-line arguments:
 
-| Argument | Type | What it is |
-|---|---|---|
-| `--dataset PATH` | path | Root of the training dataset (has `images/` and `labels/` subdirectories) |
-| `--name STR` | string | Experiment name, used for checkpoint folder naming |
-| `--epochs INT` | int | Number of training epochs |
+| Argument | Type | Required | What it is |
+|---|---|---|---|
+| `--dataset PATH` | path | yes | Root of the training dataset (has `images/` and `labels/` subdirectories) |
+| `--name STR` | string | yes | Experiment name, used for checkpoint folder naming |
+| `--epochs INT` | int | no (default 50) | Number of training epochs |
+| `--save_root PATH` | path | no | Root directory for saving checkpoints; `manage_bubbly.py` passes `~/scratch/bubble-models/trained/` automatically |
 
 The dataset format is fixed regardless of model: `images/<stem>.png` paired with `labels/<stem>.tif`, where each pixel value is an integer instance ID (0 = background, 1 = first bubble, 2 = second bubble, ...). This is exactly what option 4 of the menu produces.
 
-Save model weights under `bubbly_flows/microsam/models/<name>/` so the inference menu (option 6) can find them. Print training progress to stdout — Slurm captures it in the `.out` log file automatically.
+When `--save_root` is provided, save checkpoints to `<save_root>/<name>/`. When it is absent, fall back to `bubbly_flows/microsam/models/<name>/`. The menu always passes `--save_root`, so trained models land in `~/scratch/bubble-models/trained/` on the cluster. Print training progress to stdout — Slurm captures it in the `.out` log file automatically.
 
 A minimal skeleton to start from:
 
@@ -246,14 +298,18 @@ from pathlib import Path
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", required=True, type=Path)
-    parser.add_argument("--name",    required=True, type=str)
-    parser.add_argument("--epochs",  type=int, default=50)
+    parser.add_argument("--dataset",   required=True, type=Path)
+    parser.add_argument("--name",      required=True, type=str)
+    parser.add_argument("--epochs",    type=int, default=50)
+    parser.add_argument("--save_root", type=Path, default=None)
     args = parser.parse_args()
 
     images_dir = args.dataset / "images"
     labels_dir = args.dataset / "labels"
-    save_dir   = Path(__file__).resolve().parent.parent / "microsam" / "models" / args.name
+    if args.save_root:
+        save_dir = args.save_root / args.name
+    else:
+        save_dir = Path(__file__).resolve().parent.parent / "microsam" / "models" / args.name
     save_dir.mkdir(parents=True, exist_ok=True)
 
     # --- your model training code here ---
@@ -291,9 +347,14 @@ tail -f bubbly_flows/logs/<exp_name>_<job_id>.out
 | `TRAINING COMPLETE` | Done |
 | Error message in the `.err` file | Something went wrong |
 
-Two common problems:
+Three common problems:
 - `CUDA driver version is insufficient` — the job was not allocated a GPU. Check that the generated `.sh` file in `bubbly_flows/logs/` contains `#SBATCH -p gpu`.
 - `Module not found: torch` — the environment was not activated in the job script. Look for `conda activate bubbly-train-env` in the `.sh` file.
+- `Using device: cpu` despite `--gres=gpu:1` — PyTorch was installed without CUDA support. The conda-forge build of PyTorch is CPU-only. To fix, reinstall with the CUDA-enabled build from the `pytorch` channel (the `environment.yml` already pins `pytorch::pytorch` and `pytorch::pytorch-cuda=11.8` to ensure this). If the environment was created before this fix, run:
+
+  ```bash
+  conda install -n bubbly-train-env pytorch::pytorch pytorch::torchvision pytorch::torchaudio pytorch::pytorch-cuda=11.8
+  ```
 
 ---
 
@@ -481,16 +542,17 @@ if __name__ == "__main__":
 |---|---|
 | Gold annotations | `bubbly_flows/annotations/gold/<version>/labels_json/` |
 | Training datasets | `bubbly_flows/microsam/datasets/<name>/` |
-| Model weights | `bubbly_flows/microsam/models/<name>/checkpoints/<name>/best.pt` |
+| Base model weights | `~/scratch/bubble-models/{microsam,stardist,yolo,bubmask}/` |
+| Trained model weights | `~/scratch/bubble-models/trained/<exp_name>/` |
 | Training logs | `bubbly_flows/logs/<name>_<job_id>.out` |
 | Action history | `bubbly_flows/diary.log` |
 
 ```
 annotations/gold/  (labels_json/*.json)
         ↓  manage_bubbly.py — option 4
-microsam/datasets/<name>/
+microsam/datasets/<name>/  (images/ + labels/)
         ↓  manage_bubbly.py — option 5  →  Slurm job
-microsam/models/<name>/best.pt
+~/scratch/bubble-models/trained/<name>/best.pt
         ↓  inference.py
 predicted masks
         ↓  evaluate.py

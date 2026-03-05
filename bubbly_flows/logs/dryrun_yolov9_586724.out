@@ -1,0 +1,75 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 586724
+##  Job Name : dryrun_yolov9
+##  Nodelist : gpu2003
+##      CPUs : 
+##  Mem/Node : 32768 MB
+## Directory : /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
+##   Job Started : Wed Mar  4 03:03:45 PM EST 2026
+###############################################################################
+Job ID: 586724
+Node:   gpu2003
+Model:  yolov9
+---
+STARTING YOLOv9 TRAINING: dryrun_yolov9
+Dataset:  /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/microsam/datasets/v00_train
+Epochs:   2
+Output:   /users/eaguerov/scratch/bubble-models/trained/dryrun_yolov9
+--------------------------------
+WARNING ⚠️ torchvision==0.25 is incompatible with torch==2.9.
+Run 'pip install torchvision==0.24' to fix torchvision or 'pip install -U torch torchvision' to update both.
+For a full compatibility table see https://github.com/pytorch/vision#installation
+Device: CPU
+Weights:  /users/eaguerov/scratch/bubble-models/yolo/yolov9c-seg.pt
+Converting 124 instance masks to YOLO polygon format ...
+  Total bubble instances written: 9824
+  YOLO dataset: /users/eaguerov/scratch/bubble-models/trained/dryrun_yolov9/_yolo_dataset
+Starting YOLOv9 training ...
+Ultralytics 8.4.19 🚀 Python-3.11.14 torch-2.9.1 CPU (Intel Xeon Gold 6242 CPU @ 2.80GHz)
+[34m[1mengine/trainer: [0magnostic_nms=False, amp=True, angle=1.0, augment=False, auto_augment=randaugment, batch=4, bgr=0.0, box=7.5, cache=False, cfg=None, classes=None, close_mosaic=10, cls=0.5, compile=False, conf=None, copy_paste=0.0, copy_paste_mode=flip, cos_lr=False, cutmix=0.0, data=/users/eaguerov/scratch/bubble-models/trained/dryrun_yolov9/_yolo_dataset/bubbles.yaml, degrees=0.0, deterministic=True, device=cpu, dfl=1.5, dnn=False, dropout=0.0, dynamic=False, embed=None, end2end=None, epochs=2, erasing=0.4, exist_ok=True, fliplr=0.5, flipud=0.0, format=torchscript, fraction=1.0, freeze=None, half=False, hsv_h=0.015, hsv_s=0.7, hsv_v=0.4, imgsz=512, int8=False, iou=0.7, keras=False, kobj=1.0, line_width=None, lr0=0.01, lrf=0.01, mask_ratio=4, max_det=300, mixup=0.0, mode=train, model=/users/eaguerov/scratch/bubble-models/yolo/yolov9c-seg.pt, momentum=0.937, mosaic=1.0, multi_scale=0.0, name=dryrun_yolov9, nbs=64, nms=False, opset=None, optimize=False, optimizer=auto, overlap_mask=True, patience=100, perspective=0.0, plots=True, pose=12.0, pretrained=True, profile=False, project=/users/eaguerov/scratch/bubble-models/trained, rect=False, resume=False, retina_masks=False, rle=1.0, save=True, save_conf=False, save_crop=False, save_dir=/oscar/scratch/eaguerov/bubble-models/trained/dryrun_yolov9, save_frames=False, save_json=False, save_period=-1, save_txt=False, scale=0.5, seed=0, shear=0.0, show=False, show_boxes=True, show_conf=True, show_labels=True, simplify=True, single_cls=False, source=None, split=val, stream_buffer=False, task=segment, time=None, tracker=botsort.yaml, translate=0.1, val=True, verbose=True, vid_stride=1, visualize=False, warmup_bias_lr=0.1, warmup_epochs=3.0, warmup_momentum=0.8, weight_decay=0.0005, workers=8, workspace=None
+[KDownloading https://ultralytics.com/assets/Arial.ttf to '/users/eaguerov/.config/Ultralytics/Arial.ttf': 100% ━━━━━━━━━━━━ 755.1KB 36.4MB/s 0.0s
+Overriding model.yaml nc=80 with nc=1
+
+                   from  n    params  module                                       arguments                     
+  0                  -1  1      1856  ultralytics.nn.modules.conv.Conv             [3, 64, 3, 2]                 
+  1                  -1  1     73984  ultralytics.nn.modules.conv.Conv             [64, 128, 3, 2]               
+  2                  -1  1    212864  ultralytics.nn.modules.block.RepNCSPELAN4    [128, 256, 128, 64, 1]        
+  3                  -1  1    164352  ultralytics.nn.modules.block.ADown           [256, 256]                    
+  4                  -1  1    847616  ultralytics.nn.modules.block.RepNCSPELAN4    [256, 512, 256, 128, 1]       
+  5                  -1  1    656384  ultralytics.nn.modules.block.ADown           [512, 512]                    
+  6                  -1  1   2857472  ultralytics.nn.modules.block.RepNCSPELAN4    [512, 512, 512, 256, 1]       
+  7                  -1  1    656384  ultralytics.nn.modules.block.ADown           [512, 512]                    
+  8                  -1  1   2857472  ultralytics.nn.modules.block.RepNCSPELAN4    [512, 512, 512, 256, 1]       
+  9                  -1  1    656896  ultralytics.nn.modules.block.SPPELAN         [512, 512, 256]               
+ 10                  -1  1         0  torch.nn.modules.upsampling.Upsample         [None, 2, 'nearest']          
+ 11             [-1, 6]  1         0  ultralytics.nn.modules.conv.Concat           [1]                           
+ 12                  -1  1   3119616  ultralytics.nn.modules.block.RepNCSPELAN4    [1024, 512, 512, 256, 1]      
+ 13                  -1  1         0  torch.nn.modules.upsampling.Upsample         [None, 2, 'nearest']          
+ 14             [-1, 4]  1         0  ultralytics.nn.modules.conv.Concat           [1]                           
+ 15                  -1  1    912640  ultralytics.nn.modules.block.RepNCSPELAN4    [1024, 256, 256, 128, 1]      
+ 16                  -1  1    164352  ultralytics.nn.modules.block.ADown           [256, 256]                    
+ 17            [-1, 12]  1         0  ultralytics.nn.modules.conv.Concat           [1]                           
+ 18                  -1  1   2988544  ultralytics.nn.modules.block.RepNCSPELAN4    [768, 512, 512, 256, 1]       
+ 19                  -1  1    656384  ultralytics.nn.modules.block.ADown           [512, 512]                    
+ 20             [-1, 9]  1         0  ultralytics.nn.modules.conv.Concat           [1]                           
+ 21                  -1  1   3119616  ultralytics.nn.modules.block.RepNCSPELAN4    [1024, 512, 512, 256, 1]      
+ 22        [15, 18, 21]  1   7889779  ultralytics.nn.modules.head.Segment          [1, 32, 256, 16, None, [256, 512, 512]]
+YOLOv9c-seg summary: 380 layers, 27,836,211 parameters, 27,836,195 gradients, 149.0 GFLOPs
+
+Transferred 993/999 items from pretrained weights
+Freezing layer 'model.22.dfl.conv.weight'
+[34m[1mtrain: [0mFast image access ✅ (ping: 0.0±0.0 ms, read: 129.0±17.4 MB/s, size: 248.6 KB)
+[K[34m[1mtrain: [0mScanning /oscar/scratch/eaguerov/bubble-models/trained/dryrun_yolov9/_yolo_dataset/labels/train... 19 images, 0 backgrounds, 0 corrupt: 17% ━━────────── 19/111 51.5it/s 0.1s<1.8s[K[34m[1mtrain: [0mScanning /oscar/scratch/eaguerov/bubble-models/trained/dryrun_yolov9/_yolo_dataset/labels/train... 91 images, 3 backgrounds, 0 corrupt: 82% ━━━━━━━━━╸── 91/111 239.8it/s 0.2s<0.1s[K[34m[1mtrain: [0mScanning /oscar/scratch/eaguerov/bubble-models/trained/dryrun_yolov9/_yolo_dataset/labels/train... 111 images, 3 backgrounds, 0 corrupt: 100% ━━━━━━━━━━━━ 111/111 450.1it/s 0.2s
+[34m[1mtrain: [0mNew cache created: /oscar/scratch/eaguerov/bubble-models/trained/dryrun_yolov9/_yolo_dataset/labels/train.cache
+[34m[1mval: [0mFast image access ✅ (ping: 0.0±0.0 ms, read: 142.5±10.9 MB/s, size: 284.3 KB)
+[K[34m[1mval: [0mScanning /oscar/scratch/eaguerov/bubble-models/trained/dryrun_yolov9/_yolo_dataset/labels/val... 13 images, 0 backgrounds, 0 corrupt: 100% ━━━━━━━━━━━━ 13/13 425.0it/s 0.0s
+[34m[1mval: [0mNew cache created: /oscar/scratch/eaguerov/bubble-models/trained/dryrun_yolov9/_yolo_dataset/labels/val.cache
+[34m[1moptimizer:[0m 'optimizer=auto' found, ignoring 'lr0=0.01' and 'momentum=0.937' and determining best 'optimizer', 'lr0' and 'momentum' automatically... 
+[34m[1moptimizer:[0m AdamW(lr=0.002, momentum=0.9) with parameter groups 163 weight(decay=0.0), 174 weight(decay=0.0005), 173 bias(decay=0.0)
+Plotting labels to /oscar/scratch/eaguerov/bubble-models/trained/dryrun_yolov9/labels.jpg... 
+Image sizes 512 train, 512 val
+Using 0 dataloader workers
+Logging results to [1m/oscar/scratch/eaguerov/bubble-models/trained/dryrun_yolov9[0m
+Starting training for 2 epochs...
+
+      Epoch    GPU_mem   box_loss   seg_loss   cls_loss   dfl_loss   sem_loss  Instances       Size

@@ -1,0 +1,24 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 586725
+##  Job Name : dryrun_maskrcnn
+##  Nodelist : gpu2257
+##      CPUs : 
+##  Mem/Node : 32768 MB
+## Directory : /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
+##   Job Started : Wed Mar  4 03:04:18 PM EST 2026
+###############################################################################
+Job ID: 586725
+Node:   gpu2257
+Model:  maskrcnn
+---
+STARTING Mask R-CNN TRAINING: dryrun_maskrcnn
+Dataset:  /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/microsam/datasets/v00_train
+Epochs:   2
+Output:   /users/eaguerov/scratch/bubble-models/trained/dryrun_maskrcnn
+--------------------------------
+Device: cpu
+WARNING: Training on CPU will be extremely slow.
+Found 124 image/label pairs.
+Split: 111 train / 13 val
+Loading Mask R-CNN (ResNet-50 + FPN, COCO pretrained) ...
+Downloading: "https://download.pytorch.org/models/maskrcnn_resnet50_fpn_coco-bf2d0c1e.pth" to /users/eaguerov/.cache/torch/hub/checkpoints/maskrcnn_resnet50_fpn_coco-bf2d0c1e.pth
