@@ -702,49 +702,20 @@ def promote_to_gold():
     input("Press Enter...")
 
 
-# --- 4. MicroSAM Export ---
-def export_microsam_dataset():
-    print("\n[ Prepare Training Dataset ]")
-    
-    # Select Gold Version
-    gold_vers = sorted([d.name for d in GOLD_DIR.iterdir() if d.is_dir()])
-    if not gold_vers:
-        print("No Gold versions found.")
-        input()
-        return
+# --- 4. Export helper ---
+def _export_json_list(
+    json_files: List[Path],
+    dest_ds_dir: Path,
+    enable_aug: bool,
+    aug_seed: Optional[int],
+) -> Dict[str, int]:
+    """Convert a list of gold JSON files to an images+labels dataset.
 
-    print("Available Gold Versions:")
-    for i, g in enumerate(gold_vers):
-        print(f"{i+1}. {g}")
-        
-    idx = input_int("Select version", 1) - 1
-    if not (0 <= idx < len(gold_vers)):
-        return
-        
-    gold_name = gold_vers[idx]
-    src_json_dir = GOLD_DIR / gold_name / "labels_json"
-    
-    # Destination
-    dest_ds_name = input_str("Dataset Name (e.g. v01_train)", gold_name)
-    dest_ds_dir = MICROSAM_DIR / "datasets" / dest_ds_name
+    dest_ds_dir must already exist with images/ and labels/ subdirectories.
+    Returns dict: base, aug, skipped, cp_success, cp_failed.
+    """
     dest_img_dir = dest_ds_dir / "images"
     dest_lbl_dir = dest_ds_dir / "labels"
-    
-    if dest_ds_dir.exists():
-        print(f"Warning: {dest_ds_dir} already exists.")
-        overwrite = input_str("Overwrite? (y/n)", "n")
-        if overwrite.lower() != 'y':
-            return
-        shutil.rmtree(dest_ds_dir)
-        
-    dest_img_dir.mkdir(parents=True)
-    dest_lbl_dir.mkdir(parents=True)
-    
-    enable_aug = input_str("Enable export-time augmentation? (y/n)", "y").lower() == "y"
-    aug_seed = input_int("Augmentation seed", 42) if enable_aug else None
-
-    json_files = list(src_json_dir.glob("*.json"))
-    print(f"Converting {len(json_files)} labeled images...")
 
     base_count = 0
     aug_count = 0
@@ -765,22 +736,17 @@ def export_microsam_dataset():
     }
 
     for jf in json_files:
-        # 1. Read JSON
         with open(jf, "r") as f:
             data = json.load(f)
-            
+
         img_h = data.get("imageHeight")
         img_w = data.get("imageWidth")
         shapes = data.get("shapes", [])
-        
-        # If dimensions missing, try to infer from matching image in pool
-        # But for now assuming JSON is valid from X-AnyLabeling
-        
-        # 2. Find source image (full frames first, then pool as fallback)
+
         img_stem = jf.stem
         image_name = data.get("imagePath")
         found_img = find_source_image(img_stem, image_name=image_name)
-        
+
         if not found_img:
             print(f"Warning: Image for {jf.name} not found in known sources. Skipping.")
             skipped_count += 1
@@ -791,20 +757,16 @@ def export_microsam_dataset():
             print(f"Warning: Could not load image {found_img}. Skipping.")
             skipped_count += 1
             continue
-        
-        # 3. Create Mask
-        # If H/W missing in JSON, read image to get them.
+
         if not img_h or not img_w:
             img_h, img_w = base_image.shape[:2]
 
         mask = np.zeros((img_h, img_w), dtype=np.uint16)
-        
         inst_id = 1
         for shape in shapes:
             points = shape.get("points")
             if not points:
                 continue
-            
             pts = np.array(points, dtype=np.int32)
             if pts.size == 0:
                 continue
@@ -816,10 +778,8 @@ def export_microsam_dataset():
             skipped_count += 1
             continue
 
-        # Save original pair.
         shutil.copy2(found_img, dest_img_dir / found_img.name)
-        base_mask_name = f"{img_stem}.tif"
-        cv2.imwrite(str(dest_lbl_dir / base_mask_name), mask)
+        cv2.imwrite(str(dest_lbl_dir / f"{img_stem}.tif"), mask)
         base_count += 1
 
         source_meta: Dict[str, Any] = {
@@ -859,34 +819,151 @@ def export_microsam_dataset():
                     else:
                         copy_paste_failed += 1
 
-                source_meta["variants"].append(
-                    {
-                        "variant_stem": aug_stem,
-                        "variant_seed": variant_seed,
-                        "image_file": aug_img_name,
-                        "mask_file": aug_msk_name,
-                        "pipeline": "geom+photo+copy" if with_copy_paste else "geom+photo",
-                        "metadata": aug_meta,
-                    }
-                )
+                source_meta["variants"].append({
+                    "variant_stem": aug_stem,
+                    "variant_seed": variant_seed,
+                    "image_file": aug_img_name,
+                    "mask_file": aug_msk_name,
+                    "pipeline": "geom+photo+copy" if with_copy_paste else "geom+photo",
+                    "metadata": aug_meta,
+                })
 
         aug_config["sources"].append(source_meta)
 
     with open(dest_ds_dir / "augmentation_config.json", "w") as f:
         json.dump(aug_config, f, indent=2)
 
-    total_pairs = base_count + aug_count
-    print(f"Export complete. Base pairs: {base_count}, augmented pairs: {aug_count}, total: {total_pairs}.")
-    if enable_aug:
-        print(f"Copy-paste stats: success={copy_paste_success}, failed={copy_paste_failed}")
-    if skipped_count:
-        print(f"Skipped {skipped_count} samples due to missing/invalid data.")
+    return {
+        "base": base_count,
+        "aug": aug_count,
+        "skipped": skipped_count,
+        "cp_success": copy_paste_success,
+        "cp_failed": copy_paste_failed,
+    }
 
-    log_command(
-        "export_microsam",
-        f"Exported base={base_count}, aug={aug_count}, total={total_pairs} to {dest_ds_name} "
-        f"(augmentation={'on' if enable_aug else 'off'}, seed={aug_seed}, skipped={skipped_count})",
-    )
+
+# --- 4. MicroSAM Export ---
+def export_microsam_dataset():
+    print("\n[ Prepare Training Dataset ]")
+
+    # Select Gold Version
+    gold_vers = sorted([d.name for d in GOLD_DIR.iterdir() if d.is_dir()])
+    if not gold_vers:
+        print("No Gold versions found.")
+        input()
+        return
+
+    print("Available Gold Versions:")
+    for i, g in enumerate(gold_vers):
+        print(f"{i+1}. {g}")
+
+    idx = input_int("Select version", 1) - 1
+    if not (0 <= idx < len(gold_vers)):
+        return
+
+    gold_name = gold_vers[idx]
+    src_json_dir = GOLD_DIR / gold_name / "labels_json"
+    json_files = sorted(src_json_dir.glob("*.json"))
+
+    if not json_files:
+        print("No JSON files found in selected gold version.")
+        input("Press Enter...")
+        return
+
+    # Train/test split?
+    do_split = input_str("Enable train/test split? (y/n)", "y").lower() == "y"
+
+    if do_split:
+        test_frac_str = input_str("Test fraction (e.g. 0.2 = 20% held out for evaluation)", "0.2")
+        try:
+            test_frac = float(test_frac_str)
+            if not (0.0 < test_frac < 1.0):
+                raise ValueError
+        except ValueError:
+            print("Invalid fraction; defaulting to 0.2")
+            test_frac = 0.2
+        split_seed = input_int("Split seed", 42)
+        base_name = input_str("Base dataset name (train/test suffix added automatically)", gold_name)
+
+        import random as _random
+        rng = _random.Random(split_seed)
+        shuffled = list(json_files)
+        rng.shuffle(shuffled)
+        n_test = max(1, round(len(shuffled) * test_frac))
+        test_files  = shuffled[:n_test]
+        train_files = shuffled[n_test:]
+
+        train_ds_name = base_name + "_train"
+        test_ds_name  = base_name + "_test"
+
+        print(f"\nSplit: {len(train_files)} train / {len(test_files)} test")
+
+        for ds_name, files, aug in [
+            (train_ds_name, train_files, True),
+            (test_ds_name,  test_files,  False),
+        ]:
+            ds_dir = MICROSAM_DIR / "datasets" / ds_name
+            if ds_dir.exists():
+                print(f"Warning: {ds_dir} already exists.")
+                if input_str("Overwrite? (y/n)", "n").lower() != "y":
+                    print(f"Skipping {ds_name}.")
+                    continue
+                shutil.rmtree(ds_dir)
+            (ds_dir / "images").mkdir(parents=True)
+            (ds_dir / "labels").mkdir(parents=True)
+
+            label = "with augmentation" if aug else "no augmentation (test set)"
+            print(f"\nExporting {ds_name} ({label}) ...")
+            counts = _export_json_list(
+                files, ds_dir,
+                enable_aug=aug,
+                aug_seed=split_seed if aug else None,
+            )
+            total = counts["base"] + counts["aug"]
+            print(f"  {counts['base']} base + {counts['aug']} augmented = {total} pairs"
+                  + (f"  (skipped {counts['skipped']})" if counts["skipped"] else ""))
+
+        log_command(
+            "export_split",
+            f"Split {gold_name}: train={train_ds_name} ({len(train_files)} src), "
+            f"test={test_ds_name} ({len(test_files)} src), "
+            f"frac={test_frac}, seed={split_seed}",
+        )
+
+    else:
+        # Single export — original behaviour
+        dest_ds_name = input_str("Dataset Name (e.g. v01_train)", gold_name)
+        dest_ds_dir = MICROSAM_DIR / "datasets" / dest_ds_name
+
+        if dest_ds_dir.exists():
+            print(f"Warning: {dest_ds_dir} already exists.")
+            if input_str("Overwrite? (y/n)", "n").lower() != "y":
+                input("Press Enter...")
+                return
+            shutil.rmtree(dest_ds_dir)
+
+        (dest_ds_dir / "images").mkdir(parents=True)
+        (dest_ds_dir / "labels").mkdir(parents=True)
+
+        enable_aug = input_str("Enable export-time augmentation? (y/n)", "y").lower() == "y"
+        aug_seed = input_int("Augmentation seed", 42) if enable_aug else None
+
+        print(f"Converting {len(json_files)} labeled images...")
+        counts = _export_json_list(json_files, dest_ds_dir, enable_aug=enable_aug, aug_seed=aug_seed)
+
+        total = counts["base"] + counts["aug"]
+        print(f"Export complete. Base: {counts['base']}, augmented: {counts['aug']}, total: {total}.")
+        if enable_aug:
+            print(f"Copy-paste stats: success={counts['cp_success']}, failed={counts['cp_failed']}")
+        if counts["skipped"]:
+            print(f"Skipped {counts['skipped']} samples due to missing/invalid data.")
+
+        log_command(
+            "export_microsam",
+            f"Exported base={counts['base']}, aug={counts['aug']}, total={total} to {dest_ds_name} "
+            f"(augmentation={'on' if enable_aug else 'off'}, seed={aug_seed}, skipped={counts['skipped']})",
+        )
+
     input("Press Enter...")
 
 

@@ -12,13 +12,14 @@ Human-labeled annotations are assumed to exist in `bubbly_flows/annotations/gold
 1. [What Is This Project?](#1-what-is-this-project)
 2. [How the Repository Is Organized](#2-how-the-repository-is-organized)
 3. [Environment Setup on Oscar](#3-environment-setup-on-oscar)
-4. [Understanding the Data](#4-understanding-the-data)
-5. [Step 1 — Export a Training Dataset](#5-step-1--export-a-training-dataset)
-6. [Step 2 — Train a Model](#6-step-2--train-a-model)
-7. [Step 3 — Monitor Training](#7-step-3--monitor-training)
-8. [Step 4 — Run Inference](#8-step-4--run-inference)
-9. [Step 5 — Build an Evaluation Pipeline](#9-step-5--build-an-evaluation-pipeline)
-10. [Quick Reference](#10-quick-reference)
+4. [Download Base Model Weights (one-time)](#4-download-base-model-weights-one-time)
+5. [Understanding the Data](#5-understanding-the-data)
+6. [Step 1 — Export a Training Dataset](#6-step-1--export-a-training-dataset)
+7. [Step 2 — Train a Model](#7-step-2--train-a-model)
+8. [Step 3 — Monitor Training](#8-step-3--monitor-training)
+9. [Step 4 — Run Inference](#9-step-4--run-inference)
+10. [Step 5 — Evaluate](#10-step-5--evaluate)
+11. [Quick Reference](#11-quick-reference)
 
 ---
 
@@ -96,9 +97,59 @@ annotations/gold/  →  microsam/datasets/  →  ~/scratch/bubble-models/trained
 
 ---
 
-## 2.5. Download Base Model Weights (one-time setup)
+## 3. Environment Setup on Oscar
 
-Before training, you need to stage pre-trained model weights to your scratch space. Run this once:
+Log in to Oscar:
+
+```bash
+ssh <your-username>@ssh.ccv.brown.edu
+```
+
+The repository lives in shared project storage. Navigate there (ask a team member for the exact path if you are not sure):
+
+```bash
+cd /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
+```
+
+Oscar does not load conda by default, so you need to do this at the start of every session:
+
+```bash
+module load miniforge3
+```
+
+Adding that line to your `~/.bashrc` will save you from having to remember it each time.
+
+To create the Python environment for the first time, use `mamba` — it is much faster than `conda` for large environments like this one (expect 10–15 minutes instead of 1+ hour):
+
+```bash
+mamba env create -f environment.yml
+```
+
+If that fails with `CondaValueError: prefix already exists`, the environment was previously created but may be incomplete. Fix it with:
+
+```bash
+mamba env update --name bubbly-train-env --file environment.yml
+```
+
+Then activate it — you will need to do this every session:
+
+```bash
+conda activate bubbly-train-env
+```
+
+To verify everything installed correctly:
+
+```bash
+python -c "import torch; import micro_sam; print(torch.__version__, torch.cuda.is_available())"
+```
+
+`torch.cuda.is_available()` will return `False` on the login node even if CUDA is properly installed — that is expected. The GPU is only available inside a Slurm job.
+
+---
+
+## 4. Download Base Model Weights (one-time)
+
+Before training, you need to stage pre-trained model weights to your scratch space. Run this once with the conda environment active:
 
 ```bash
 bash bubbly_flows/scripts/download_models.sh
@@ -120,52 +171,7 @@ The script is idempotent — safe to re-run. It prints a status summary at the e
 
 ---
 
-## 3. Environment Setup on Oscar
-
-Log in and navigate to the project:
-
-```bash
-ssh <your-username>@ssh.ccv.brown.edu
-cd /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
-```
-
-Oscar does not load conda by default, so you need to do this at the start of every session:
-
-```bash
-module load miniforge3
-```
-
-Adding that line to your `~/.bashrc` will save you from having to remember it each time.
-
-To create the Python environment for the first time (takes about 10–15 minutes):
-
-```bash
-conda env create -f environment.yml
-```
-
-If that fails with `CondaValueError: prefix already exists`, the environment was previously created but may be incomplete. Fix it with:
-
-```bash
-conda env update --name bubbly-train-env --file environment.yml
-```
-
-Then activate it — you will need to do this every session:
-
-```bash
-conda activate bubbly-train-env
-```
-
-To verify everything installed correctly:
-
-```bash
-python -c "import torch; import micro_sam; print(torch.__version__, torch.cuda.is_available())"
-```
-
-`torch.cuda.is_available()` will return `False` on the login node even if CUDA is properly installed — that is expected. The GPU is only available inside a Slurm job.
-
----
-
-## 4. Understanding the Data
+## 5. Understanding the Data
 
 ### Gold annotations
 
@@ -204,14 +210,14 @@ Each image and its mask share the same filename, with a `.tif` extension for the
 
 ---
 
-## 5. Step 1 — Export a Training Dataset
+## 6. Step 1 — Export a Training Dataset
 
 ```bash
 conda activate bubbly-train-env
 python bubbly_flows/scripts/manage_bubbly.py
 ```
 
-A menu will appear. Select option 4 (Prepare Training Dataset):
+Select option 4 (Prepare Training Dataset). The menu looks like this:
 
 ```
 ========================================
@@ -222,24 +228,33 @@ A menu will appear. Select option 4 (Prepare Training Dataset):
 3. Promote Workspace to Gold (+ Cleanup)
 4. Prepare Training Dataset (Export)
 5. Train Model (submit job)
-6. Run Inference
+6. Run Inference (Stub)
 q. Quit
 ```
 
-The script will ask you to pick a gold version (e.g. `gold_seed_v00`), give the dataset a name (e.g. `v01_seed_aug`), and whether to enable augmentation. Say yes to augmentation — it automatically generates extra training variations of each image using flips, rotations, and brightness changes, ending up with roughly 4× more training examples at no extra labeling cost. Use seed `42` to keep it reproducible.
+Pick a gold version, then answer the prompts:
 
-The exported dataset lands in `bubbly_flows/microsam/datasets/<your-dataset-name>/`. A quick sanity check:
+1. **Enable train/test split?** — say `y`. The script will randomly hold out a fraction of the labeled images as a test set, which you will use later for evaluation. Images in the test set are never seen by the model during training.
+2. **Test fraction** — accept the default (`0.2` = 20% held out).
+3. **Split seed** — accept `42` for reproducibility.
+4. **Base dataset name** — give it a name like `v01_seed`. The script appends `_train` and `_test` automatically.
+
+The script exports two datasets:
+- `bubbly_flows/microsam/datasets/v01_seed_train/` — training images with augmentation (~4× the source count)
+- `bubbly_flows/microsam/datasets/v01_seed_test/`  — test images, no augmentation, for evaluation only
+
+A quick sanity check:
 
 ```bash
-ls bubbly_flows/microsam/datasets/<your-dataset-name>/images/ | wc -l
-ls bubbly_flows/microsam/datasets/<your-dataset-name>/labels/ | wc -l
+ls bubbly_flows/microsam/datasets/v01_seed_train/images/ | wc -l
+ls bubbly_flows/microsam/datasets/v01_seed_train/labels/ | wc -l
 ```
 
 Both counts should match.
 
 ---
 
-## 6. Step 2 — Train a Model
+## 7. Step 2 — Train a Model
 
 From the same menu, select option 5. Pick the dataset you just exported. You will then be asked which training script to use:
 
@@ -326,7 +341,7 @@ That is the entire interface. The menu and Slurm scaffolding handle everything e
 
 ---
 
-## 7. Step 3 — Monitor Training
+## 8. Step 3 — Monitor Training
 
 Logs are saved to `bubbly_flows/logs/`. Two files are created per job:
 
@@ -358,175 +373,142 @@ Three common problems:
 
 ---
 
-## 8. Step 4 — Run Inference
+## 9. Step 4 — Run Inference
 
-Once training is done, select option 6 from the menu to run the model on a new image, or call the script directly:
+There is no unified inference script across all model families yet. Each one uses its own library API. Option 6 in the menu ("Run Inference (Stub)") only covers MicroSAM and also looks in the wrong directory — use the snippets below directly.
+
+All trained checkpoints land under `~/scratch/bubble-models/trained/<exp_name>/`.
+
+### MicroSAM
 
 ```bash
 python bubbly_flows/scripts/inference.py \
-    --model_path bubbly_flows/microsam/models/<exp_name>/checkpoints/<exp_name>/best.pt \
+    --model_path ~/scratch/bubble-models/trained/<exp_name>/checkpoints/<exp_name>/best.pt \
     --image bubbly_flows/data/patches_pool/images/<some_image>.png \
     --output output/<some_image>_pred.png \
     --model_type vit_b
 ```
 
-The output is a mask image where each pixel's value is a predicted bubble ID (0 = background, 1 = first bubble, etc.), the same format as the gold masks in `microsam/datasets/*/labels/`.
+### StarDist
 
----
-
-## 9. Step 5 — Build an Evaluation Pipeline
-
-There is no evaluation pipeline yet. This section explains the problem and gives a starting point.
-
-### What you have to work with
-
-After running inference on a test image, you have two masks to compare:
-
-| | Path | Format |
-|---|---|---|
-| Prediction | wherever you saved it | mask file, pixel = predicted bubble ID |
-| Ground truth | `microsam/datasets/<ds>/labels/<stem>.tif` | mask file, pixel = labeled bubble ID |
-
-The catch: bubble IDs in the prediction and ground truth are not aligned. Bubble "3" in the prediction might be the same physical bubble as "7" in the ground truth. You have to figure out which predicted bubble corresponds to which labeled bubble before computing any score — this is called the matching problem.
-
-### Metrics
-
-Intersection over Union (IoU) measures overlap between two masks. A perfect match scores 1.0; no overlap scores 0.0:
-
-```
-IoU = (pixels in both masks) / (pixels in either mask)
-```
-
-F1 score balances finding all real bubbles (recall) against avoiding false detections (precision). It is a good first metric to get working.
-
-Average Precision (AP) is the standard rigorous benchmark. At IoU ≥ 0.5, a predicted bubble counts as a correct detection if it overlaps enough with a labeled bubble. AP@0.5 and AP@0.75 are what most papers report.
-
-Panoptic Quality (PQ) combines how many bubbles were found with how well their shapes were drawn. Worth reading about once the basics are working.
-
-### Solving the matching problem
-
-The standard solution is the Hungarian algorithm, which finds the best one-to-one assignment between predicted and labeled bubbles:
+StarDist saves its model in a directory structure it manages itself. Load it by pointing to the basedir and name:
 
 ```python
-from scipy.optimize import linear_sum_assignment
-import numpy as np
-
-def match_instances(pred_mask, gt_mask, iou_threshold=0.5):
-    """
-    Match predicted bubbles to labeled bubbles.
-    Returns:
-        matches  - list of (pred_id, gt_id, iou) for correct detections
-        fp_ids   - predicted bubbles with no matching label (false positives)
-        fn_ids   - labeled bubbles with no matching prediction (false negatives)
-    """
-    pred_ids = [i for i in np.unique(pred_mask) if i > 0]
-    gt_ids   = [i for i in np.unique(gt_mask)   if i > 0]
-
-    if not pred_ids or not gt_ids:
-        return [], pred_ids, gt_ids
-
-    # Build a table of IoU scores: one row per prediction, one column per label
-    iou_matrix = np.zeros((len(pred_ids), len(gt_ids)), dtype=np.float32)
-    for i, pid in enumerate(pred_ids):
-        for j, gid in enumerate(gt_ids):
-            inter = np.logical_and(pred_mask == pid, gt_mask == gid).sum()
-            union = np.logical_or( pred_mask == pid, gt_mask == gid).sum()
-            iou_matrix[i, j] = inter / union if union > 0 else 0.0
-
-    row_ind, col_ind = linear_sum_assignment(-iou_matrix)
-
-    matches, fp_ids, fn_ids = [], list(pred_ids), list(gt_ids)
-    for r, c in zip(row_ind, col_ind):
-        if iou_matrix[r, c] >= iou_threshold:
-            matches.append((pred_ids[r], gt_ids[c], iou_matrix[r, c]))
-            fp_ids.remove(pred_ids[r])
-            fn_ids.remove(gt_ids[c])
-
-    return matches, fp_ids, fn_ids
-```
-
-### Computing scores
-
-```python
-def compute_metrics(matches, fp_ids, fn_ids):
-    TP = len(matches)   # correct detections
-    FP = len(fp_ids)    # predicted bubbles that don't exist in the labels
-    FN = len(fn_ids)    # labeled bubbles the model missed
-
-    precision = TP / (TP + FP) if (TP + FP) > 0 else 0.0
-    recall    = TP / (TP + FN) if (TP + FN) > 0 else 0.0
-    f1        = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
-    mean_iou  = np.mean([m[2] for m in matches]) if matches else 0.0
-
-    return {"TP": TP, "FP": FP, "FN": FN,
-            "precision": precision, "recall": recall,
-            "F1": f1, "mean_IoU": mean_iou}
-```
-
-### Suggested workflow
-
-Reserve some gold annotations as a test set before training — either a held-out subset or a gold version that was never used in any training run. Run inference on all test images, compare each prediction against its ground truth using the functions above, and report aggregated metrics (mean F1, AP@0.5, etc.). Visualizing failures is also worth doing early: draw predicted bubble outlines on top of the original images to see where things go wrong.
-
-A good place to start the evaluation script is `bubbly_flows/scripts/evaluate.py`. Here is a skeleton:
-
-```python
-#!/usr/bin/env python3
-"""
-evaluate.py — compare predicted masks against gold masks and report metrics.
-
-Usage:
-    python bubbly_flows/scripts/evaluate.py \
-        --preds output/preds/ \
-        --gts   bubbly_flows/microsam/datasets/v01_seed/labels/ \
-        --iou_threshold 0.5
-"""
-import argparse
-import numpy as np
-import cv2
+from stardist.models import StarDist2D
+from csbdeep.utils import normalize
 from pathlib import Path
-from scipy.optimize import linear_sum_assignment
+import numpy as np, cv2, tifffile
 
+model = StarDist2D(None, name="<exp_name>",
+                   basedir=str(Path.home() / "scratch/bubble-models/trained"))
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--preds", required=True, type=Path)
-    parser.add_argument("--gts",   required=True, type=Path)
-    parser.add_argument("--iou_threshold", type=float, default=0.5)
-    args = parser.parse_args()
-
-    pred_files = sorted(args.preds.glob("*.tif")) + sorted(args.preds.glob("*.png"))
-    results = []
-
-    for pred_path in pred_files:
-        gt_path = args.gts / pred_path.name
-        if not gt_path.exists():
-            gt_path = gt_path.with_suffix(".tif")
-        if not gt_path.exists():
-            print(f"  [skip] no gold mask found for {pred_path.name}")
-            continue
-
-        pred_mask = cv2.imread(str(pred_path), cv2.IMREAD_UNCHANGED)
-        gt_mask   = cv2.imread(str(gt_path),   cv2.IMREAD_UNCHANGED)
-
-        if pred_mask is None or gt_mask is None:
-            print(f"  [error] could not read {pred_path.name}")
-            continue
-
-        # TODO: call match_instances() and compute_metrics() here
-        print(f"  {pred_path.name}: pred {pred_mask.shape}, gt {gt_mask.shape}")
-        results.append(pred_path.name)
-
-    print(f"\nProcessed {len(results)} image pairs.")
-    # TODO: print aggregated metrics
-
-
-if __name__ == "__main__":
-    main()
+img = cv2.imread("path/to/image.png", cv2.IMREAD_GRAYSCALE).astype(np.float32)
+img = normalize(img, 1, 99.8)
+labels, _ = model.predict_instances(img)
+tifffile.imwrite("output_mask.tif", labels.astype(np.uint16))
 ```
+
+### YOLOv9
+
+```python
+from ultralytics import YOLO
+import numpy as np, cv2, tifffile
+from pathlib import Path
+
+model = YOLO(str(Path.home() / "scratch/bubble-models/trained/<exp_name>/weights/best.pt"))
+results = model.predict("path/to/image.png", imgsz=512, conf=0.25)
+
+# Convert YOLO instance masks to a labeled mask
+img = cv2.imread("path/to/image.png")
+label_map = np.zeros(img.shape[:2], dtype=np.uint16)
+if results[0].masks is not None:
+    for i, m in enumerate(results[0].masks.data.cpu().numpy()):
+        mask = cv2.resize(m, (img.shape[1], img.shape[0])) > 0.5
+        label_map[mask] = i + 1
+tifffile.imwrite("output_mask.tif", label_map)
+```
+
+### Mask R-CNN
+
+```python
+import torch, cv2, numpy as np, tifffile
+from pathlib import Path
+from torchvision.models.detection import maskrcnn_resnet50_fpn, MaskRCNN_ResNet50_FPN_Weights
+from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
+from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
+
+def build_model(num_classes=2):
+    m = maskrcnn_resnet50_fpn(weights=MaskRCNN_ResNet50_FPN_Weights.DEFAULT)
+    in_f = m.roi_heads.box_predictor.cls_score.in_features
+    m.roi_heads.box_predictor = FastRCNNPredictor(in_f, num_classes)
+    in_fm = m.roi_heads.mask_predictor.conv5_mask.in_channels
+    m.roi_heads.mask_predictor = MaskRCNNPredictor(in_fm, 256, num_classes)
+    return m
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = build_model()
+model.load_state_dict(torch.load(
+    Path.home() / "scratch/bubble-models/trained/<exp_name>/best.pt",
+    map_location=device))
+model.to(device).eval()
+
+img_bgr = cv2.imread("path/to/image.png")
+img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0
+tensor = torch.from_numpy(img_rgb.transpose(2, 0, 1)).unsqueeze(0).to(device)
+
+with torch.no_grad():
+    out = model(tensor)[0]
+
+label_map = np.zeros(img_bgr.shape[:2], dtype=np.uint16)
+scores = out["scores"].cpu().numpy()
+masks  = out["masks"].squeeze(1).cpu().numpy()
+for i, (score, mask) in enumerate(zip(scores, masks)):
+    if score > 0.5:
+        label_map[mask > 0.5] = i + 1
+tifffile.imwrite("output_mask.tif", label_map)
+```
+
+In all cases the output mask has the same format: pixel value = bubble instance ID (0 = background, 1 = first bubble, 2 = second bubble, ...), matching the gold masks in `microsam/datasets/*/labels/`.
 
 ---
 
-## 10. Quick Reference
+## 10. Step 5 — Evaluate
+
+`bubbly_flows/scripts/evaluate.py` is a complete evaluation script. Point it at a directory of predicted masks and the ground-truth labels from your test dataset:
+
+```bash
+python bubbly_flows/scripts/evaluate.py \
+    --preds output/preds/ \
+    --gts   bubbly_flows/microsam/datasets/v01_seed_test/labels/ \
+    --iou_threshold 0.5 \
+    --output results.csv       # optional
+```
+
+It prints a per-image table followed by an aggregate summary:
+
+```
+image                                     TP     FP     FN     precision   recall     F1       mean_IoU
+  ------------------------------------------------------------------------------------------------
+  SomeImage__x0320_y0640_pred.tif         12     1      2      0.923       0.857      0.889    0.781
+  ...
+
+--- Summary (24 images, IoU threshold = 0.5) ---
+Total:   TP=287  FP=14  FN=23
+Macro:   precision=0.941  recall=0.893  F1=0.916  mean_IoU=0.804
+Micro:   precision=0.953  recall=0.926  F1=0.939
+```
+
+**How it works:**
+- Bubble IDs in predictions and ground truth are not aligned (the model's "bubble 3" may be the same physical bubble as the label's "bubble 7"). The script solves this with the Hungarian algorithm, which finds the optimal one-to-one matching between predicted and labeled instances.
+- A predicted bubble counts as a correct detection (TP) if its IoU with the matched ground-truth bubble is ≥ `--iou_threshold`.
+- Unmatched predictions are false positives (FP); unmatched ground-truth bubbles are false negatives (FN).
+- **Macro** aggregates by giving equal weight to each image; **Micro** pools all TP/FP/FN counts first.
+
+The metrics reported (precision, recall, F1, mean IoU) are the standard benchmarks used in the bubble segmentation literature (e.g., Hessenkemper et al. 2022 report AP@0.5, which is equivalent to precision@0.5 with 1:1 matching).
+
+---
+
+## 11. Quick Reference
 
 | Action | Command |
 |---|---|
@@ -549,14 +531,14 @@ if __name__ == "__main__":
 
 ```
 annotations/gold/  (labels_json/*.json)
-        ↓  manage_bubbly.py — option 4
-microsam/datasets/<name>/  (images/ + labels/)
+        ↓  manage_bubbly.py — option 4  (train/test split + export)
+microsam/datasets/<name>_train/   microsam/datasets/<name>_test/
         ↓  manage_bubbly.py — option 5  →  Slurm job
-~/scratch/bubble-models/trained/<name>/best.pt
-        ↓  inference.py
-predicted masks
-        ↓  evaluate.py
-F1, AP@0.5, mean IoU
+~/scratch/bubble-models/trained/<name>/
+        ↓  inference.py / model-specific snippet
+predicted masks  (run on test images)
+        ↓  evaluate.py --preds ... --gts datasets/<name>_test/labels/
+precision, recall, F1, mean IoU
 ```
 
 ---
