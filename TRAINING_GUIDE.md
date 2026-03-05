@@ -85,7 +85,7 @@ Bubble-tracking/
 │   ├── stardist/hzdr_2022/            # Hessenkemper 2022 bubble-specific StarDist
 │   ├── stardist/hzdr_bubble_column/   # Hessenkemper 2024 bubble column StarDist
 │   ├── yolo/yolov9c-seg.pt            # YOLOv9c-seg COCO weights
-│   ├── bubmask/mask_rcnn_bubble.h5    # BubMask (symlink from bubble_test_2021/)
+│   ├── bubmask/mask_rcnn_bubble.h5    # BubMask (Kim & Park 2021, downloaded from Google Drive)
 │   └── trained/<exp_name>/            # All post-training checkpoints land here
 ```
 
@@ -163,7 +163,7 @@ This creates `~/scratch/bubble-models/` with the following weights:
 | **StarDist HZDR 2022** | Bubble-specific checkpoints from Hessenkemper et al. 2022; AP@0.5 ~0.91 on air-water flow |
 | **StarDist HZDR bubble column** | Second HZDR bubble-specific release (Hessenkemper et al. 2024) |
 | **YOLOv9c-seg** | Real-time ~20 fps option; no bubble-specific release from papers, so this starts from COCO weights |
-| **BubMask (Mask R-CNN)** | Kim & Park 2021; symlinked from `~/scratch/bubble_test_2021/` |
+| **BubMask (Mask R-CNN)** | Kim & Park 2021; downloaded from Google Drive via `gdown` |
 
 The script is idempotent — safe to re-run. It prints a status summary at the end.
 

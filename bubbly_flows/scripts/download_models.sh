@@ -10,7 +10,7 @@
 #   microsam/   MicroSAM vit_b_lm  — fine-tuned on light microscopy (BioImage.IO)
 #   stardist/   HZDR bubble-specific StarDist checkpoints (Hessenkemper 2022, RODARE)
 #   yolo/       YOLOv9c-seg  — Ultralytics COCO-pretrained (no bubble release from papers)
-#   bubmask/    BubMask Mask-RCNN  — symlinked from ~/scratch/bubble_test_2021/
+#   bubmask/    BubMask Mask-RCNN  — downloaded from Google Drive (Kim & Park 2021)
 
 set -euo pipefail
 
@@ -97,21 +97,29 @@ download_if_missing \
     "https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov9c-seg.pt" \
     "YOLOv9c-seg (~100 MB)"
 
-# ── 5. BubMask (Mask R-CNN, Kim & Park 2021) — symlink ──────────────────────
-# Weights already downloaded during earlier bubble_test_2021 work.
+# ── 5. BubMask (Mask R-CNN, Kim & Park 2021) ────────────────────────────────
+# Download from Google Drive via gdown (pip package, already in env).
+# Source: https://github.com/ywflow/BubMask
 echo ""
 echo "5/5  BubMask (Mask R-CNN)"
-BUBMASK_SRC="${HOME}/scratch/bubble_test_2021/mask_rcnn_bubble.h5"
 BUBMASK_DEST="${MODELS_DIR}/bubmask/mask_rcnn_bubble.h5"
+BUBMASK_GDRIVE_ID="1BSi4djQtR0QKYEp-nFGsGi0e6UVEx5ug"
+BUBMASK_GDRIVE_URL="https://drive.google.com/file/d/${BUBMASK_GDRIVE_ID}/view?usp=sharing"
+
 if [[ -L "${BUBMASK_DEST}" || -f "${BUBMASK_DEST}" ]]; then
     echo "  [skip]     already present"
-elif [[ -f "${BUBMASK_SRC}" ]]; then
-    ln -sf "${BUBMASK_SRC}" "${BUBMASK_DEST}"
-    echo "  [ok]       symlinked from ${BUBMASK_SRC}"
 else
-    echo "  [MISSING]  ${BUBMASK_SRC} not found"
-    echo "             Download from: https://github.com/ywflow/BubMask (Releases)"
-    echo "             Place at:      ${BUBMASK_DEST}"
+    echo "  [download] Downloading BubMask from Google Drive (Kim & Park 2021) ..."
+    if ! command -v gdown &>/dev/null; then
+        pip install gdown -q
+    fi
+    if gdown "${BUBMASK_GDRIVE_ID}" -O "${BUBMASK_DEST}"; then
+        echo "  [ok]       BubMask downloaded"
+    else
+        echo "  [MISSING]  gdown failed. Download manually and place at:"
+        echo "             ${BUBMASK_DEST}"
+        echo "             Link: ${BUBMASK_GDRIVE_URL}"
+    fi
 fi
 
 # ── Summary ──────────────────────────────────────────────────────────────────
