@@ -375,11 +375,18 @@ Three common problems:
 
 ## 9. Step 4 — Run Inference
 
-There is no unified inference script across all model families yet. Each one uses its own library API. Option 6 in the menu ("Run Inference (Stub)") only covers MicroSAM and also looks in the wrong directory — use the snippets below directly.
-
 All trained checkpoints land under `~/scratch/bubble-models/trained/<exp_name>/`.
 
+Run inference on a **compute node**, not the login node — the model needs a GPU. Start an interactive session first:
+
+```bash
+interact -q gpu -g 1 -m 16g -t 01:00:00
+conda activate bubbly-train-env
+```
+
 ### MicroSAM
+
+`inference.py` handles the full pipeline: loads the SAM encoder and UNETR decoder from the fine-tuned checkpoint, computes image embeddings, and decodes instances.
 
 ```bash
 python bubbly_flows/scripts/inference.py \
@@ -388,6 +395,10 @@ python bubbly_flows/scripts/inference.py \
     --output output/<some_image>_pred.png \
     --model_type vit_b
 ```
+
+This writes two files:
+- `<output>.png` — uint16 label map where each pixel's value is its instance ID (0 = background). Used as input to `evaluate.py`.
+- `<output>_vis.png` — the original image with each detected bubble coloured in at 50% opacity. Open this to visually inspect the predictions.
 
 ### StarDist
 

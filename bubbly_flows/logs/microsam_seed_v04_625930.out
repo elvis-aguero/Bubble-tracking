@@ -1,0 +1,26 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 625930
+##  Job Name : microsam_seed_v04
+##  Nodelist : gpu2001
+##      CPUs : 
+##  Mem/Node : 32768 MB
+## Directory : /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
+##   Job Started : Fri Mar  6 09:27:44 AM EST 2026
+###############################################################################
+Job ID: 625930
+Node: gpu2001
+Dataset: gold_seed_v04_train
+STARTING TRAINING: microsam_seed_v04
+Dataset: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/microsam/datasets/gold_seed_v04_train
+Epochs:  100
+--------------------------------
+Found 56 images for training.
+Using device: cuda
+Checkpoints will be saved to: /users/eaguerov/scratch/bubble-models/trained/microsam_seed_v04
+Creating DataLoaders...
+Split: 50 training, 6 validation.
+Starting MicroSAM training...
+Start fitting for 10000 iterations /  100 epochs
+with 100 iterations per epoch
+Training with mixed precision
+CRITICAL TRAINING ERROR: CUDA out of memory. Tried to allocate 72.00 MiB. GPU 0 has a total capacity of 23.46 GiB of which 61.50 MiB is free. Including non-PyTorch memory, this process has 23.38 GiB memory in use. Of the allocated memory 22.92 GiB is allocated by PyTorch, and 239.30 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

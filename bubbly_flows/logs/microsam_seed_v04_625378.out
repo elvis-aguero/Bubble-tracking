@@ -1,0 +1,23 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 625378
+##  Job Name : microsam_seed_v04
+##  Nodelist : gpu2001
+##      CPUs : 
+##  Mem/Node : 32768 MB
+## Directory : /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
+##   Job Started : Fri Mar  6 09:06:09 AM EST 2026
+###############################################################################
+Job ID: 625378
+Node: gpu2001
+Dataset: gold_seed_v04_train
+STARTING TRAINING: microsam_seed_v04
+Dataset: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/microsam/datasets/gold_seed_v04_train
+Epochs:  100
+--------------------------------
+Found 56 images for training.
+Using device: cuda
+Checkpoints will be saved to: /users/eaguerov/scratch/bubble-models/trained/microsam_seed_v04
+Creating DataLoaders...
+Split: 50 training, 6 validation.
+Starting MicroSAM training...
+CRITICAL TRAINING ERROR: Invalid data range for the input data from the data loader. The input has to be in range [0, 255], but got minimum value -2.2881619930267334.

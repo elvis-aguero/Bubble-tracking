@@ -1,0 +1,115 @@
+Job ID: 632024
+Node: gpu2101
+Model: maskrcnn
+STARTING Mask R-CNN TRAINING: maskrcnn_seed_v04_run1
+Dataset:  /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/microsam/datasets/seed_v04_train
+Epochs:   100
+Output:   /users/eaguerov/scratch/bubble-models/trained/maskrcnn_seed_v04_run1
+--------------------------------
+Device: cuda
+Found 44 image/label pairs.
+Split: 39 train / 5 val
+Loading Mask R-CNN (ResNet-50 + FPN, COCO pretrained) ...
+Epoch   1/100  train_loss=nan  val_loss=nan
+Epoch   2/100  train_loss=nan  val_loss=nan
+Epoch   3/100  train_loss=nan  val_loss=nan
+Epoch   4/100  train_loss=nan  val_loss=nan
+Epoch   5/100  train_loss=nan  val_loss=nan
+Epoch   6/100  train_loss=nan  val_loss=nan
+Epoch   7/100  train_loss=nan  val_loss=nan
+Epoch   8/100  train_loss=nan  val_loss=nan
+Epoch   9/100  train_loss=nan  val_loss=nan
+Epoch  10/100  train_loss=nan  val_loss=nan
+Epoch  11/100  train_loss=nan  val_loss=nan
+Epoch  12/100  train_loss=nan  val_loss=nan
+Epoch  13/100  train_loss=nan  val_loss=nan
+Epoch  14/100  train_loss=nan  val_loss=nan
+Epoch  15/100  train_loss=nan  val_loss=nan
+Epoch  16/100  train_loss=nan  val_loss=nan
+Epoch  17/100  train_loss=nan  val_loss=nan
+Epoch  18/100  train_loss=nan  val_loss=nan
+Epoch  19/100  train_loss=nan  val_loss=nan
+Epoch  20/100  train_loss=nan  val_loss=nan
+Epoch  21/100  train_loss=nan  val_loss=nan
+Epoch  22/100  train_loss=nan  val_loss=nan
+Epoch  23/100  train_loss=nan  val_loss=nan
+Epoch  24/100  train_loss=nan  val_loss=nan
+Epoch  25/100  train_loss=nan  val_loss=nan
+Epoch  26/100  train_loss=nan  val_loss=nan
+Epoch  27/100  train_loss=nan  val_loss=nan
+Epoch  28/100  train_loss=nan  val_loss=nan
+Epoch  29/100  train_loss=nan  val_loss=nan
+Epoch  30/100  train_loss=nan  val_loss=nan
+Epoch  31/100  train_loss=nan  val_loss=nan
+Epoch  32/100  train_loss=nan  val_loss=nan
+Epoch  33/100  train_loss=nan  val_loss=nan
+Epoch  34/100  train_loss=nan  val_loss=nan
+Epoch  35/100  train_loss=nan  val_loss=nan
+Epoch  36/100  train_loss=nan  val_loss=nan
+Epoch  37/100  train_loss=nan  val_loss=nan
+Epoch  38/100  train_loss=nan  val_loss=nan
+Epoch  39/100  train_loss=nan  val_loss=nan
+Epoch  40/100  train_loss=nan  val_loss=nan
+Epoch  41/100  train_loss=nan  val_loss=nan
+Epoch  42/100  train_loss=nan  val_loss=nan
+Epoch  43/100  train_loss=nan  val_loss=nan
+Epoch  44/100  train_loss=nan  val_loss=nan
+Epoch  45/100  train_loss=nan  val_loss=nan
+Epoch  46/100  train_loss=nan  val_loss=nan
+Epoch  47/100  train_loss=nan  val_loss=nan
+Epoch  48/100  train_loss=nan  val_loss=nan
+Epoch  49/100  train_loss=nan  val_loss=nan
+Epoch  50/100  train_loss=nan  val_loss=nan
+Epoch  51/100  train_loss=nan  val_loss=nan
+Epoch  52/100  train_loss=nan  val_loss=nan
+Epoch  53/100  train_loss=nan  val_loss=nan
+Epoch  54/100  train_loss=nan  val_loss=nan
+Epoch  55/100  train_loss=nan  val_loss=nan
+Epoch  56/100  train_loss=nan  val_loss=nan
+Epoch  57/100  train_loss=nan  val_loss=nan
+Epoch  58/100  train_loss=nan  val_loss=nan
+Epoch  59/100  train_loss=nan  val_loss=nan
+Epoch  60/100  train_loss=nan  val_loss=nan
+Epoch  61/100  train_loss=nan  val_loss=nan
+Epoch  62/100  train_loss=nan  val_loss=nan
+Epoch  63/100  train_loss=nan  val_loss=nan
+Epoch  64/100  train_loss=nan  val_loss=nan
+Epoch  65/100  train_loss=nan  val_loss=nan
+Epoch  66/100  train_loss=nan  val_loss=nan
+Epoch  67/100  train_loss=nan  val_loss=nan
+Epoch  68/100  train_loss=nan  val_loss=nan
+Epoch  69/100  train_loss=nan  val_loss=nan
+Epoch  70/100  train_loss=nan  val_loss=nan
+Epoch  71/100  train_loss=nan  val_loss=nan
+Epoch  72/100  train_loss=nan  val_loss=nan
+Epoch  73/100  train_loss=nan  val_loss=nan
+Epoch  74/100  train_loss=nan  val_loss=nan
+Epoch  75/100  train_loss=nan  val_loss=nan
+Epoch  76/100  train_loss=nan  val_loss=nan
+Epoch  77/100  train_loss=nan  val_loss=nan
+Epoch  78/100  train_loss=nan  val_loss=nan
+Epoch  79/100  train_loss=nan  val_loss=nan
+Epoch  80/100  train_loss=nan  val_loss=nan
+Epoch  81/100  train_loss=nan  val_loss=nan
+Epoch  82/100  train_loss=nan  val_loss=nan
+Epoch  83/100  train_loss=nan  val_loss=nan
+Epoch  84/100  train_loss=nan  val_loss=nan
+Epoch  85/100  train_loss=nan  val_loss=nan
+Epoch  86/100  train_loss=nan  val_loss=nan
+Epoch  87/100  train_loss=nan  val_loss=nan
+Epoch  88/100  train_loss=nan  val_loss=nan
+Epoch  89/100  train_loss=nan  val_loss=nan
+Epoch  90/100  train_loss=nan  val_loss=nan
+Epoch  91/100  train_loss=nan  val_loss=nan
+Epoch  92/100  train_loss=nan  val_loss=nan
+Epoch  93/100  train_loss=nan  val_loss=nan
+Epoch  94/100  train_loss=nan  val_loss=nan
+Epoch  95/100  train_loss=nan  val_loss=nan
+Epoch  96/100  train_loss=nan  val_loss=nan
+Epoch  97/100  train_loss=nan  val_loss=nan
+Epoch  98/100  train_loss=nan  val_loss=nan
+Epoch  99/100  train_loss=nan  val_loss=nan
+Epoch 100/100  train_loss=nan  val_loss=nan
+--------------------------------
+TRAINING COMPLETE.
+Best model: /users/eaguerov/scratch/bubble-models/trained/maskrcnn_seed_v04_run1/best.pt  (val_loss=inf)

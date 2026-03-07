@@ -20,3 +20,9 @@
 [2026-02-04 17:51:45] create_workspace: Created workspace seed_v03
 [2026-02-14 16:00:27] create_workspace: Created workspace seed_v04
 [2026-02-14 18:35:54] export_microsam: Exported base=124, aug=372, total=496 to dryrun_aug_20260214_1835 (augmentation=on, seed=42, skipped=0)
+[2026-03-06 08:41:48] promote_gold: Promoted seed_v04 to gold_seed_v04 (14 labels)
+[2026-03-06 08:42:33] export_microsam: Exported base=14, aug=42, total=56 to gold_seed_v04_train (augmentation=on, seed=42, skipped=0)
+[2026-03-06 09:06:08] submit_job: Submitted job microsam_seed_v04 (dataset: gold_seed_v04_train, script: train.py, save: /users/eaguerov/scratch/bubble-models/trained)
+[2026-03-06 14:09:29] promote_gold: Promoted seed_v04 to gold_seed_v04 (14 labels)
+[2026-03-06 14:09:54] export_split: Split gold_seed_v04: train=seed_v04_train (11 src), test=seed_v04_test (3 src), frac=0.2, seed=42
+[2026-03-06 14:09:54] submit_job: Submitted job microsam_seed_v04_run1 (dataset: seed_v04_test, script: train.py, save: /users/eaguerov/scratch/bubble-models/trained)

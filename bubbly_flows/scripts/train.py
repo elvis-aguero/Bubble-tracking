@@ -2,11 +2,23 @@ import argparse
 import sys
 import os
 import glob
+import numpy as np
 import torch
-import torch
-import torch_em
-from micro_sam.training.training import train_sam
+from torch_em.transform.raw import normalize_percentile
+from micro_sam.training import default_sam_loader, train_sam
 from pathlib import Path
+
+
+def raw_transform(raw):
+    """Normalize image to [0, 255] as required by MicroSAM.
+
+    torch_em's default standardize() produces z-score values outside [0, 255],
+    which violates MicroSAM's expected input range. Percentile normalization is
+    robust to outliers and consistent with how SAM was originally trained.
+    """
+    raw = normalize_percentile(raw.astype(np.float32), lower=1.0, upper=99.8)
+    return (np.clip(raw, 0.0, 1.0) * 255.0).astype(np.float32)
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -73,32 +85,34 @@ def main():
     
     print(f"Split: {len(train_image_paths)} training, {len(val_image_paths)} validation.")
 
-    # We use torch_em to handle reading images and patching
-    # raw_key=None, label_key=None implies standard image files (tif/png)
-    train_loader = torch_em.default_segmentation_loader(
+    # Use micro_sam's own loader — it applies the 4-channel label transform
+    # required by the instance segmentation decoder (foreground + distance fields).
+    train_loader = default_sam_loader(
         raw_paths=train_image_paths,
         raw_key=None,
         label_paths=train_label_paths,
         label_key=None,
-        batch_size=2,
         patch_shape=(512, 512),
-        ndim=2,
-        is_seg_dataset=True,
-        num_workers=4,
-        shuffle=True
+        with_segmentation_decoder=True,
+        raw_transform=raw_transform,
+        is_train=True,
+        batch_size=1,
+        num_workers=2,
+        shuffle=True,
     )
-    
-    val_loader = torch_em.default_segmentation_loader(
+
+    val_loader = default_sam_loader(
         raw_paths=val_image_paths,
         raw_key=None,
         label_paths=val_label_paths,
         label_key=None,
-        batch_size=1,
         patch_shape=(512, 512),
-        ndim=2,
-        is_seg_dataset=True,
+        with_segmentation_decoder=True,
+        raw_transform=raw_transform,
+        is_train=False,
+        batch_size=1,
         num_workers=1,
-        shuffle=False
+        shuffle=False,
     )
     
     print("Starting MicroSAM training...")
@@ -111,9 +125,12 @@ def main():
             val_loader=val_loader,
             model_type="vit_b",
             n_epochs=args.epochs,
-            batch_size=2,   # Conservative batch size for 3090/standard GPUs
-            save_every_k_epochs=10,
-            device=device
+            device=device,
+            # Freeze the image encoder so gradients are not stored through ViT-B's
+            # 1024x1024 attention maps. With batch_size=1 the encoder alone fills
+            # the 24GB GPU. Fine-tuning only the mask decoder + segmentation decoder
+            # is the standard approach for small microscopy datasets.
+            freeze=["image_encoder"],
         )
     except Exception as e:
         print(f"CRITICAL TRAINING ERROR: {e}")

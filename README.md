@@ -30,7 +30,8 @@ Data flows through the project in this order:
 4. Labeling workspace batches: `bubbly_flows/workspaces/<workspace>/`
 5. Versioned gold labels: `bubbly_flows/annotations/gold/<gold_version>/`
 6. MicroSAM training dataset export: `bubbly_flows/microsam/datasets/<dataset>/`
-7. Trained checkpoints: `bubbly_flows/microsam/models/<experiment>/`
+7. Trained checkpoints: `~/scratch/bubble-models/trained/<experiment>/`
+8. Evaluation: `bubbly_flows/scripts/evaluate.py` (compare predicted masks to gold test labels)
 
 Operational logs are tracked in:
 - `bubbly_flows/diary.log` (action audit log)
@@ -97,8 +98,8 @@ Training inputs and trained model artifacts.
   - Training image patches.
 - `datasets/<dataset_name>/labels/`
   - Instance-ID masks (`.tif`) generated from polygon JSON.
-- `models/<experiment_name>/`
-  - Checkpoints, including `best.pt` under MicroSAM checkpoint folders.
+- `models/`
+  - Base model weight cache (e.g., MicroSAM `vit_b.pt` used during training). Fine-tuned checkpoints go to `~/scratch/bubble-models/trained/` (scratch storage, not committed to git).
 
 ### `bubbly_flows/scripts/`
 Primary pipeline entry points.
@@ -107,13 +108,21 @@ Primary pipeline entry points.
   - Main interactive controller.
   - Handles pool update, workspace creation, gold promotion, dataset export, Slurm training submission, inference launch.
 - `utils.py`
-  - End-to-end preprocessing utility:
-  - CLAHE preprocessing, overlap tiling, patch-map generation, optional auto-labeling sidecars, YOLO dataset assembly helpers.
+  - End-to-end preprocessing utility: CLAHE preprocessing, overlap tiling, patch-map generation, optional auto-labeling sidecars, YOLO dataset assembly helpers.
 - `train.py`
-  - MicroSAM training wrapper around `train_sam`.
-  - Reads `images/` + `labels/`, creates train/val split, writes checkpoints to `microsam/models/`.
+  - MicroSAM (ViT-B) fine-tuning. Reads `images/` + `labels/`, creates 90/10 train/val split, writes checkpoints to `~/scratch/bubble-models/trained/`.
+- `train_stardist.py`
+  - StarDist 2D fine-tuning. Starts from HZDR 2022 bubble-specific pre-trained weights if available, falls back to scratch.
+- `train_yolov9.py`
+  - YOLOv9c-seg fine-tuning. Converts uint16 instance masks to YOLO polygon format on the fly; starts from COCO pre-trained weights.
+- `train_maskrcnn.py`
+  - Mask R-CNN (ResNet-50 + FPN) fine-tuning. Replaces detection and mask heads; starts from COCO pre-trained weights.
 - `inference.py`
-  - Runs model inference for one input image and writes an instance label map.
+  - Runs MicroSAM inference on a single image. Writes a uint16 instance label map (for `evaluate.py`) and a colourised overlay PNG for visual inspection.
+- `evaluate.py`
+  - Instance segmentation metrics (precision, recall, F1, mean IoU) using Hungarian instance matching. Reads a directory of predicted masks and a directory of ground-truth masks.
+- `download_models.sh`
+  - One-time setup: downloads pre-trained base weights (MicroSAM vit_b_lm, HZDR StarDist, YOLOv9c-seg) to `~/scratch/bubble-models/`.
 - `migrate_legacy.py`
   - One-time migration helper for older labeling layouts.
 - `xanylabel.sh`
@@ -181,8 +190,9 @@ Usually ephemeral/generated during runs:
 
 ## 7) Where To Start as a New Contributor
 
-1. Read `USER_GUIDE.md` for operations.
-2. Read `bubbly_flows/scripts/manage_bubbly.py` to understand the canonical workflow.
-3. Review this data lineage: `data -> workspaces -> annotations/gold -> microsam/datasets -> microsam/models`.
-4. Only then dive into `bubbly_flows/tests/` for experimental methods (FRST/SAM3 variants).
+1. Read `USER_GUIDE.md` for the operator workflow (annotation → training → evaluation).
+2. Read `TRAINING_GUIDE.md` for a detailed tutorial covering environment setup, training, and evaluation on the Oscar cluster.
+3. Read `bubbly_flows/scripts/manage_bubbly.py` to understand the canonical workflow.
+4. Review this data lineage: `data → workspaces → annotations/gold → microsam/datasets → ~/scratch/bubble-models/trained`.
+5. Only then dive into `bubbly_flows/tests/` for experimental methods (FRST/SAM3 variants).
 

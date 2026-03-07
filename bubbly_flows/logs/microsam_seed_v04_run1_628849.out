@@ -1,0 +1,25 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 628849
+##  Job Name : microsam_seed_v04_run1
+##  Nodelist : gpu2258
+##      CPUs : 
+##  Mem/Node : 32768 MB
+## Directory : /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
+##   Job Started : Fri Mar  6 02:09:56 PM EST 2026
+###############################################################################
+Job ID: 628849
+Node: gpu2258
+Dataset: seed_v04_test
+STARTING TRAINING: microsam_seed_v04_run1
+Dataset: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/microsam/datasets/seed_v04_test
+Epochs:  100
+--------------------------------
+Found 3 images for training.
+Using device: cuda
+Checkpoints will be saved to: /users/eaguerov/scratch/bubble-models/trained/microsam_seed_v04_run1
+Creating DataLoaders...
+Split: 2 training, 1 validation.
+Starting MicroSAM training...
+Start fitting for 10000 iterations /  100 epochs
+with 100 iterations per epoch
+Training with mixed precision

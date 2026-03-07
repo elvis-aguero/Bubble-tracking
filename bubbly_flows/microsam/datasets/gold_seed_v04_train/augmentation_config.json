@@ -1,0 +1,1473 @@
+{
+  "enabled": true,
+  "seed": 42,
+  "variants_per_source": 3,
+  "output_multiplier": 4,
+  "techniques": {
+    "geometric": "flip/rot90/affine",
+    "photometric": "brightness/contrast/gamma/noise/blur",
+    "copy_paste": {
+      "enabled": true,
+      "overlap_cap": 0.2,
+      "mode": "limited_overlap"
+    }
+  },
+  "sources": [
+    {
+      "source_json": "ZeroG_FlightDay_Test_C1S0014_img006001.json",
+      "source_image": "ZeroG_FlightDay_Test_C1S0014_img006001.png",
+      "source_stem": "ZeroG_FlightDay_Test_C1S0014_img006001",
+      "variants": [
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0014_img006001__aug01",
+          "variant_seed": 984326900,
+          "image_file": "ZeroG_FlightDay_Test_C1S0014_img006001__aug01.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0014_img006001__aug01.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": true,
+              "rot90_k": 1,
+              "affine": {
+                "scale": 0.9649488049638489,
+                "tx": -25.403670117247948,
+                "ty": 20.91013877860658
+              }
+            },
+            "photometric": {
+              "brightness": 0.9206265339156743,
+              "contrast": 1.0803451780318036,
+              "gamma": 0.9465366809047336,
+              "noise_sigma": 0.002216181117737295,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0014_img006001__aug02",
+          "variant_seed": 3930407475,
+          "image_file": "ZeroG_FlightDay_Test_C1S0014_img006001__aug02.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0014_img006001__aug02.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": false,
+              "rot90_k": 1,
+              "affine": {
+                "scale": 0.9647629758856363,
+                "tx": 6.370306256257763,
+                "ty": -13.102077921576534
+              }
+            },
+            "photometric": {
+              "brightness": 1.0056282071748655,
+              "contrast": 0.9560253724136557,
+              "gamma": 1.039904811021199,
+              "noise_sigma": 0.0024309043634304106,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0014_img006001__aug03",
+          "variant_seed": 2295543844,
+          "image_file": "ZeroG_FlightDay_Test_C1S0014_img006001__aug03.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0014_img006001__aug03.tif",
+          "pipeline": "geom+photo+copy",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": false,
+              "rot90_k": 0,
+              "affine": {
+                "scale": 1.0329372045085088,
+                "tx": -13.242649333596876,
+                "ty": 21.677167804002693
+              }
+            },
+            "photometric": {
+              "brightness": 0.9331107929753858,
+              "contrast": 1.0167550770875824,
+              "gamma": 0.9525677876639543,
+              "noise_sigma": 0.002938134889873989,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": true,
+              "applied": true,
+              "target_pastes": 2,
+              "applied_pastes": 2,
+              "overlap_cap": 0.2,
+              "max_attempts": 20,
+              "reason": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "source_json": "ZeroG_FlightDay_Test_C1S0014_img009542.json",
+      "source_image": "ZeroG_FlightDay_Test_C1S0014_img009542.png",
+      "source_stem": "ZeroG_FlightDay_Test_C1S0014_img009542",
+      "variants": [
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0014_img009542__aug01",
+          "variant_seed": 616668582,
+          "image_file": "ZeroG_FlightDay_Test_C1S0014_img009542__aug01.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0014_img009542__aug01.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": false,
+              "rot90_k": 2,
+              "affine": {
+                "scale": 0.9605764450559884,
+                "tx": 27.584124478025196,
+                "ty": 11.121855512301451
+              }
+            },
+            "photometric": {
+              "brightness": 1.0634109315583289,
+              "contrast": 1.0029382725852343,
+              "gamma": 0.9376827891651105,
+              "noise_sigma": 0.008778251035608385,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0014_img009542__aug02",
+          "variant_seed": 741954304,
+          "image_file": "ZeroG_FlightDay_Test_C1S0014_img009542__aug02.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0014_img009542__aug02.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": true,
+              "rot90_k": 0,
+              "affine": {
+                "scale": 0.9733726701433822,
+                "tx": -18.208473741743493,
+                "ty": 6.295901102707603
+              }
+            },
+            "photometric": {
+              "brightness": 0.9880856947913355,
+              "contrast": 1.045570559058509,
+              "gamma": 0.9354704038243313,
+              "noise_sigma": 0.0012894314489222713,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0014_img009542__aug03",
+          "variant_seed": 712761335,
+          "image_file": "ZeroG_FlightDay_Test_C1S0014_img009542__aug03.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0014_img009542__aug03.tif",
+          "pipeline": "geom+photo+copy",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": false,
+              "rot90_k": 0,
+              "affine": {
+                "scale": 1.0462998357372322,
+                "tx": 7.927754326770746,
+                "ty": -10.602462342907604
+              }
+            },
+            "photometric": {
+              "brightness": 1.0025168496509995,
+              "contrast": 1.086444553142797,
+              "gamma": 1.058560675348765,
+              "noise_sigma": 0.016237289943559465,
+              "blur_applied": true
+            },
+            "copy_paste": {
+              "requested": true,
+              "applied": true,
+              "target_pastes": 1,
+              "applied_pastes": 1,
+              "overlap_cap": 0.2,
+              "max_attempts": 20,
+              "reason": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "source_json": "ZeroG_FlightDay_Test_C1S0014_img018008.json",
+      "source_image": "ZeroG_FlightDay_Test_C1S0014_img018008.png",
+      "source_stem": "ZeroG_FlightDay_Test_C1S0014_img018008",
+      "variants": [
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0014_img018008__aug01",
+          "variant_seed": 3115660907,
+          "image_file": "ZeroG_FlightDay_Test_C1S0014_img018008__aug01.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0014_img018008__aug01.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": false,
+              "rot90_k": 2,
+              "affine": {
+                "scale": 0.9649998513350184,
+                "tx": 25.20173934258473,
+                "ty": 5.116415262711222
+              }
+            },
+            "photometric": {
+              "brightness": 0.9581513791908634,
+              "contrast": 0.9798237914133889,
+              "gamma": 1.0550841156234059,
+              "noise_sigma": 0.0011448853698681782,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0014_img018008__aug02",
+          "variant_seed": 2252454421,
+          "image_file": "ZeroG_FlightDay_Test_C1S0014_img018008__aug02.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0014_img018008__aug02.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": true,
+              "rot90_k": 1,
+              "affine": {
+                "scale": 1.0444162620645385,
+                "tx": 22.393897372329334,
+                "ty": 22.18686962739428
+              }
+            },
+            "photometric": {
+              "brightness": 0.9330409173584824,
+              "contrast": 0.9764138112262426,
+              "gamma": 1.0182681609146589,
+              "noise_sigma": 0.002893188427240383,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0014_img018008__aug03",
+          "variant_seed": 82046000,
+          "image_file": "ZeroG_FlightDay_Test_C1S0014_img018008__aug03.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0014_img018008__aug03.tif",
+          "pipeline": "geom+photo+copy",
+          "metadata": {
+            "geometric": {
+              "hflip": true,
+              "vflip": false,
+              "rot90_k": 0,
+              "affine": {
+                "scale": 0.9900377872143826,
+                "tx": -14.093156872489757,
+                "ty": -20.195072768210984
+              }
+            },
+            "photometric": {
+              "brightness": 0.9916233259526717,
+              "contrast": 0.9372315776627812,
+              "gamma": 0.9865015286138563,
+              "noise_sigma": 0.004278496088534922,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": true,
+              "applied": true,
+              "target_pastes": 1,
+              "applied_pastes": 1,
+              "overlap_cap": 0.2,
+              "max_attempts": 20,
+              "reason": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "source_json": "ZeroG_FlightDay_Test_C1S0014_img018351.json",
+      "source_image": "ZeroG_FlightDay_Test_C1S0014_img018351.png",
+      "source_stem": "ZeroG_FlightDay_Test_C1S0014_img018351",
+      "variants": [
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0014_img018351__aug01",
+          "variant_seed": 2332629553,
+          "image_file": "ZeroG_FlightDay_Test_C1S0014_img018351__aug01.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0014_img018351__aug01.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": false,
+              "rot90_k": 3,
+              "affine": {
+                "scale": 1.0476420143003204,
+                "tx": 18.957450233335855,
+                "ty": -28.931313009539615
+              }
+            },
+            "photometric": {
+              "brightness": 0.9762220908388338,
+              "contrast": 0.9791799558513062,
+              "gamma": 0.9977575667194984,
+              "noise_sigma": 0.01630440590133684,
+              "blur_applied": true
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0014_img018351__aug02",
+          "variant_seed": 2463912645,
+          "image_file": "ZeroG_FlightDay_Test_C1S0014_img018351__aug02.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0014_img018351__aug02.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": true,
+              "rot90_k": 2,
+              "affine": {
+                "scale": 0.9939820369207091,
+                "tx": 16.643315344193866,
+                "ty": -20.97269840043261
+              }
+            },
+            "photometric": {
+              "brightness": 0.9512120690088521,
+              "contrast": 1.084509276700701,
+              "gamma": 1.0808836967618078,
+              "noise_sigma": 0.014719523674338136,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0014_img018351__aug03",
+          "variant_seed": 3336194484,
+          "image_file": "ZeroG_FlightDay_Test_C1S0014_img018351__aug03.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0014_img018351__aug03.tif",
+          "pipeline": "geom+photo+copy",
+          "metadata": {
+            "geometric": {
+              "hflip": true,
+              "vflip": true,
+              "rot90_k": 0,
+              "affine": {
+                "scale": 1.0218801733229164,
+                "tx": -1.4884460154616548,
+                "ty": 8.971749607531578
+              }
+            },
+            "photometric": {
+              "brightness": 1.0256683754535192,
+              "contrast": 0.9249296934395728,
+              "gamma": 0.931844781013005,
+              "noise_sigma": 0.002156427108372847,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": true,
+              "applied": true,
+              "target_pastes": 1,
+              "applied_pastes": 1,
+              "overlap_cap": 0.2,
+              "max_attempts": 20,
+              "reason": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "source_json": "ZeroG_FlightDay_Test_C1S0019_img003593.json",
+      "source_image": "ZeroG_FlightDay_Test_C1S0019_img003593.png",
+      "source_stem": "ZeroG_FlightDay_Test_C1S0019_img003593",
+      "variants": [
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0019_img003593__aug01",
+          "variant_seed": 3554733764,
+          "image_file": "ZeroG_FlightDay_Test_C1S0019_img003593__aug01.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0019_img003593__aug01.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": true,
+              "vflip": true,
+              "rot90_k": 0,
+              "affine": {
+                "scale": 0.9738374379315489,
+                "tx": -25.876388542889643,
+                "ty": -17.506623164070028
+              }
+            },
+            "photometric": {
+              "brightness": 1.0759881392631143,
+              "contrast": 1.079984228822422,
+              "gamma": 1.0477361626315385,
+              "noise_sigma": 0.008997643707484286,
+              "blur_applied": true
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0019_img003593__aug02",
+          "variant_seed": 3827330062,
+          "image_file": "ZeroG_FlightDay_Test_C1S0019_img003593__aug02.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0019_img003593__aug02.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": true,
+              "vflip": true,
+              "rot90_k": 1,
+              "affine": {
+                "scale": 0.9654600188445174,
+                "tx": 12.70038999489185,
+                "ty": 12.730283984688093
+              }
+            },
+            "photometric": {
+              "brightness": 1.0025346226258638,
+              "contrast": 0.971682253756518,
+              "gamma": 1.053818709524564,
+              "noise_sigma": 0.0018758123079222978,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0019_img003593__aug03",
+          "variant_seed": 3396368684,
+          "image_file": "ZeroG_FlightDay_Test_C1S0019_img003593__aug03.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0019_img003593__aug03.tif",
+          "pipeline": "geom+photo+copy",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": false,
+              "rot90_k": 2,
+              "affine": {
+                "scale": 0.991696319321438,
+                "tx": 0.23021357998397818,
+                "ty": -19.954743180218173
+              }
+            },
+            "photometric": {
+              "brightness": 0.9860972643461878,
+              "contrast": 1.0023919914452795,
+              "gamma": 1.015196427020586,
+              "noise_sigma": 0.016129626840453236,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": true,
+              "applied": true,
+              "target_pastes": 1,
+              "applied_pastes": 1,
+              "overlap_cap": 0.2,
+              "max_attempts": 20,
+              "reason": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "source_json": "ZeroG_FlightDay_Test_C1S0019_img011890.json",
+      "source_image": "ZeroG_FlightDay_Test_C1S0019_img011890.png",
+      "source_stem": "ZeroG_FlightDay_Test_C1S0019_img011890",
+      "variants": [
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0019_img011890__aug01",
+          "variant_seed": 3461377234,
+          "image_file": "ZeroG_FlightDay_Test_C1S0019_img011890__aug01.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0019_img011890__aug01.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": false,
+              "rot90_k": 3,
+              "affine": {
+                "scale": 0.9769196963438728,
+                "tx": -3.973823935853286,
+                "ty": -10.258966510840565
+              }
+            },
+            "photometric": {
+              "brightness": 0.9357416856082112,
+              "contrast": 1.0943774809531053,
+              "gamma": 1.0464336342324412,
+              "noise_sigma": 0.010528806592347149,
+              "blur_applied": true
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0019_img011890__aug02",
+          "variant_seed": 1446850905,
+          "image_file": "ZeroG_FlightDay_Test_C1S0019_img011890__aug02.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0019_img011890__aug02.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": true,
+              "vflip": true,
+              "rot90_k": 1,
+              "affine": {
+                "scale": 1.0337392876526057,
+                "tx": 24.046035695064504,
+                "ty": -28.297855215672865
+              }
+            },
+            "photometric": {
+              "brightness": 1.0934825466635043,
+              "contrast": 0.9473432303978035,
+              "gamma": 1.0956786155653035,
+              "noise_sigma": 0.001365795994146284,
+              "blur_applied": true
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0019_img011890__aug03",
+          "variant_seed": 1433402559,
+          "image_file": "ZeroG_FlightDay_Test_C1S0019_img011890__aug03.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0019_img011890__aug03.tif",
+          "pipeline": "geom+photo+copy",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": true,
+              "rot90_k": 0,
+              "affine": {
+                "scale": 1.0060946216987492,
+                "tx": -13.152237367731605,
+                "ty": -0.7404830817937764
+              }
+            },
+            "photometric": {
+              "brightness": 1.0719862982732709,
+              "contrast": 1.096452461478176,
+              "gamma": 1.0999677166010533,
+              "noise_sigma": 0.018598462161434993,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": true,
+              "applied": true,
+              "target_pastes": 2,
+              "applied_pastes": 2,
+              "overlap_cap": 0.2,
+              "max_attempts": 20,
+              "reason": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "source_json": "ZeroG_FlightDay_Test_C1S0024_img014500.json",
+      "source_image": "ZeroG_FlightDay_Test_C1S0024_img014500.png",
+      "source_stem": "ZeroG_FlightDay_Test_C1S0024_img014500",
+      "variants": [
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0024_img014500__aug01",
+          "variant_seed": 1705677859,
+          "image_file": "ZeroG_FlightDay_Test_C1S0024_img014500__aug01.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0024_img014500__aug01.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": true,
+              "vflip": false,
+              "rot90_k": 3,
+              "affine": {
+                "scale": 0.98073123114682,
+                "tx": 7.708613448622046,
+                "ty": 21.399491190161548
+              }
+            },
+            "photometric": {
+              "brightness": 1.023988511957844,
+              "contrast": 0.9610129426015286,
+              "gamma": 1.0475035735671265,
+              "noise_sigma": 0.00802887023257016,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0024_img014500__aug02",
+          "variant_seed": 2342735965,
+          "image_file": "ZeroG_FlightDay_Test_C1S0024_img014500__aug02.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0024_img014500__aug02.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": true,
+              "vflip": false,
+              "rot90_k": 2,
+              "affine": {
+                "scale": 1.0401053777764233,
+                "tx": -20.38766860939026,
+                "ty": -7.595016669746425
+              }
+            },
+            "photometric": {
+              "brightness": 1.0300795193204273,
+              "contrast": 1.0663486994969062,
+              "gamma": 0.9193510097166455,
+              "noise_sigma": 0.003115161760332157,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test_C1S0024_img014500__aug03",
+          "variant_seed": 2150283574,
+          "image_file": "ZeroG_FlightDay_Test_C1S0024_img014500__aug03.png",
+          "mask_file": "ZeroG_FlightDay_Test_C1S0024_img014500__aug03.tif",
+          "pipeline": "geom+photo+copy",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": true,
+              "rot90_k": 1,
+              "affine": {
+                "scale": 1.0013096598763005,
+                "tx": 14.607797148158546,
+                "ty": 11.79331212617791
+              }
+            },
+            "photometric": {
+              "brightness": 1.0789368126663719,
+              "contrast": 1.0478226680343008,
+              "gamma": 1.059527827802354,
+              "noise_sigma": 0.00624795590615169,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": true,
+              "applied": true,
+              "target_pastes": 1,
+              "applied_pastes": 1,
+              "overlap_cap": 0.2,
+              "max_attempts": 20,
+              "reason": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "source_json": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.json",
+      "source_image": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.png",
+      "source_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001",
+      "variants": [
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001__aug01",
+          "variant_seed": 2249317723,
+          "image_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001__aug01.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001__aug01.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": false,
+              "rot90_k": 1,
+              "affine": {
+                "scale": 0.9910737995094593,
+                "tx": 2.9956982063705695,
+                "ty": 28.37628247456758
+              }
+            },
+            "photometric": {
+              "brightness": 1.072291744618458,
+              "contrast": 1.058365611475138,
+              "gamma": 1.0947700734664736,
+              "noise_sigma": 0.014985282752888256,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001__aug02",
+          "variant_seed": 3138447165,
+          "image_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001__aug02.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001__aug02.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": true,
+              "vflip": true,
+              "rot90_k": 3,
+              "affine": {
+                "scale": 1.0255976119350836,
+                "tx": -25.549160621701603,
+                "ty": -5.655248239876883
+              }
+            },
+            "photometric": {
+              "brightness": 1.017919518824676,
+              "contrast": 0.9384779160153751,
+              "gamma": 1.0238032596444993,
+              "noise_sigma": 0.009978428626619637,
+              "blur_applied": true
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001__aug03",
+          "variant_seed": 2435300345,
+          "image_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001__aug03.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001__aug03.tif",
+          "pipeline": "geom+photo+copy",
+          "metadata": {
+            "geometric": {
+              "hflip": true,
+              "vflip": false,
+              "rot90_k": 3,
+              "affine": {
+                "scale": 0.9772787877835395,
+                "tx": -5.165881717014738,
+                "ty": -15.621029784743559
+              }
+            },
+            "photometric": {
+              "brightness": 1.0889881795281868,
+              "contrast": 1.0418794034848367,
+              "gamma": 0.9938714354243348,
+              "noise_sigma": 0.0051007445175384495,
+              "blur_applied": true
+            },
+            "copy_paste": {
+              "requested": true,
+              "applied": true,
+              "target_pastes": 1,
+              "applied_pastes": 1,
+              "overlap_cap": 0.2,
+              "max_attempts": 20,
+              "reason": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "source_json": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.json",
+      "source_image": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.png",
+      "source_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509",
+      "variants": [
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509__aug01",
+          "variant_seed": 1785732311,
+          "image_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509__aug01.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509__aug01.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": true,
+              "rot90_k": 1,
+              "affine": {
+                "scale": 1.0444024106633043,
+                "tx": -1.410072459682958,
+                "ty": 24.604174759874034
+              }
+            },
+            "photometric": {
+              "brightness": 0.9843842001010292,
+              "contrast": 1.0006622961084561,
+              "gamma": 0.9880458089993742,
+              "noise_sigma": 0.0019626774391733703,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509__aug02",
+          "variant_seed": 411457460,
+          "image_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509__aug02.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509__aug02.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": true,
+              "vflip": true,
+              "rot90_k": 0,
+              "affine": {
+                "scale": 1.0019517952491521,
+                "tx": 13.353215844751801,
+                "ty": -12.235855497978125
+              }
+            },
+            "photometric": {
+              "brightness": 0.9718014646605568,
+              "contrast": 0.9638004426842964,
+              "gamma": 1.0150174262171163,
+              "noise_sigma": 0.007606404729713416,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509__aug03",
+          "variant_seed": 2546124510,
+          "image_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509__aug03.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509__aug03.tif",
+          "pipeline": "geom+photo+copy",
+          "metadata": {
+            "geometric": {
+              "hflip": true,
+              "vflip": false,
+              "rot90_k": 0,
+              "affine": {
+                "scale": 1.0102218450433964,
+                "tx": 0.6977961028157509,
+                "ty": -20.74611708267083
+              }
+            },
+            "photometric": {
+              "brightness": 0.9268245984841635,
+              "contrast": 0.979154593769734,
+              "gamma": 0.9244308901472916,
+              "noise_sigma": 0.00558113331719686,
+              "blur_applied": true
+            },
+            "copy_paste": {
+              "requested": true,
+              "applied": true,
+              "target_pastes": 2,
+              "applied_pastes": 2,
+              "overlap_cap": 0.2,
+              "max_attempts": 20,
+              "reason": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "source_json": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070.json",
+      "source_image": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070.png",
+      "source_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070",
+      "variants": [
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070__aug01",
+          "variant_seed": 1339262277,
+          "image_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070__aug01.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070__aug01.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": false,
+              "rot90_k": 1,
+              "affine": {
+                "scale": 1.0277532920343648,
+                "tx": -25.595623023835337,
+                "ty": -6.476856011456007
+              }
+            },
+            "photometric": {
+              "brightness": 0.9027206455164034,
+              "contrast": 0.9275318453454214,
+              "gamma": 1.0892315279769496,
+              "noise_sigma": 0.008195015587103218,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070__aug02",
+          "variant_seed": 1891714808,
+          "image_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070__aug02.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070__aug02.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": false,
+              "rot90_k": 3,
+              "affine": {
+                "scale": 1.0043097061342636,
+                "tx": -29.822678274319728,
+                "ty": 0.52165439076418
+              }
+            },
+            "photometric": {
+              "brightness": 0.912077088596229,
+              "contrast": 1.0256766101237609,
+              "gamma": 0.959233717939402,
+              "noise_sigma": 0.0019004586091384069,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070__aug03",
+          "variant_seed": 3163503938,
+          "image_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070__aug03.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070__aug03.tif",
+          "pipeline": "geom+photo+copy",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": false,
+              "rot90_k": 2,
+              "affine": {
+                "scale": 0.9898656511992009,
+                "tx": -28.018163231202056,
+                "ty": 20.500047778764284
+              }
+            },
+            "photometric": {
+              "brightness": 0.901918378050608,
+              "contrast": 1.0652034873863478,
+              "gamma": 1.014841689014305,
+              "noise_sigma": 0.012801023436068046,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": true,
+              "applied": true,
+              "target_pastes": 2,
+              "applied_pastes": 2,
+              "overlap_cap": 0.2,
+              "max_attempts": 20,
+              "reason": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "source_json": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062.json",
+      "source_image": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062.png",
+      "source_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062",
+      "variants": [
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062__aug01",
+          "variant_seed": 2441681564,
+          "image_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062__aug01.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062__aug01.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": true,
+              "rot90_k": 2,
+              "affine": {
+                "scale": 1.0360182616835152,
+                "tx": 11.230339413952478,
+                "ty": -12.2537675384572
+              }
+            },
+            "photometric": {
+              "brightness": 1.0324450465007582,
+              "contrast": 1.0427458254083075,
+              "gamma": 0.9259106014222787,
+              "noise_sigma": 0.008441581302001904,
+              "blur_applied": true
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062__aug02",
+          "variant_seed": 3632700118,
+          "image_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062__aug02.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062__aug02.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": false,
+              "rot90_k": 2,
+              "affine": {
+                "scale": 1.0409352947691766,
+                "tx": -12.173288296001832,
+                "ty": -11.731687495468037
+              }
+            },
+            "photometric": {
+              "brightness": 0.9303369147226015,
+              "contrast": 1.0006373911641064,
+              "gamma": 0.9501001894992034,
+              "noise_sigma": 0.011898312174110698,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062__aug03",
+          "variant_seed": 292376781,
+          "image_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062__aug03.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062__aug03.tif",
+          "pipeline": "geom+photo+copy",
+          "metadata": {
+            "geometric": {
+              "hflip": true,
+              "vflip": false,
+              "rot90_k": 3,
+              "affine": {
+                "scale": 0.9953917358787058,
+                "tx": 10.330738444955998,
+                "ty": -24.124423294498555
+              }
+            },
+            "photometric": {
+              "brightness": 1.0842403120350947,
+              "contrast": 1.0634876410226821,
+              "gamma": 1.0040812402079093,
+              "noise_sigma": 0.016344699105799665,
+              "blur_applied": true
+            },
+            "copy_paste": {
+              "requested": true,
+              "applied": true,
+              "target_pastes": 2,
+              "applied_pastes": 2,
+              "overlap_cap": 0.2,
+              "max_attempts": 20,
+              "reason": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "source_json": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002.json",
+      "source_image": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002.png",
+      "source_stem": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002",
+      "variants": [
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002__aug01",
+          "variant_seed": 265290595,
+          "image_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002__aug01.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002__aug01.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": false,
+              "rot90_k": 0,
+              "affine": {
+                "scale": 1.0105784577746035,
+                "tx": -2.7413111475929988,
+                "ty": -3.0042146424881473
+              }
+            },
+            "photometric": {
+              "brightness": 0.9761726385649004,
+              "contrast": 0.9245168267390091,
+              "gamma": 1.0107754311942525,
+              "noise_sigma": 0.01420560544014773,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002__aug02",
+          "variant_seed": 4181774773,
+          "image_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002__aug02.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002__aug02.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": true,
+              "vflip": true,
+              "rot90_k": 1,
+              "affine": {
+                "scale": 0.9916542282094489,
+                "tx": 16.14257933214021,
+                "ty": 0.9802528800812169
+              }
+            },
+            "photometric": {
+              "brightness": 1.0281138840704105,
+              "contrast": 0.9642970035847368,
+              "gamma": 0.9618190291881976,
+              "noise_sigma": 0.017066873542379225,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002__aug03",
+          "variant_seed": 613167772,
+          "image_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002__aug03.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002__aug03.tif",
+          "pipeline": "geom+photo+copy",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": true,
+              "rot90_k": 0,
+              "affine": {
+                "scale": 1.0275227061768146,
+                "tx": -17.524988661730845,
+                "ty": -18.875694349537717
+              }
+            },
+            "photometric": {
+              "brightness": 0.9200970930492962,
+              "contrast": 0.9683043566465355,
+              "gamma": 0.9380156531683806,
+              "noise_sigma": 0.001326608952586603,
+              "blur_applied": true
+            },
+            "copy_paste": {
+              "requested": true,
+              "applied": true,
+              "target_pastes": 1,
+              "applied_pastes": 1,
+              "overlap_cap": 0.2,
+              "max_attempts": 20,
+              "reason": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "source_json": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.json",
+      "source_image": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.png",
+      "source_stem": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432",
+      "variants": [
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432__aug01",
+          "variant_seed": 3909001181,
+          "image_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432__aug01.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432__aug01.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": true,
+              "rot90_k": 1,
+              "affine": {
+                "scale": 0.9629397549652952,
+                "tx": -15.566404061151843,
+                "ty": -28.49712578667488
+              }
+            },
+            "photometric": {
+              "brightness": 0.9750184855410615,
+              "contrast": 0.9024128598117839,
+              "gamma": 1.0354148960990184,
+              "noise_sigma": 0.010667850224344117,
+              "blur_applied": true
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432__aug02",
+          "variant_seed": 3488356810,
+          "image_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432__aug02.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432__aug02.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": true,
+              "rot90_k": 1,
+              "affine": {
+                "scale": 1.0040617849188065,
+                "tx": -28.163203293171147,
+                "ty": -25.833673775909894
+              }
+            },
+            "photometric": {
+              "brightness": 1.0926000502285793,
+              "contrast": 1.0707744177005147,
+              "gamma": 1.0353212793337363,
+              "noise_sigma": 0.00702670388069849,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432__aug03",
+          "variant_seed": 3279252639,
+          "image_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432__aug03.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432__aug03.tif",
+          "pipeline": "geom+photo+copy",
+          "metadata": {
+            "geometric": {
+              "hflip": true,
+              "vflip": false,
+              "rot90_k": 1,
+              "affine": {
+                "scale": 1.0053136283120316,
+                "tx": 8.517742664484622,
+                "ty": 25.420087674286123
+              }
+            },
+            "photometric": {
+              "brightness": 1.0814613777112054,
+              "contrast": 0.9688470966602519,
+              "gamma": 1.0333767768615818,
+              "noise_sigma": 0.015583099957285376,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": true,
+              "applied": true,
+              "target_pastes": 1,
+              "applied_pastes": 1,
+              "overlap_cap": 0.2,
+              "max_attempts": 20,
+              "reason": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "source_json": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655.json",
+      "source_image": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655.png",
+      "source_stem": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655",
+      "variants": [
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655__aug01",
+          "variant_seed": 3759059328,
+          "image_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655__aug01.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655__aug01.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": true,
+              "vflip": true,
+              "rot90_k": 0,
+              "affine": {
+                "scale": 1.0173513510707246,
+                "tx": -21.36625011948395,
+                "ty": -14.81030361643119
+              }
+            },
+            "photometric": {
+              "brightness": 1.0758842542213507,
+              "contrast": 1.0065487337957169,
+              "gamma": 1.075789657334323,
+              "noise_sigma": 0.0019655813919001197,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655__aug02",
+          "variant_seed": 2979632755,
+          "image_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655__aug02.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655__aug02.tif",
+          "pipeline": "geom+photo",
+          "metadata": {
+            "geometric": {
+              "hflip": true,
+              "vflip": false,
+              "rot90_k": 2,
+              "affine": {
+                "scale": 0.9838823158897283,
+                "tx": -0.24828185198280295,
+                "ty": 19.179936446144993
+              }
+            },
+            "photometric": {
+              "brightness": 1.0443840342273156,
+              "contrast": 1.087069510869283,
+              "gamma": 1.0447439831220589,
+              "noise_sigma": 0.0020734609815895766,
+              "blur_applied": true
+            },
+            "copy_paste": {
+              "requested": false,
+              "applied": false,
+              "reason": "not_requested"
+            }
+          }
+        },
+        {
+          "variant_stem": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655__aug03",
+          "variant_seed": 3606210176,
+          "image_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655__aug03.png",
+          "mask_file": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655__aug03.tif",
+          "pipeline": "geom+photo+copy",
+          "metadata": {
+            "geometric": {
+              "hflip": false,
+              "vflip": false,
+              "rot90_k": 0,
+              "affine": {
+                "scale": 0.9622451373138018,
+                "tx": -4.028274830094613,
+                "ty": -13.39989334571257
+              }
+            },
+            "photometric": {
+              "brightness": 1.042909575158897,
+              "contrast": 1.0964394873991512,
+              "gamma": 1.0659809655739956,
+              "noise_sigma": 0.013285850605976758,
+              "blur_applied": false
+            },
+            "copy_paste": {
+              "requested": true,
+              "applied": true,
+              "target_pastes": 2,
+              "applied_pastes": 2,
+              "overlap_cap": 0.2,
+              "max_attempts": 20,
+              "reason": ""
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

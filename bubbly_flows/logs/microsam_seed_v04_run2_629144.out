@@ -1,0 +1,32 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 629144
+##  Job Name : microsam_seed_v04_run2
+##  Nodelist : gpu2001
+##      CPUs : 
+##  Mem/Node : 32768 MB
+## Directory : /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
+##   Job Started : Fri Mar  6 02:13:25 PM EST 2026
+###############################################################################
+Job ID: 629144
+Node: gpu2001
+Dataset: seed_v04_train
+STARTING TRAINING: microsam_seed_v04_run2
+Dataset: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/microsam/datasets/seed_v04_train
+Epochs:  100
+--------------------------------
+Found 44 images for training.
+Using device: cuda
+Checkpoints will be saved to: /users/eaguerov/scratch/bubble-models/trained/microsam_seed_v04_run2
+Creating DataLoaders...
+Split: 39 training, 5 validation.
+Starting MicroSAM training...
+Start fitting for 15600 iterations /  100 epochs
+with 156 iterations per epoch
+Training with mixed precision
+Stopping training because there has been no improvement for 10 epochs
+Finished training after 23 epochs / 3744 iterations.
+The best epoch is number 12.
+Training took 3401.985550880432 seconds (= 00:56:42 hours)
+--------------------------------
+TRAINING COMPLETE.
+Best model expected at: /users/eaguerov/scratch/bubble-models/trained/microsam_seed_v04_run2/checkpoints/microsam_seed_v04_run2/best.pt

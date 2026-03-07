@@ -1,0 +1,35 @@
+{
+  "enabled": false,
+  "seed": null,
+  "variants_per_source": 0,
+  "output_multiplier": 1,
+  "techniques": {
+    "geometric": "flip/rot90/affine",
+    "photometric": "brightness/contrast/gamma/noise/blur",
+    "copy_paste": {
+      "enabled": false,
+      "overlap_cap": 0.2,
+      "mode": "limited_overlap"
+    }
+  },
+  "sources": [
+    {
+      "source_json": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.json",
+      "source_image": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.png",
+      "source_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509",
+      "variants": []
+    },
+    {
+      "source_json": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.json",
+      "source_image": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.png",
+      "source_stem": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432",
+      "variants": []
+    },
+    {
+      "source_json": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.json",
+      "source_image": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.png",
+      "source_stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001",
+      "variants": []
+    }
+  ]
+}
