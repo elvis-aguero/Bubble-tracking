@@ -1,6 +1,8 @@
 {
   "model": "stardist",
+  "pretrained_weights": "HZDR_2022",
   "training": {
+    "patch_shape": 1024,
     "epochs": 100,
     "batch_size": 2,
     "val_fraction": 0.15,

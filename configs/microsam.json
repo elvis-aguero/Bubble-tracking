@@ -3,6 +3,7 @@
   "backbone": "vit_b",
   "training": {
     "patch_shape": 1024,
+    "model_type": "vit_b",
     "epochs": 100,
     "batch_size": 1,
     "num_workers": 4,
