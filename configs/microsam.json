@@ -1,0 +1,17 @@
+{
+  "model": "microsam",
+  "backbone": "vit_b",
+  "training": {
+    "patch_shape": 1024,
+    "epochs": 100,
+    "batch_size": 1,
+    "num_workers": 4,
+    "val_fraction": 0.15,
+    "early_stopping_patience": 10,
+    "freeze": ["image_encoder"]
+  },
+  "inference": {
+    "model_type": "vit_b"
+  },
+  "notes": "Full-resolution 1024px crops. Encoder frozen — only UNETR decoder trains. patch_shape matches frame resolution (1024x1024) to avoid crop-vs-inference mismatch."
+}

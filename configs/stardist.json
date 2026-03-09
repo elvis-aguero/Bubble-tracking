@@ -1,0 +1,15 @@
+{
+  "model": "stardist",
+  "training": {
+    "epochs": 100,
+    "batch_size": 2,
+    "val_fraction": 0.15,
+    "n_rays": 64,
+    "grid": [2, 2]
+  },
+  "inference": {
+    "prob_thresh": null,
+    "nms_thresh": 0.4
+  },
+  "notes": "Fine-tuned from HZDR pre-trained weights when available. prob_thresh=null means use the auto-optimised threshold saved by training. grid=[2,2] matches bubble scale at 1024px resolution."
+}

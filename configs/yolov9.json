@@ -1,0 +1,15 @@
+{
+  "model": "yolov9",
+  "training": {
+    "epochs": 100,
+    "imgsz": 1024,
+    "batch": 4,
+    "val_fraction": 0.15
+  },
+  "inference": {
+    "imgsz": 1024,
+    "conf": 0.25,
+    "iou": 0.7
+  },
+  "notes": "imgsz=1024 matches frame resolution. Previously trained at 512 — that caused inference mismatch with full-frame test images."
+}
