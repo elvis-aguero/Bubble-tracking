@@ -75,7 +75,7 @@ Bubble-tracking/
 │   │       │   ├── labels_json/       # One annotation file per image
 │   │       │   └── manifest.csv       # List of which images were labeled
 │   │       └── gold_v00/ ...
-│   ├── microsam/
+│   ├── pipeline/
 │   │   └── datasets/                  # Training-ready datasets (images + masks)
 │   ├── data/
 │   │   └── patches_pool/images/       # Source image patches
@@ -91,7 +91,7 @@ Bubble-tracking/
 
 Data flows in one direction through the project:
 ```
-annotations/gold/  →  microsam/datasets/  →  ~/scratch/bubble-models/trained/
+annotations/gold/  →  pipeline/datasets/  →  ~/scratch/bubble-models/trained/
  (annotation files)    (images + masks)          (trained model weights)
 ```
 
@@ -203,8 +203,8 @@ print('Bubbles labeled:', len(d['shapes']))
 
 When you export a dataset (Step 1 below), those polygon files get converted into pixel masks that the training code can read:
 
-- `microsam/datasets/<name>/images/` — the image patches
-- `microsam/datasets/<name>/labels/` — paired mask files where each pixel's value is a bubble ID (0 = background, 1 = first bubble, 2 = second bubble, ...)
+- `pipeline/datasets/<name>/images/` — the image patches
+- `pipeline/datasets/<name>/labels/` — paired mask files where each pixel's value is a bubble ID (0 = background, 1 = first bubble, 2 = second bubble, ...)
 
 Each image and its mask share the same filename, with a `.tif` extension for the mask.
 
@@ -240,14 +240,14 @@ Pick a gold version, then answer the prompts:
 4. **Base dataset name** — give it a name like `v01_seed`. The script appends `_train` and `_test` automatically.
 
 The script exports two datasets:
-- `bubbly_flows/microsam/datasets/v01_seed_train/` — training images with augmentation (~4× the source count)
-- `bubbly_flows/microsam/datasets/v01_seed_test/`  — test images, no augmentation, for evaluation only
+- `bubbly_flows/pipeline/datasets/v01_seed_train/` — training images with augmentation (~4× the source count)
+- `bubbly_flows/pipeline/datasets/v01_seed_test/`  — test images, no augmentation, for evaluation only
 
 A quick sanity check:
 
 ```bash
-ls bubbly_flows/microsam/datasets/v01_seed_train/images/ | wc -l
-ls bubbly_flows/microsam/datasets/v01_seed_train/labels/ | wc -l
+ls bubbly_flows/pipeline/datasets/v01_seed_train/images/ | wc -l
+ls bubbly_flows/pipeline/datasets/v01_seed_train/labels/ | wc -l
 ```
 
 Both counts should match.
@@ -302,7 +302,7 @@ The script must accept these command-line arguments:
 
 The dataset format is fixed regardless of model: `images/<stem>.png` paired with `labels/<stem>.tif`, where each pixel value is an integer instance ID (0 = background, 1 = first bubble, 2 = second bubble, ...). This is exactly what option 4 of the menu produces.
 
-When `--save_root` is provided, save checkpoints to `<save_root>/<name>/`. When it is absent, fall back to `bubbly_flows/microsam/models/<name>/`. The menu always passes `--save_root`, so trained models land in `~/scratch/bubble-models/trained/` on the cluster. Print training progress to stdout — Slurm captures it in the `.out` log file automatically.
+When `--save_root` is provided, save checkpoints to `<save_root>/<name>/`. When it is absent, fall back to `bubbly_flows/pipeline/models/<name>/`. The menu always passes `--save_root`, so trained models land in `~/scratch/bubble-models/trained/` on the cluster. Print training progress to stdout — Slurm captures it in the `.out` log file automatically.
 
 A minimal skeleton to start from:
 
@@ -479,7 +479,7 @@ for i, (score, mask) in enumerate(zip(scores, masks)):
 tifffile.imwrite("output_mask.tif", label_map)
 ```
 
-In all cases the output mask has the same format: pixel value = bubble instance ID (0 = background, 1 = first bubble, 2 = second bubble, ...), matching the gold masks in `microsam/datasets/*/labels/`.
+In all cases the output mask has the same format: pixel value = bubble instance ID (0 = background, 1 = first bubble, 2 = second bubble, ...), matching the gold masks in `pipeline/datasets/*/labels/`.
 
 ---
 
@@ -490,7 +490,7 @@ In all cases the output mask has the same format: pixel value = bubble instance 
 ```bash
 python bubbly_flows/scripts/evaluate.py \
     --preds output/preds/ \
-    --gts   bubbly_flows/microsam/datasets/v01_seed_test/labels/ \
+    --gts   bubbly_flows/pipeline/datasets/v01_seed_test/labels/ \
     --iou_threshold 0.5 \
     --output results.csv       # optional
 ```
@@ -534,7 +534,7 @@ The metrics reported (precision, recall, F1, mean IoU) are the standard benchmar
 | What | Where |
 |---|---|
 | Gold annotations | `bubbly_flows/annotations/gold/<version>/labels_json/` |
-| Training datasets | `bubbly_flows/microsam/datasets/<name>/` |
+| Training datasets | `bubbly_flows/pipeline/datasets/<name>/` |
 | Base model weights | `~/scratch/bubble-models/{microsam,stardist,yolo,bubmask}/` |
 | Trained model weights | `~/scratch/bubble-models/trained/<exp_name>/` |
 | Training logs | `bubbly_flows/logs/<name>_<job_id>.out` |
@@ -543,7 +543,7 @@ The metrics reported (precision, recall, F1, mean IoU) are the standard benchmar
 ```
 annotations/gold/  (labels_json/*.json)
         ↓  manage_bubbly.py — option 4  (train/test split + export)
-microsam/datasets/<name>_train/   microsam/datasets/<name>_test/
+pipeline/datasets/<name>_train/   pipeline/datasets/<name>_test/
         ↓  manage_bubbly.py — option 5  →  Slurm job
 ~/scratch/bubble-models/trained/<name>/
         ↓  inference.py / model-specific snippet

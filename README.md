@@ -29,7 +29,7 @@ Data flows through the project in this order:
 3. Patch pool (canonical patch lake): `bubbly_flows/data/patches_pool/images/`
 4. Labeling workspace batches: `bubbly_flows/workspaces/<workspace>/`
 5. Versioned gold labels: `bubbly_flows/annotations/gold/<gold_version>/`
-6. MicroSAM training dataset export: `bubbly_flows/microsam/datasets/<dataset>/`
+6. Training dataset export: `bubbly_flows/pipeline/datasets/<dataset>/`
 7. Trained checkpoints: `~/scratch/bubble-models/trained/<experiment>/`
 8. Evaluation: `bubbly_flows/scripts/evaluate.py` (compare predicted masks to gold test labels)
 
@@ -46,7 +46,7 @@ bubbly_flows/
 ├── archive/
 ├── data/
 ├── logs/
-├── microsam/
+├── pipeline/
 ├── scripts/
 ├── tests/
 ├── workspaces/
@@ -91,7 +91,7 @@ Versioned, curated labels (source of truth for supervised training).
   - `manifest.csv` (tracked labeled stems)
   - `stats.json` (simple counts/metadata)
 
-### `bubbly_flows/microsam/`
+### `bubbly_flows/pipeline/`
 Training inputs and trained model artifacts.
 
 - `datasets/<dataset_name>/images/`
@@ -180,7 +180,7 @@ Usually stable (versioned data/code):
 - `bubbly_flows/scripts/`
 - `bubbly_flows/annotations/gold/`
 - `bubbly_flows/data/` (as canonical source pool)
-- `bubbly_flows/microsam/datasets/` and selected models
+- `bubbly_flows/pipeline/datasets/` and selected models
 
 Usually ephemeral/generated during runs:
 - `bubbly_flows/workspaces/<workspace>/`
@@ -193,6 +193,6 @@ Usually ephemeral/generated during runs:
 1. Read `USER_GUIDE.md` for the operator workflow (annotation → training → evaluation).
 2. Read `TRAINING_GUIDE.md` for a detailed tutorial covering environment setup, training, and evaluation on the Oscar cluster.
 3. Read `bubbly_flows/scripts/manage_bubbly.py` to understand the canonical workflow.
-4. Review this data lineage: `data → workspaces → annotations/gold → microsam/datasets → ~/scratch/bubble-models/trained`.
+4. Review this data lineage: `data → workspaces → annotations/gold → pipeline/datasets → ~/scratch/bubble-models/trained`.
 5. Only then dive into `bubbly_flows/tests/` for experimental methods (FRST/SAM3 variants).
 

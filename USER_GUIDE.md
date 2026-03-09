@@ -65,7 +65,7 @@ bubbly_flows/
 ├── workspaces/             # Active labeling batches (hardlinked, ephemeral)
 ├── annotations/
 │   └── gold/               # Versioned cumulative datasets (The Source of Truth)
-├── microsam/               # Training datasets and base weight cache
+├── pipeline/               # Training datasets and base weight cache
 ├── logs/                   # Slurm job logs (*.out, *.err) and submission scripts
 └── scripts/
     ├── manage_bubbly.py    # Master Controller (CLI Menu)
@@ -148,7 +148,7 @@ This stages MicroSAM vit_b_lm, the HZDR StarDist bubble weights, and YOLOv9c-seg
 1.  Select **Option 4 (Prepare Training Dataset (Export))**.
 2.  Choose a Gold Version (e.g., `gold_seed_v00`).
 3.  Enable train/test split (recommended), accept defaults (0.2 test fraction, seed 42).
-4.  *Action*: The script generates two directories in `microsam/datasets/`:
+4.  *Action*: The script generates two directories in `pipeline/datasets/`:
     *   `<name>_train/` — training images + masks, with augmentation (4× multiplier)
     *   `<name>_test/` — held-out test images + masks, no augmentation
 
@@ -178,7 +178,7 @@ Once you have predicted masks (from `inference.py` or a model's own prediction s
 ```bash
 python bubbly_flows/scripts/evaluate.py \
     --preds  <path-to-predicted-masks>/ \
-    --gts    bubbly_flows/microsam/datasets/<name>_test/labels/ \
+    --gts    bubbly_flows/pipeline/datasets/<name>_test/labels/ \
     --iou_threshold 0.5 \
     --output results.csv
 ```

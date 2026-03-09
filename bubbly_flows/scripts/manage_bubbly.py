@@ -15,12 +15,12 @@ Typical workflow:
 - Prepare or update source data (pool/frames).
 - Create workspace and annotate in X-AnyLabeling.
 - Promote validated annotations to a new Gold version.
-- Export Gold to `microsam/datasets`, then train or run inference.
+- Export Gold to `pipeline/datasets`, then train or run inference.
 
 Directory model:
 - `workspaces/`: transient labeling batches.
 - `annotations/gold/`: versioned source-of-truth labels for reproducible training.
-- `microsam/datasets/`: materialized training datasets derived from Gold.
+- `pipeline/datasets/`: materialized training datasets derived from Gold.
 """
 
 HELP_EXAMPLES = """Examples:
@@ -191,7 +191,7 @@ POOL_DIR = ROOT_DIR / "data" / "patches_pool" / "images"
 POOL_MAP = ROOT_DIR / "data" / "patches_pool" / "patch_map.csv"
 WORKSPACES_DIR = ROOT_DIR / "workspaces"
 GOLD_DIR = ROOT_DIR / "annotations" / "gold"
-MICROSAM_DIR = ROOT_DIR / "microsam"
+PIPELINE_DIR = ROOT_DIR / "pipeline"
 SCRIPTS_DIR = ROOT_DIR / "scripts"
 DIARY_LOG = ROOT_DIR / "diary.log"
 
@@ -902,7 +902,7 @@ def export_microsam_dataset():
             (train_ds_name, train_files, True),
             (test_ds_name,  test_files,  False),
         ]:
-            ds_dir = MICROSAM_DIR / "datasets" / ds_name
+            ds_dir = PIPELINE_DIR / "datasets" / ds_name
             if ds_dir.exists():
                 print(f"Warning: {ds_dir} already exists.")
                 if input_str("Overwrite? (y/n)", "n").lower() != "y":
@@ -933,7 +933,7 @@ def export_microsam_dataset():
     else:
         # Single export — original behaviour
         dest_ds_name = input_str("Dataset Name (e.g. v01_train)", gold_name)
-        dest_ds_dir = MICROSAM_DIR / "datasets" / dest_ds_name
+        dest_ds_dir = PIPELINE_DIR / "datasets" / dest_ds_name
 
         if dest_ds_dir.exists():
             print(f"Warning: {dest_ds_dir} already exists.")
@@ -974,9 +974,9 @@ def submit_training_job():
     print("\n[ Submit Training Job (Oscar) ]")
 
     # Select Dataset
-    ds_root = MICROSAM_DIR / "datasets"
+    ds_root = PIPELINE_DIR / "datasets"
     if not ds_root.exists():
-        print("No datasets found (microsam/datasets empty).")
+        print("No datasets found (pipeline/datasets empty).")
         return
         
     datasets = sorted([d.name for d in ds_root.iterdir() if d.is_dir()])
@@ -1071,7 +1071,7 @@ echo "Node: $SLURMD_NODENAME"
 echo "Dataset: {ds_name}"
 
 # Run Training
-export MICROSAM_CACHEDIR={SCRATCH_MODELS_DIR / "microsam"}
+export MICROSAM_CACHEDIR={SCRATCH_MODELS_DIR / "pipeline"}
 python3 {train_script} \\
     --dataset {ds_root / ds_name} \\
     --name {exp_name} \\
@@ -1115,6 +1115,7 @@ def main_menu():
         print("4. Prepare Training Dataset (Export)")
         print("5. Train Model (submit job)")
         print("6. Run Inference (Stub)")
+        print("7. Evaluate Model on Test Set")
         print("q. Quit")
         
         choice = input_str("\nSelect option")
@@ -1137,7 +1138,7 @@ def main_menu():
             print("\n[ Run Inference ]")
             
             # 1. Select Model
-            models_dir = MICROSAM_DIR / "models"
+            models_dir = PIPELINE_DIR / "models"
             if not models_dir.exists():
                 print("No models found. Run training first.")
                 input("Enter...")
@@ -1161,7 +1162,7 @@ def main_menu():
             model_path = models_dir / exp_name / "checkpoints" / exp_name / "best.pt"
             if not model_path.exists():
                 # Fallback to just under models if script saved differently?
-                # train.py saves to: microsam/models/EXP/checkpoints/EXP/best.pt via micro_sam default?
+                # train.py saves to: pipeline/models/EXP/checkpoints/EXP/best.pt via micro_sam default?
                 # Actually my train.py wrapper passes save_root=models/EXP
                 # micro_sam usually appends 'checkpoints/name/best.pt'
                 # Let's try finding any .pt
@@ -1189,7 +1190,162 @@ def main_menu():
             cmd = f"python3 {SCRIPTS_DIR}/inference.py --model_path {model_path} --image {img_path} --output {out_path_str}"
             os.system(cmd)
             input("Predictions done. Press Enter...")
+        elif choice == '7':
+            evaluate_model()
 
+
+# --- 7. Evaluate Model on Test Set ---
+def evaluate_model():
+    print("\n[ Evaluate Model on Test Set ]")
+
+    if not SCRATCH_TRAINED_DIR.exists():
+        print("No trained models found. Train a model first.")
+        input("Press Enter...")
+        return
+
+    experiments = sorted([d.name for d in SCRATCH_TRAINED_DIR.iterdir() if d.is_dir()])
+    if not experiments:
+        print("No experiments found in scratch.")
+        input("Press Enter...")
+        return
+
+    print("Trained experiments:")
+    for i, e in enumerate(experiments):
+        print(f"  {i+1}. {e}")
+    idx = input_int("Select experiment", 1) - 1
+    if not (0 <= idx < len(experiments)):
+        return
+    exp_name = experiments[idx]
+    exp_dir = SCRATCH_TRAINED_DIR / exp_name
+
+    # Auto-detect model type by checkpoint structure
+    microsam_ckpt = exp_dir / "checkpoints" / exp_name / "best.pt"
+    yolo_ckpt     = exp_dir / "weights" / "best.pt"
+    stardist_cfg  = exp_dir / "thresholds.json"
+
+    if microsam_ckpt.exists():
+        model_type = "microsam"
+        checkpoint = microsam_ckpt
+    elif yolo_ckpt.exists():
+        model_type = "yolov9"
+        checkpoint = yolo_ckpt
+    elif stardist_cfg.exists():
+        model_type = "stardist"
+        checkpoint = exp_dir
+    else:
+        print(f"Could not detect model type for {exp_name}.")
+        print("Expected: checkpoints/<name>/best.pt  OR  weights/best.pt  OR  thresholds.json")
+        input("Press Enter...")
+        return
+
+    print(f"Detected model type: {model_type}")
+
+    # Select test dataset
+    ds_root = PIPELINE_DIR / "datasets"
+    test_datasets = sorted([d.name for d in ds_root.iterdir()
+                            if d.is_dir() and d.name.endswith("_test")])
+    if not test_datasets:
+        print("No *_test datasets found. Export a dataset with train/test split first.")
+        input("Press Enter...")
+        return
+
+    print("\nTest datasets:")
+    for i, d in enumerate(test_datasets):
+        n = len(list((ds_root / d / "images").glob("*")))
+        print(f"  {i+1}. {d}  ({n} images)")
+    idx = input_int("Select test dataset", 1) - 1
+    if not (0 <= idx < len(test_datasets)):
+        return
+    test_ds      = test_datasets[idx]
+    test_img_dir = ds_root / test_ds / "images"
+    test_lbl_dir = ds_root / test_ds / "labels"
+
+    test_images = sorted(list(test_img_dir.glob("*.png")) + list(test_img_dir.glob("*.tif")))
+    if not test_images:
+        print("No images found in test dataset.")
+        input("Press Enter...")
+        return
+
+    pred_dir = ROOT_DIR / "tests" / "output" / "eval_preds" / exp_name
+    pred_dir.mkdir(parents=True, exist_ok=True)
+
+    print(f"\nRunning {model_type} inference on {len(test_images)} images ...")
+
+    import tempfile
+
+    if model_type == "microsam":
+        for img_path in test_images:
+            out_path = pred_dir / img_path.name
+            cmd = (f"python3 {SCRIPTS_DIR}/inference.py"
+                   f" --model_path {checkpoint}"
+                   f" --image {img_path}"
+                   f" --output {out_path}"
+                   f" --model_type vit_b")
+            if os.system(cmd) != 0:
+                print(f"  Warning: inference failed for {img_path.name}")
+
+    elif model_type == "stardist":
+        py = f"""
+import cv2, numpy as np
+from pathlib import Path
+from stardist.models import StarDist2D
+from csbdeep.utils import normalize
+model = StarDist2D(None, name="{exp_name}", basedir="{SCRATCH_TRAINED_DIR}")
+for p in sorted(Path("{test_img_dir}").glob("*.png")):
+    raw = cv2.imread(str(p), cv2.IMREAD_UNCHANGED)
+    gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY) if raw.ndim == 3 else raw
+    labels, _ = model.predict_instances(normalize(gray.astype(float), 1, 99.8))
+    cv2.imwrite(str(Path("{pred_dir}") / p.name), labels.astype("uint16"))
+    print(p.name, int(labels.max()), "instances")
+"""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as tf:
+            tf.write(py); tmp = tf.name
+        ret = os.system(f"python3 {tmp}")
+        os.unlink(tmp)
+        if ret != 0:
+            print("StarDist inference failed.")
+            input("Press Enter..."); return
+
+    elif model_type == "yolov9":
+        py = f"""
+import cv2, numpy as np
+from pathlib import Path
+from ultralytics import YOLO
+model = YOLO("{checkpoint}")
+for p in sorted(Path("{test_img_dir}").glob("*.png")):
+    raw = cv2.imread(str(p), cv2.IMREAD_UNCHANGED)
+    h, w = raw.shape[:2]
+    lmap = np.zeros((h, w), dtype="uint16")
+    res = model.predict(str(p), imgsz=640, conf=0.25, device=0, verbose=False)
+    if res[0].masks is not None:
+        for i, m in enumerate(res[0].masks.data.cpu().numpy()):
+            lmap[cv2.resize(m, (w, h)) > 0.5] = i + 1
+    cv2.imwrite(str(Path("{pred_dir}") / p.name), lmap)
+    print(p.name, int(lmap.max()), "instances")
+"""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as tf:
+            tf.write(py); tmp = tf.name
+        ret = os.system(f"python3 {tmp}")
+        os.unlink(tmp)
+        if ret != 0:
+            print("YOLOv9 inference failed.")
+            input("Press Enter..."); return
+
+    # Evaluate
+    print("\nRunning evaluation ...")
+    results_csv = pred_dir / "results.csv"
+    ret = os.system(
+        f"python3 {SCRIPTS_DIR}/evaluate.py"
+        f" --preds {pred_dir}"
+        f" --gts {test_lbl_dir}"
+        f" --output {results_csv}"
+    )
+    if ret == 0:
+        print(f"\nResults saved to: {results_csv}")
+        log_command("evaluate", f"{exp_name} on {test_ds} → {results_csv}")
+    else:
+        print("Evaluation script failed.")
+    input("Press Enter...")
 
 
 if __name__ == "__main__":
