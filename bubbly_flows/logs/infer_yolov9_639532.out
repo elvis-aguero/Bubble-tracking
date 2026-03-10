@@ -1,0 +1,15 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 639532
+##  Job Name : infer_yolov9
+##  Nodelist : gpu2104
+##      CPUs : 
+##  Mem/Node : 16384 MB
+## Directory : /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
+##   Job Started : Sat Mar  7 05:18:55 PM EST 2026
+###############################################################################
+
+image 1/1 /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test_C1S0024_img011620.png: 640x640 25 bubbles, 15.6ms
+Speed: 17.0ms preprocess, 15.6ms inference, 122.5ms postprocess per image at shape (1, 3, 640, 640)
+Found 25 instances
+Label map: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/infer_yolov9_C1S0024_img011620.png
+Vis: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/infer_yolov9_C1S0024_img011620_vis.png

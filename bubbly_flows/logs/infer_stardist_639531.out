@@ -1,0 +1,15 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 639531
+##  Job Name : infer_stardist
+##  Nodelist : gpu1414
+##      CPUs : 
+##  Mem/Node : 16384 MB
+## Directory : /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
+##   Job Started : Sat Mar  7 05:18:21 PM EST 2026
+###############################################################################
+Loading network weights from 'weights_best.h5'.
+Loading thresholds from 'thresholds.json'.
+Using default values: prob_thresh=0.807868, nms_thresh=0.3.
+Found 0 instances
+Label map: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/infer_stardist_C1S0024_img011620.png
+Vis: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/infer_stardist_C1S0024_img011620_vis.png

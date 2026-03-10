@@ -142,7 +142,8 @@ def main():
         sys.exit(1)
 
     pred_files = sorted(
-        list(args.preds.glob("*.tif")) + list(args.preds.glob("*.png"))
+        p for p in list(args.preds.glob("*.tif")) + list(args.preds.glob("*.png"))
+        if not p.stem.endswith("_vis")
     )
     if not pred_files:
         print(f"No .tif or .png files found in {args.preds}")

@@ -1,0 +1,45 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 646303
+##  Job Name : test_eval_microsam
+##  Nodelist : gpu1414
+##      CPUs : 
+##  Mem/Node : 16384 MB
+## Directory : /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
+##   Job Started : Sun Mar  8 09:02:47 PM EDT 2026
+###############################################################################
+=== Running MicroSAM inference on test set ===
+Inferring ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001 ...
+Using device: cuda
+Loading model from /users/eaguerov/scratch/bubble-models/trained/microsam_seed_v04_run2/checkpoints/microsam_seed_v04_run2/best.pt ...
+Running inference on ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.png ((1024, 1024, 3)) ...
+Found 26 instances. Saving to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/eval_preds/microsam_seed_v04_run2/ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.png
+Visualisation saved to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/eval_preds/microsam_seed_v04_run2/ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001_vis.png
+Inferring ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509 ...
+Using device: cuda
+Loading model from /users/eaguerov/scratch/bubble-models/trained/microsam_seed_v04_run2/checkpoints/microsam_seed_v04_run2/best.pt ...
+Running inference on ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.png ((1024, 1024, 3)) ...
+Found 41 instances. Saving to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/eval_preds/microsam_seed_v04_run2/ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.png
+Visualisation saved to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/eval_preds/microsam_seed_v04_run2/ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509_vis.png
+Inferring ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432 ...
+Using device: cuda
+Loading model from /users/eaguerov/scratch/bubble-models/trained/microsam_seed_v04_run2/checkpoints/microsam_seed_v04_run2/best.pt ...
+Running inference on ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.png ((1024, 1024, 3)) ...
+Found 25 instances. Saving to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/eval_preds/microsam_seed_v04_run2/ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.png
+Visualisation saved to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/eval_preds/microsam_seed_v04_run2/ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432_vis.png
+=== Running evaluation ===
+image                                     TP     FP     FN     precision   recall      F1        mean_IoU  
+  -----------------------------------------------------------------------------------------------------------
+ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.png  5      21     71     0.192       0.066       0.098     0.662     
+  [skip] no GT mask for ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001_vis.png
+ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.png  15     26     625    0.366       0.023       0.044     0.680     
+  [skip] no GT mask for ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509_vis.png
+ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.png  13     12     568    0.520       0.022       0.043     0.753     
+  [skip] no GT mask for ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432_vis.png
+
+--- Summary (3 images, IoU threshold = 0.5) ---
+Total:   TP=33  FP=59  FN=1264
+Macro:   precision=0.359  recall=0.037  F1=0.062  mean_IoU=0.698
+Micro:   precision=0.359  recall=0.025  F1=0.048
+
+Results written to: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/eval_preds/microsam_seed_v04_run2/results.csv
+=== Done. Results at /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/eval_preds/microsam_seed_v04_run2/results.csv ===

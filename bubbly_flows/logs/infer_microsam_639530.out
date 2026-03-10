@@ -1,0 +1,14 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 639530
+##  Job Name : infer_microsam
+##  Nodelist : gpu2250
+##      CPUs : 
+##  Mem/Node : 16384 MB
+## Directory : /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
+##   Job Started : Sat Mar  7 05:18:21 PM EST 2026
+###############################################################################
+Using device: cuda
+Loading model from /users/eaguerov/scratch/bubble-models/trained/microsam_seed_v04_run2/checkpoints/microsam_seed_v04_run2/best.pt ...
+Running inference on ZeroG_FlightDay_Test_C1S0024_img011620.png ((1024, 1024, 3)) ...
+Found 26 instances. Saving to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/infer_microsam_C1S0024_img011620.png
+Visualisation saved to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/infer_microsam_C1S0024_img011620_vis.png

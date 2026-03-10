@@ -1,0 +1,12 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 645989
+##  Job Name : eval_infer_yolov9
+##  Nodelist : gpu1414
+##      CPUs : 
+##  Mem/Node : 16384 MB
+## Directory : /oscar/data/dharri15/eaguerov/Github/Bubble-tracking
+##   Job Started : Sun Mar  8 08:46:07 PM EDT 2026
+###############################################################################
+ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.png: 0 instances
+ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.png: 45 instances
+ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.png: 100 instances

@@ -1,4 +1,5 @@
 import argparse
+import json
 import sys
 import os
 import glob
@@ -24,15 +25,36 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", required=True, type=Path, help="Path to dataset root (must have images/ and labels/ subdirs)")
     parser.add_argument("--name", required=True, type=str, help="Experiment name")
-    parser.add_argument("--epochs", type=int, default=50)
+    parser.add_argument("--config", required=True, type=Path,
+                        help="Path to model config JSON (e.g. configs/microsam.json)")
     parser.add_argument("--save_root", type=Path, default=None,
                         help="Root directory for saving checkpoints. "
                              "Defaults to bubbly_flows/microsam/models/<name>/")
     args = parser.parse_args()
 
+    with open(args.config) as f:
+        cfg = json.load(f)
+    t = cfg["training"]
+    patch_shape  = t.get("patch_shape", 1024)
+    epochs       = t.get("epochs", 100)
+    batch_size   = t.get("batch_size", 1)
+    num_workers  = t.get("num_workers", 4)
+    val_fraction = t.get("val_fraction", 0.15)
+    early_stop   = t.get("early_stopping_patience", 10)
+    freeze       = t.get("freeze", ["image_encoder"])
+    backbone     = t.get("model_type", cfg.get("backbone", "vit_b"))
+
     print(f"STARTING TRAINING: {args.name}")
-    print(f"Dataset: {args.dataset}")
-    print(f"Epochs:  {args.epochs}")
+    print(f"Config:      {args.config}")
+    print(f"Dataset:     {args.dataset}")
+    print(f"Epochs:      {epochs}")
+    print(f"Patch shape: ({patch_shape}, {patch_shape})")
+    print(f"Batch size:  {batch_size}")
+    print(f"Num workers: {num_workers}")
+    print(f"Val fraction:{val_fraction}")
+    print(f"Early stop:  {early_stop}")
+    print(f"Freeze:      {freeze}")
+    print(f"Backbone:    {backbone}")
     print("--------------------------------")
 
     # 1. Validation
@@ -76,8 +98,8 @@ def main():
     # micro_sam expects patches. We use a default shape of (512, 512).
     print("Creating DataLoaders...")
     
-    # Simple validation split (last 10%)
-    split_idx = max(1, int(len(train_image_paths) * 0.9))
+    # Simple validation split
+    split_idx = max(1, int(len(train_image_paths) * (1 - val_fraction)))
     val_image_paths = train_image_paths[split_idx:]
     val_label_paths = train_label_paths[split_idx:]
     train_image_paths = train_image_paths[:split_idx]
@@ -87,17 +109,18 @@ def main():
 
     # Use micro_sam's own loader — it applies the 4-channel label transform
     # required by the instance segmentation decoder (foreground + distance fields).
+    ps = (patch_shape, patch_shape)
     train_loader = default_sam_loader(
         raw_paths=train_image_paths,
         raw_key=None,
         label_paths=train_label_paths,
         label_key=None,
-        patch_shape=(512, 512),
+        patch_shape=ps,
         with_segmentation_decoder=True,
         raw_transform=raw_transform,
         is_train=True,
-        batch_size=1,
-        num_workers=2,
+        batch_size=batch_size,
+        num_workers=num_workers,
         shuffle=True,
     )
 
@@ -106,12 +129,12 @@ def main():
         raw_key=None,
         label_paths=val_label_paths,
         label_key=None,
-        patch_shape=(512, 512),
+        patch_shape=ps,
         with_segmentation_decoder=True,
         raw_transform=raw_transform,
         is_train=False,
-        batch_size=1,
-        num_workers=1,
+        batch_size=batch_size,
+        num_workers=num_workers,
         shuffle=False,
     )
     
@@ -123,14 +146,14 @@ def main():
             save_root=str(model_save_root),
             train_loader=train_loader,
             val_loader=val_loader,
-            model_type="vit_b",
-            n_epochs=args.epochs,
+            model_type=backbone,
+            n_epochs=epochs,
             device=device,
             # Freeze the image encoder so gradients are not stored through ViT-B's
             # 1024x1024 attention maps. With batch_size=1 the encoder alone fills
             # the 24GB GPU. Fine-tuning only the mask decoder + segmentation decoder
             # is the standard approach for small microscopy datasets.
-            freeze=["image_encoder"],
+            freeze=freeze,
         )
     except Exception as e:
         print(f"CRITICAL TRAINING ERROR: {e}")

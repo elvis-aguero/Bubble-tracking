@@ -17,3 +17,5 @@
 | 20260214-1731-manage-bubbly-help-docstring | Add detailed CLI help docstring and examples for manage_bubbly.py | done | codex/20260214-1731 | main | 2026-02-14 17:31 EST |
 | 20260214-1818-export-augmentation-gold-to-ml | Add export-time augmentation (geom/photometric/copy-paste) for Gold to MicroSAM dataset export | done | codex/20260214-1818 | main | 2026-02-14 18:18 EST |
 | 20260214-1833-dryrun-aug-export-validation | Generate dry-run augmented dataset and validate output integrity | done | codex/20260214-1833 | main | 2026-02-14 18:33 EST |
+
+| 20260310-1302-manage-bubbly-restructure | Continue manage_bubbly pipeline restructure | open | codex/20260310-1302 | main | 2026-03-10 13:02 EST |
