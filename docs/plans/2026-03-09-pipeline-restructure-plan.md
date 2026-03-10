@@ -10,6 +10,32 @@
 
 **Design doc:** `docs/plans/2026-03-09-pipeline-restructure-design.md`
 
+## Implementation Status
+
+- [x] Task 1: Create `configs/` directory with per-model JSON files
+- [x] Task 2: Rename `microsam/` → `pipeline/` on disk and in code
+- [x] Task 3: Refactor `train.py` to read from config JSON
+- [x] Task 4: Refactor `train_stardist.py` and `train_yolov9.py` to read from config JSON
+  - [x] `train_stardist.py` now reads `--config`
+  - [x] `train_yolov9.py` now reads `--config`
+- [x] Task 5: Config provenance — copy JSON into run directory at submission
+
+### `manage_bubbly.py` Milestones
+
+- [x] Replace legacy top-level menu with 4-option happy path + `Advanced`
+- [x] Add `Advanced` submenu for patch pool, workspace creation, and dataset export
+- [x] Add computed state line: `gold=... dataset=... last_run=...`
+- [x] Add prerequisite blocking for Train / Evaluate / Inference
+- [x] Redesign `Train Model` selection to choose model family first (`MicroSAM`, `StarDist`, `YOLOv9`, `Other`)
+- [x] Restrict training dataset picker to exported `*_train` datasets
+- [x] Add per-option tooltips in menus
+- [x] Copy chosen config into trained run directory after submission
+- [x] Refactor built-in StarDist and YOLO trainers to consume their config JSONs directly
+  - [x] StarDist complete
+  - [x] YOLOv9 complete
+- [x] Redesign Evaluate flow to fully match the approved plan
+- [x] Redesign Inference flow to fully match the approved plan
+
 ---
 
 ## Task 1: Create `configs/` directory with per-model JSON files

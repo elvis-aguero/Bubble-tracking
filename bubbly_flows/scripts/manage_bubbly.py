@@ -85,6 +85,161 @@ def banner():
     print(f"Root: {ROOT_DIR}")
     print("========================================\n")
 
+
+def _latest_dir_name(path: Path) -> Optional[str]:
+    if not path.exists():
+        return None
+    dirs = [p for p in path.iterdir() if p.is_dir()]
+    if not dirs:
+        return None
+    latest = max(dirs, key=lambda p: (p.stat().st_mtime_ns, p.name))
+    return latest.name
+
+
+def _latest_dataset_pair(datasets_dir: Path) -> Optional[str]:
+    if not datasets_dir.exists():
+        return None
+
+    train_dirs = {p.name[:-6]: p for p in datasets_dir.iterdir() if p.is_dir() and p.name.endswith("_train")}
+    test_dirs = {p.name[:-5]: p for p in datasets_dir.iterdir() if p.is_dir() and p.name.endswith("_test")}
+    shared = set(train_dirs) & set(test_dirs)
+    if not shared:
+        return None
+
+    latest = max(
+        shared,
+        key=lambda name: (
+            max(train_dirs[name].stat().st_mtime_ns, test_dirs[name].stat().st_mtime_ns),
+            name,
+        ),
+    )
+    return f"{latest}_train/test"
+
+
+def format_pipeline_state_line(
+    gold_dir: Optional[Path] = None,
+    datasets_dir: Optional[Path] = None,
+    trained_dir: Optional[Path] = None,
+) -> str:
+    gold_dir = gold_dir or GOLD_DIR
+    datasets_dir = datasets_dir or (PIPELINE_DIR / "datasets")
+    trained_dir = trained_dir or SCRATCH_TRAINED_DIR
+    gold_name = _latest_dir_name(gold_dir) or "none"
+    dataset_name = _latest_dataset_pair(datasets_dir) or "none"
+    last_run = _latest_dir_name(trained_dir) or "none"
+    return f"State: gold={gold_name}  dataset={dataset_name}  last_run={last_run}"
+
+
+def has_training_dataset(datasets_dir: Optional[Path] = None) -> bool:
+    datasets_dir = datasets_dir or (PIPELINE_DIR / "datasets")
+    return datasets_dir.exists() and any(
+        p.is_dir() and p.name.endswith("_train") for p in datasets_dir.iterdir()
+    )
+
+
+def has_trained_run(trained_dir: Optional[Path] = None) -> bool:
+    trained_dir = trained_dir or SCRATCH_TRAINED_DIR
+    return trained_dir.exists() and any(p.is_dir() for p in trained_dir.iterdir())
+
+
+def list_training_datasets(datasets_dir: Optional[Path] = None) -> List[str]:
+    datasets_dir = datasets_dir or (PIPELINE_DIR / "datasets")
+    if not datasets_dir.exists():
+        return []
+    return sorted(
+        p.name for p in datasets_dir.iterdir()
+        if p.is_dir() and p.name.endswith("_train")
+    )
+
+
+def list_test_datasets(datasets_dir: Optional[Path] = None) -> List[str]:
+    datasets_dir = datasets_dir or (PIPELINE_DIR / "datasets")
+    if not datasets_dir.exists():
+        return []
+    return sorted(
+        p.name for p in datasets_dir.iterdir()
+        if p.is_dir() and p.name.endswith("_test")
+    )
+
+
+def detect_trained_model_type(exp_dir: Path) -> Optional[Tuple[str, Path]]:
+    exp_name = exp_dir.name
+    microsam_ckpt = exp_dir / "checkpoints" / exp_name / "best.pt"
+    yolo_ckpt = exp_dir / "weights" / "best.pt"
+    stardist_cfg = exp_dir / "thresholds.json"
+
+    if microsam_ckpt.exists():
+        return "microsam", microsam_ckpt
+    if yolo_ckpt.exists():
+        return "yolov9", yolo_ckpt
+    if stardist_cfg.exists():
+        return "stardist", exp_dir
+    return None
+
+
+def list_other_training_scripts(scripts_dir: Optional[Path] = None) -> List[Path]:
+    scripts_dir = scripts_dir or SCRIPTS_DIR
+    excluded = {"train.py", "train_stardist.py", "train_yolov9.py"}
+    return sorted(
+        p for p in scripts_dir.glob("train_*.py")
+        if p.name not in excluded
+    )
+
+
+def resolve_training_model_choice(choice: str) -> Optional[Dict[str, Any]]:
+    builtins = {
+        "1": {
+            "label": "microsam",
+            "display_name": "MicroSAM",
+            "script_path": SCRIPTS_DIR / "train.py",
+            "config_path": CONFIGS_DIR / "microsam.json",
+            "uses_config": True,
+            "description": "best for dense instance segmentation, needs GPU",
+        },
+        "2": {
+            "label": "stardist",
+            "display_name": "StarDist 2D",
+            "script_path": SCRIPTS_DIR / "train_stardist.py",
+            "config_path": CONFIGS_DIR / "stardist.json",
+            "uses_config": True,
+            "description": "fast, good for convex bubble shapes",
+        },
+        "3": {
+            "label": "yolov9",
+            "display_name": "YOLOv9c-seg",
+            "script_path": SCRIPTS_DIR / "train_yolov9.py",
+            "config_path": CONFIGS_DIR / "yolov9.json",
+            "uses_config": True,
+            "description": "good generalisation, real-time capable",
+        },
+    }
+    return builtins.get(choice)
+
+
+def _summarize_config(config_path: Path, label: str) -> str:
+    if not config_path.exists():
+        return "missing"
+    with open(config_path) as f:
+        cfg = json.load(f)
+    training = cfg.get("training", {})
+    if label == "microsam":
+        freeze = training.get("freeze", [])
+        freeze_label = ",".join(str(v).replace("_", "-") for v in freeze) if freeze else "none"
+        return f"patch={training.get('patch_shape', 'n/a')}, epochs={training.get('epochs', 'n/a')}, freeze={freeze_label}"
+    if label == "stardist":
+        return f"epochs={training.get('epochs', 'n/a')}, batch={training.get('batch_size', 'n/a')}, val={training.get('val_fraction', 'n/a')}"
+    if label == "yolov9":
+        return f"epochs={training.get('epochs', 'n/a')}, imgsz={training.get('imgsz', 'n/a')}, batch={training.get('batch', 'n/a')}"
+    return f"epochs={training.get('epochs', 'n/a')}"
+
+
+def _config_training_epochs(config_path: Optional[Path], default: int = 100) -> int:
+    if config_path is None or not config_path.exists():
+        return default
+    with open(config_path) as f:
+        cfg = json.load(f)
+    return int(cfg.get("training", {}).get("epochs", default))
+
 import os
 import sys
 import shutil
@@ -193,6 +348,7 @@ WORKSPACES_DIR = ROOT_DIR / "workspaces"
 GOLD_DIR = ROOT_DIR / "annotations" / "gold"
 PIPELINE_DIR = ROOT_DIR / "pipeline"
 SCRIPTS_DIR = ROOT_DIR / "scripts"
+CONFIGS_DIR = ROOT_DIR.parent / "configs"
 DIARY_LOG = ROOT_DIR / "diary.log"
 
 SCRATCH_MODELS_DIR = Path.home() / "scratch" / "bubble-models"
@@ -973,55 +1129,78 @@ def export_microsam_dataset():
 def submit_training_job():
     print("\n[ Submit Training Job (Oscar) ]")
 
-    # Select Dataset
-    ds_root = PIPELINE_DIR / "datasets"
-    if not ds_root.exists():
-        print("No datasets found (pipeline/datasets empty).")
-        return
-        
-    datasets = sorted([d.name for d in ds_root.iterdir() if d.is_dir()])
-    if not datasets:
-        print("No datasets found.")
+    # Select model family first. Built-ins map to canonical script/config pairs.
+    print("Select model:")
+    print("  1. MicroSAM (ViT-B + UNETR)  — best for dense instance segmentation, needs GPU")
+    print("  2. StarDist 2D               — fast, good for convex bubble shapes")
+    print("  3. YOLOv9c-seg               — good generalisation, real-time capable")
+    print("  4. Other")
+
+    model_choice = input_str("Select model", "1")
+    selected = resolve_training_model_choice(model_choice)
+    if selected is None and model_choice == "4":
+        print("\nOther trainers:")
+        custom_scripts = list_other_training_scripts()
+        for i, script in enumerate(custom_scripts, start=1):
+            print(f"  {i}. {script.name}")
+        manual_opt = len(custom_scripts) + 1
+        print(f"  {manual_opt}. Enter path manually")
+
+        other_choice = input_int("Select trainer", 1)
+        if 1 <= other_choice <= len(custom_scripts):
+            train_script = custom_scripts[other_choice - 1]
+        elif other_choice == manual_opt:
+            manual = input_str("Script path (relative to repo root, or absolute)")
+            train_script = Path(manual) if Path(manual).is_absolute() else ROOT_DIR / manual
+            if not train_script.exists():
+                print(f"Script not found: {train_script}")
+                input("Press Enter...")
+                return
+        else:
+            return
+
+        script_label = train_script.stem.removeprefix("train_")
+        selected = {
+            "label": script_label,
+            "display_name": train_script.stem,
+            "script_path": train_script,
+            "config_path": None,
+            "uses_config": False,
+            "description": "custom trainer",
+        }
+    elif selected is None:
+        print("Invalid model selection.")
+        input("Press Enter...")
         return
 
-    print("Available Datasets:")
+    train_script = selected["script_path"]
+    config_path = selected["config_path"]
+    script_label = selected["label"]
+
+    print(f"\nUsing trainer: {selected['display_name']}")
+    print(f"Script: {train_script}")
+    if config_path is not None:
+        print(f"Config: {config_path}  [{_summarize_config(config_path, script_label)}]")
+        if not selected["uses_config"]:
+            print("Note: this trainer still uses its legacy CLI; submission currently applies config-derived epochs only.")
+
+    # Select dataset after model selection; training only consumes *_train exports.
+    ds_root = PIPELINE_DIR / "datasets"
+    datasets = list_training_datasets(ds_root)
+    if not datasets:
+        print("No training datasets found.")
+        input("Press Enter...")
+        return
+
+    print("\nTraining datasets:")
     for i, d in enumerate(datasets):
-        print(f"{i+1}. {d}")
-    
+        n = len(list((ds_root / d / "images").glob("*")))
+        print(f"{i+1}. {d}  ({n} images)")
+
     idx = input_int("Select dataset", 1) - 1
     if not (0 <= idx < len(datasets)):
         return
     ds_name = datasets[idx]
-
-    # Select Training Script
-    print("\nTraining script:")
-    print("  1. MicroSAM ViT-B (built-in: train.py)")
-    custom_scripts = sorted([
-        f for f in SCRIPTS_DIR.glob("train_*.py")
-        if f.name != "train.py"
-    ])
-    for i, s in enumerate(custom_scripts):
-        print(f"  {i+2}. {s.name}")
-    manual_opt = len(custom_scripts) + 2
-    print(f"  {manual_opt}. Enter path manually")
-
-    script_idx = input_int("Select script", 1)
-    if script_idx == 1:
-        train_script = SCRIPTS_DIR / "train.py"
-        script_label = "microsam"
-    elif 2 <= script_idx <= len(custom_scripts) + 1:
-        train_script = custom_scripts[script_idx - 2]
-        script_label = train_script.stem
-    else:
-        manual = input_str("Script path (relative to repo root, or absolute)")
-        train_script = Path(manual) if Path(manual).is_absolute() else ROOT_DIR / manual
-        if not train_script.exists():
-            print(f"Script not found: {train_script}")
-            input("Press Enter...")
-            return
-        script_label = train_script.stem
-
-    print(f"Using script: {train_script}")
 
     # Pre-flight: verify base model weights exist in scratch
     req = MODEL_WEIGHTS_MAP.get(train_script.name)
@@ -1043,6 +1222,17 @@ def submit_training_job():
     # Prepare Logs Directory
     logs_dir = ROOT_DIR / "logs"
     logs_dir.mkdir(exist_ok=True)
+
+    train_args = [
+        f"    --dataset {ds_root / ds_name}",
+        f"    --name {exp_name}",
+    ]
+    if selected["uses_config"] and config_path is not None:
+        train_args.append(f"    --config {config_path}")
+    else:
+        train_args.append(f"    --epochs {_config_training_epochs(config_path)}")
+    train_args.append(f"    --save_root {SCRATCH_TRAINED_DIR}")
+    train_args_block = " \\\n".join(train_args)
 
     # Generate Slurm Script
     slurm_content = f"""#!/bin/bash
@@ -1073,10 +1263,7 @@ echo "Dataset: {ds_name}"
 # Run Training
 export MICROSAM_CACHEDIR={SCRATCH_MODELS_DIR / "pipeline"}
 python3 {train_script} \\
-    --dataset {ds_root / ds_name} \\
-    --name {exp_name} \\
-    --epochs 100 \\
-    --save_root {SCRATCH_TRAINED_DIR}
+{train_args_block}
 """
     
     # Write Script
@@ -1094,6 +1281,12 @@ python3 {train_script} \\
         ret = os.system(f"sbatch {script_path}")
         if ret == 0:
             print("Job submitted successfully.")
+            if config_path is not None:
+                run_dir = SCRATCH_TRAINED_DIR / exp_name
+                run_dir.mkdir(parents=True, exist_ok=True)
+                config_dest = run_dir / "config.json"
+                shutil.copy2(config_path, config_dest)
+                print(f"Config saved to: {config_dest}")
             log_command("submit_job", f"Submitted job {exp_name} (dataset: {ds_name}, script: {train_script.name}, save: {SCRATCH_TRAINED_DIR})")
         else:
             print("Error submitting job (is sbatch available?).")
@@ -1104,94 +1297,113 @@ python3 {train_script} \\
     input("Press Enter...")
 
 
-# --- Main Menu ---
-def main_menu():
+def run_inference_menu():
+    print("\n[ Run Inference ]")
+
+    if not SCRATCH_TRAINED_DIR.exists():
+        print("No trained models found. Train a model first.")
+        input("Enter...")
+        return
+
+    model_exps = sorted([d.name for d in SCRATCH_TRAINED_DIR.iterdir() if d.is_dir()])
+    if not model_exps:
+        print("No experiments found in scratch.")
+        input("Enter...")
+        return
+
+    print("Available Experiments:")
+    for i, m in enumerate(model_exps):
+        print(f"{i+1}. {m}")
+
+    idx = input_int("Select experiment", 1) - 1
+    if not (0 <= idx < len(model_exps)):
+        return
+
+    exp_name = model_exps[idx]
+    exp_dir = SCRATCH_TRAINED_DIR / exp_name
+    detected = detect_trained_model_type(exp_dir)
+    if detected is None:
+        print(f"Could not detect model type for {exp_name}.")
+        print("Expected: checkpoints/<name>/best.pt  OR  weights/best.pt  OR  thresholds.json")
+        input("Enter...")
+        return
+    model_type, model_path = detected
+    print(f"Detected model type: {model_type}")
+
+    img_path_str = input_str("Enter path to image")
+    img_path = Path(img_path_str)
+    if not img_path.exists():
+        print("Image not found.")
+        input("Enter...")
+        return
+
+    out_path_str = input_str("Output path (mask.png)", f"{img_path.stem}_mask.png")
+    cmd = f"python3 {SCRIPTS_DIR}/inference.py --model_path {model_path} --image {img_path} --output {out_path_str}"
+    os.system(cmd)
+    input("Predictions done. Press Enter...")
+
+
+def advanced_menu():
     while True:
         clear_screen()
         banner()
-        print("1. Initialize / Update Patch Pool")
-        print("2. Create New Workspace")
-        print("3. Promote Workspace to Gold (+ Cleanup)")
-        print("4. Prepare Training Dataset (Export)")
-        print("5. Train Model (submit job)")
-        print("6. Run Inference (Stub)")
-        print("7. Evaluate Model on Test Set")
-        print("q. Quit")
-        
+        print("Advanced Options")
+        print("----------------------------------------")
+        print("1. Update Patch Pool      - scan frames dir for new images, rebuild pool index")
+        print("2. Create Workspace       - start a new annotation seed from the pool")
+        print("3. Export Dataset         - re-run train/test split on an existing gold set")
+        print("q. Back")
+
         choice = input_str("\nSelect option")
         if choice.lower() == 'q':
-            break
+            return
         elif choice == '1':
             update_pool()
         elif choice == '2':
             create_workspace()
         elif choice == '3':
-            promote_to_gold()
-        elif choice == '4':
             export_microsam_dataset()
-        elif choice == '5':
-            submit_training_job()
-        elif choice == '6':
 
-            # Stub logic removed, implementing real inference call.
-            # We want to ask for model and image and then run inference.py
-            print("\n[ Run Inference ]")
-            
-            # 1. Select Model
-            models_dir = PIPELINE_DIR / "models"
-            if not models_dir.exists():
-                print("No models found. Run training first.")
-                input("Enter...")
+
+# --- Main Menu ---
+def main_menu():
+    while True:
+        clear_screen()
+        banner()
+        print(f"  {format_pipeline_state_line()}\n")
+        print("1. Promote Workspace to Gold     - finalise annotations, create train/test split")
+        print("2. Train Model                   - submit Slurm job using configs/<model>.json")
+        print("3. Evaluate on Test Set          - run inference + metrics on held-out split")
+        print("4. Inference on Image            - run a trained model on any single image")
+        print("----------------------------------------")
+        print("a. Advanced                      - pool management, workspace creation, dataset export")
+        print("q. Quit")
+
+        choice = input_str("\nSelect option")
+        if choice.lower() == 'q':
+            break
+        elif choice == '1':
+            promote_to_gold()
+        elif choice == '2':
+            if not has_training_dataset():
+                print("No training dataset found. Run Option 1 first.")
+                input("Press Enter...")
                 continue
-                
-            model_exps = sorted([d.name for d in models_dir.iterdir() if d.is_dir()])
-            if not model_exps:
-                print("No model experiments found.")
-                input("Enter...")
+            submit_training_job()
+        elif choice == '3':
+            if not has_trained_run():
+                print("No trained checkpoint found. Run Option 2 first.")
+                input("Press Enter...")
                 continue
-                
-            print("Available Experiments:")
-            for i, m in enumerate(model_exps):
-                print(f"{i+1}. {m}")
-            
-            idx = input_int("Select experiment", 1) - 1
-            if not (0 <= idx < len(model_exps)): continue
-            
-            exp_name = model_exps[idx]
-            # Assume best.pt 
-            model_path = models_dir / exp_name / "checkpoints" / exp_name / "best.pt"
-            if not model_path.exists():
-                # Fallback to just under models if script saved differently?
-                # train.py saves to: pipeline/models/EXP/checkpoints/EXP/best.pt via micro_sam default?
-                # Actually my train.py wrapper passes save_root=models/EXP
-                # micro_sam usually appends 'checkpoints/name/best.pt'
-                # Let's try finding any .pt
-                pts = list((models_dir / exp_name).glob("**/*.pt"))
-                if not pts:
-                    print(f"No .pt files found in {exp_name}")
-                    input("Enter...")
-                    continue
-                model_path = pts[0]
-                print(f"Using checkpoint: {model_path.name}")
-                
-            # 2. Select Image
-            # For simplicity, ask for absolute path or pick from pool?
-            img_path_str = input_str("Enter path to image")
-            img_path = Path(img_path_str)
-            if not img_path.exists():
-                print("Image not found.")
-                input("Enter...")
-                continue
-            
-            # 3. Output
-            out_path_str = input_str("Output path (mask.png)", f"{img_path.stem}_mask.png")
-            
-            # Run
-            cmd = f"python3 {SCRIPTS_DIR}/inference.py --model_path {model_path} --image {img_path} --output {out_path_str}"
-            os.system(cmd)
-            input("Predictions done. Press Enter...")
-        elif choice == '7':
             evaluate_model()
+        elif choice == '4':
+            if not has_trained_run():
+                print("No trained checkpoint found. Run Option 2 first.")
+                input("Press Enter...")
+                continue
+            run_inference_menu()
+        elif choice.lower() == 'a':
+            advanced_menu()
 
 
 # --- 7. Evaluate Model on Test Set ---
@@ -1218,32 +1430,19 @@ def evaluate_model():
     exp_name = experiments[idx]
     exp_dir = SCRATCH_TRAINED_DIR / exp_name
 
-    # Auto-detect model type by checkpoint structure
-    microsam_ckpt = exp_dir / "checkpoints" / exp_name / "best.pt"
-    yolo_ckpt     = exp_dir / "weights" / "best.pt"
-    stardist_cfg  = exp_dir / "thresholds.json"
-
-    if microsam_ckpt.exists():
-        model_type = "microsam"
-        checkpoint = microsam_ckpt
-    elif yolo_ckpt.exists():
-        model_type = "yolov9"
-        checkpoint = yolo_ckpt
-    elif stardist_cfg.exists():
-        model_type = "stardist"
-        checkpoint = exp_dir
-    else:
+    detected = detect_trained_model_type(exp_dir)
+    if detected is None:
         print(f"Could not detect model type for {exp_name}.")
         print("Expected: checkpoints/<name>/best.pt  OR  weights/best.pt  OR  thresholds.json")
         input("Press Enter...")
         return
+    model_type, checkpoint = detected
 
     print(f"Detected model type: {model_type}")
 
     # Select test dataset
     ds_root = PIPELINE_DIR / "datasets"
-    test_datasets = sorted([d.name for d in ds_root.iterdir()
-                            if d.is_dir() and d.name.endswith("_test")])
+    test_datasets = list_test_datasets(ds_root)
     if not test_datasets:
         print("No *_test datasets found. Export a dataset with train/test split first.")
         input("Press Enter...")

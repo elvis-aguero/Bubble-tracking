@@ -13,11 +13,12 @@ Requires (not in bubbly-train-env by default — install once):
 Interface matches the manage_bubbly.py training contract:
     --dataset PATH    root with images/ and labels/ subdirectories
     --name    STR     experiment name (used for checkpoint folder)
-    --epochs  INT     training epochs (default 50)
+    --config  PATH    config JSON with training hyperparameters
     --save_root PATH  where to save checkpoints (passed by manage_bubbly.py)
 """
 
 import argparse
+import json
 import sys
 import shutil
 from pathlib import Path
@@ -26,13 +27,26 @@ import numpy as np
 
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
-def parse_args():
+def parse_args(argv=None):
     p = argparse.ArgumentParser()
     p.add_argument("--dataset",   required=True, type=Path)
     p.add_argument("--name",      required=True, type=str)
-    p.add_argument("--epochs",    type=int, default=50)
+    p.add_argument("--config",    required=True, type=Path)
     p.add_argument("--save_root", type=Path, default=None)
-    return p.parse_args()
+    return p.parse_args(argv)
+
+
+def load_training_config(config_path: Path) -> dict:
+    with open(config_path) as f:
+        cfg = json.load(f)
+
+    training = cfg.get("training", {})
+    return {
+        "epochs": int(training.get("epochs", 100)),
+        "imgsz": int(training.get("imgsz", 1024)),
+        "batch": int(training.get("batch", 4)),
+        "val_fraction": float(training.get("val_fraction", 0.15)),
+    }
 
 
 # ── Mask → YOLO polygon conversion ───────────────────────────────────────────
@@ -72,16 +86,21 @@ def mask_to_yolo_lines(mask: np.ndarray, img_h: int, img_w: int) -> list:
 # ── Main ─────────────────────────────────────────────────────────────────────
 def main():
     args = parse_args()
+    train_cfg = load_training_config(args.config)
 
     if args.save_root:
         save_dir = args.save_root / args.name
     else:
-        save_dir = Path(__file__).resolve().parent.parent / "microsam" / "models" / args.name
+        save_dir = Path(__file__).resolve().parent.parent / "pipeline" / "models" / args.name
     save_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"STARTING YOLOv9 TRAINING: {args.name}")
+    print(f"Config:   {args.config}")
     print(f"Dataset:  {args.dataset}")
-    print(f"Epochs:   {args.epochs}")
+    print(f"Epochs:   {train_cfg['epochs']}")
+    print(f"imgsz:    {train_cfg['imgsz']}")
+    print(f"Batch:    {train_cfg['batch']}")
+    print(f"Val frac: {train_cfg['val_fraction']}")
     print(f"Output:   {save_dir}")
     print("--------------------------------")
 
@@ -122,7 +141,7 @@ def main():
     for subdir in ["images/train", "images/val", "labels/train", "labels/val"]:
         (yolo_ds / subdir).mkdir(parents=True, exist_ok=True)
 
-    split_idx = max(1, int(len(image_paths) * 0.9))
+    split_idx = max(1, int(len(image_paths) * (1 - train_cfg["val_fraction"])))
     splits = {
         "train": image_paths[:split_idx],
         "val":   image_paths[split_idx:],
@@ -174,9 +193,9 @@ def main():
     model = YOLO(str(weights))
     model.train(
         data=str(data_yaml),
-        epochs=args.epochs,
-        imgsz=512,
-        batch=4,
+        epochs=train_cfg["epochs"],
+        imgsz=train_cfg["imgsz"],
+        batch=train_cfg["batch"],
         name=args.name,
         project=str(save_dir.parent),
         device=device,

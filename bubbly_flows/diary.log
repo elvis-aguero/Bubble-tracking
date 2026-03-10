@@ -26,3 +26,12 @@
 [2026-03-06 14:09:29] promote_gold: Promoted seed_v04 to gold_seed_v04 (14 labels)
 [2026-03-06 14:09:54] export_split: Split gold_seed_v04: train=seed_v04_train (11 src), test=seed_v04_test (3 src), frac=0.2, seed=42
 [2026-03-06 14:09:54] submit_job: Submitted job microsam_seed_v04_run1 (dataset: seed_v04_test, script: train.py, save: /users/eaguerov/scratch/bubble-models/trained)
+[2026-03-10 14:22:11] submit_job: Submitted job demo_run (dataset: seed_v04_train, script: train.py, save: /tmp/tmp4cwkd06w/trained)
+[2026-03-10 14:22:30] submit_job: Submitted job demo_run (dataset: seed_v04_train, script: train.py, save: /tmp/tmp8epvu4xl/trained)
+[2026-03-10 15:10:22] submit_job: Submitted job demo_run (dataset: seed_v04_train, script: train.py, save: /tmp/tmpi93z6job/trained)
+[2026-03-10 15:10:34] submit_job: Submitted job demo_run (dataset: seed_v04_train, script: train.py, save: /tmp/tmpkbzy82ar/trained)
+[2026-03-10 15:13:59] submit_job: Submitted job demo_run (dataset: seed_v04_train, script: train.py, save: /tmp/tmpl6suyeez/trained)
+[2026-03-10 15:14:27] submit_job: Submitted job demo_run (dataset: seed_v04_train, script: train.py, save: /tmp/tmpp85jyka0/trained)
+[2026-03-10 15:36:34] submit_job: Submitted job demo_run (dataset: seed_v04_train, script: train.py, save: /tmp/tmpwc0yaprx/trained)
+[2026-03-10 15:36:53] submit_job: Submitted job demo_run (dataset: seed_v04_train, script: train.py, save: /tmp/tmpqmrws9u8/trained)
+[2026-03-10 15:40:19] submit_job: Submitted job demo_run (dataset: seed_v04_train, script: train.py, save: /tmp/tmpugh9t9j_/trained)

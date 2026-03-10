@@ -10,6 +10,7 @@ For step-by-step operating instructions, see `USER_GUIDE.md`.
 ```text
 Bubble-tracking/
 ├── bubbly_flows/                # Main project code + datasets + experiment artifacts
+├── configs/                     # Canonical training/inference configs per model
 ├── .context/                    # Agent task memory/protocol (not part of runtime pipeline)
 ├── USER_GUIDE.md                # Operator guide (labeling/training workflow)
 ├── environment.yml              # Conda env spec for training + core tooling
@@ -106,11 +107,13 @@ Primary pipeline entry points.
 
 - `manage_bubbly.py`
   - Main interactive controller.
-  - Handles pool update, workspace creation, gold promotion, dataset export, Slurm training submission, inference launch.
+  - Top-level happy path is: promote gold, train, evaluate, infer.
+  - Advanced submenu holds maintenance actions: pool update, workspace creation, dataset export.
+  - Prints a live status line by scanning `annotations/gold/`, `pipeline/datasets/`, and `~/scratch/bubble-models/trained/`.
 - `utils.py`
   - End-to-end preprocessing utility: CLAHE preprocessing, overlap tiling, patch-map generation, optional auto-labeling sidecars, YOLO dataset assembly helpers.
 - `train.py`
-  - MicroSAM (ViT-B) fine-tuning. Reads `images/` + `labels/`, creates 90/10 train/val split, writes checkpoints to `~/scratch/bubble-models/trained/`.
+  - MicroSAM (ViT-B) fine-tuning. Reads hyperparameters from `configs/microsam.json` via `--config`, creates a train/val split, writes checkpoints to `~/scratch/bubble-models/trained/`.
 - `train_stardist.py`
   - StarDist 2D fine-tuning. Starts from HZDR 2022 bubble-specific pre-trained weights if available, falls back to scratch.
 - `train_yolov9.py`
@@ -195,4 +198,3 @@ Usually ephemeral/generated during runs:
 3. Read `bubbly_flows/scripts/manage_bubbly.py` to understand the canonical workflow.
 4. Review this data lineage: `data → workspaces → annotations/gold → pipeline/datasets → ~/scratch/bubble-models/trained`.
 5. Only then dive into `bubbly_flows/tests/` for experimental methods (FRST/SAM3 variants).
-

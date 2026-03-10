@@ -12,7 +12,7 @@ Requires (not in bubbly-train-env by default — install once):
 Interface matches the manage_bubbly.py training contract:
     --dataset PATH    root with images/ and labels/ subdirectories
     --name    STR     experiment name (used for checkpoint folder)
-    --epochs  INT     training epochs (default 50)
+    --config  PATH    config JSON with training hyperparameters
     --save_root PATH  where to save checkpoints (passed by manage_bubbly.py)
 """
 
@@ -25,13 +25,28 @@ import numpy as np
 
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
-def parse_args():
+def parse_args(argv=None):
     p = argparse.ArgumentParser()
     p.add_argument("--dataset",   required=True, type=Path)
     p.add_argument("--name",      required=True, type=str)
-    p.add_argument("--epochs",    type=int, default=50)
+    p.add_argument("--config",    required=True, type=Path)
     p.add_argument("--save_root", type=Path, default=None)
-    return p.parse_args()
+    return p.parse_args(argv)
+
+
+def load_training_config(config_path: Path) -> dict:
+    with open(config_path) as f:
+        cfg = json.load(f)
+
+    training = cfg.get("training", {})
+    return {
+        "epochs": int(training.get("epochs", 100)),
+        "batch_size": int(training.get("batch_size", 2)),
+        "val_fraction": float(training.get("val_fraction", 0.15)),
+        "n_rays": int(training.get("n_rays", 64)),
+        "grid": tuple(training.get("grid", [2, 2])),
+        "patch_shape": int(training.get("patch_shape", 1024)),
+    }
 
 
 # ── Data loading ─────────────────────────────────────────────────────────────
@@ -89,16 +104,22 @@ def load_data(images_dir: Path, labels_dir: Path):
 # ── Main ─────────────────────────────────────────────────────────────────────
 def main():
     args = parse_args()
+    train_cfg = load_training_config(args.config)
 
     if args.save_root:
         save_dir = args.save_root / args.name
     else:
-        save_dir = Path(__file__).resolve().parent.parent / "microsam" / "models" / args.name
+        save_dir = Path(__file__).resolve().parent.parent / "pipeline" / "models" / args.name
     save_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"STARTING StarDist TRAINING: {args.name}")
+    print(f"Config:   {args.config}")
     print(f"Dataset:  {args.dataset}")
-    print(f"Epochs:   {args.epochs}")
+    print(f"Epochs:   {train_cfg['epochs']}")
+    print(f"Batch:    {train_cfg['batch_size']}")
+    print(f"Val frac: {train_cfg['val_fraction']}")
+    print(f"n_rays:   {train_cfg['n_rays']}")
+    print(f"grid:     {train_cfg['grid']}")
     print(f"Output:   {save_dir}")
     print("--------------------------------")
 
@@ -116,7 +137,7 @@ def main():
     X, Y = load_data(images_dir, labels_dir)
     print(f"  Loaded {len(X)} pairs.")
 
-    split_idx = max(1, int(len(X) * 0.9))
+    split_idx = max(1, int(len(X) * (1 - train_cfg["val_fraction"])))
     X_train, Y_train = X[:split_idx], Y[:split_idx]
     X_val,   Y_val   = X[split_idx:], Y[split_idx:]
     print(f"  Split: {len(X_train)} train / {len(X_val)} val")
@@ -134,8 +155,11 @@ def main():
             conf_dict = json.load(f)
 
         # Override training parameters; keep architecture unchanged
-        conf_dict["train_epochs"]           = args.epochs
-        conf_dict["train_steps_per_epoch"]  = max(10, len(X_train) // max(1, conf_dict.get("train_batch_size", 2)))
+        conf_dict["train_epochs"]           = train_cfg["epochs"]
+        conf_dict["train_batch_size"]       = train_cfg["batch_size"]
+        conf_dict["grid"]                   = train_cfg["grid"]
+        conf_dict["n_rays"]                 = train_cfg["n_rays"]
+        conf_dict["train_steps_per_epoch"]  = max(10, len(X_train) // max(1, train_cfg["batch_size"]))
         conf_dict["use_gpu"]                = True
 
         # Strip checkpoint keys — Config2D does not accept them
@@ -150,13 +174,13 @@ def main():
         print(f"WARNING: HZDR weights not found at {hzdr_weights}")
         print("  Training from scratch with default StarDist 2D config.")
         conf = Config2D(
-            n_rays=64,
-            grid=(4, 8),
+            n_rays=train_cfg["n_rays"],
+            grid=train_cfg["grid"],
             n_channel_in=1,
-            train_patch_size=(512, 512),
-            train_batch_size=2,
-            train_epochs=args.epochs,
-            train_steps_per_epoch=max(10, len(X_train) // 2),
+            train_patch_size=(train_cfg["patch_shape"], train_cfg["patch_shape"]),
+            train_batch_size=train_cfg["batch_size"],
+            train_epochs=train_cfg["epochs"],
+            train_steps_per_epoch=max(10, len(X_train) // max(1, train_cfg["batch_size"])),
             use_gpu=True,
         )
         model = StarDist2D(conf, name=args.name, basedir=str(save_dir.parent))

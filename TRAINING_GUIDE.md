@@ -59,6 +59,8 @@ Everything lives inside `bubbly_flows/`. Here is what matters for this workflow:
 
 ```
 Bubble-tracking/
+├── configs/
+│   └── microsam.json                 # Canonical MicroSAM hyperparameters
 ├── environment.yml                    # All Python packages needed
 ├── bubbly_flows/
 │   ├── scripts/
@@ -217,20 +219,26 @@ conda activate bubbly-train-env
 python bubbly_flows/scripts/manage_bubbly.py
 ```
 
-Select option 4 (Prepare Training Dataset). The menu looks like this:
+The top-level menu now focuses on the happy path:
 
 ```
 ========================================
    BUBBLY FLOWS - DATASET MANAGER
 ========================================
-1. Initialize / Update Patch Pool
-2. Create New Workspace
-3. Promote Workspace to Gold (+ Cleanup)
-4. Prepare Training Dataset (Export)
-5. Train Model (submit job)
-6. Run Inference (Stub)
+State: gold=...  dataset=...  last_run=...
+
+1. Promote Workspace to Gold
+2. Train Model
+3. Evaluate on Test Set
+4. Inference on Image
+a. Advanced
 q. Quit
 ```
+
+Dataset export moved into the `Advanced` submenu:
+
+1. Select `a` for `Advanced`
+2. Select `3` for `Export Dataset`
 
 Pick a gold version, then answer the prompts:
 
@@ -256,13 +264,18 @@ Both counts should match.
 
 ## 7. Step 2 — Train a Model
 
-From the same menu, select option 5. Pick the dataset you just exported. You will then be asked which training script to use:
+From the same menu, select option 2. If no exported training dataset exists, `manage_bubbly.py` blocks the action and tells you to run Step 1 first.
 
-- Option 1 is always the built-in MicroSAM ViT-B (`train.py`).
-- Any custom scripts named `train_<modelname>.py` in `bubbly_flows/scripts/` appear as additional options automatically.
-- A final option lets you type a path manually.
+The train flow now starts with a model-family menu:
 
-Four training scripts are currently available:
+- `1. MicroSAM`
+- `2. StarDist`
+- `3. YOLOv9`
+- `4. Other`
+
+For the first three options, `manage_bubbly.py` maps directly to the canonical built-in trainer and its canonical config file. For `Other`, it first lists discovered custom `train_*.py` scripts and then offers a manual path fallback.
+
+Built-in trainer mappings:
 
 | Script | Model | Starting weights | Notes |
 |---|---|---|---|
@@ -271,9 +284,34 @@ Four training scripts are currently available:
 | `train_yolov9.py` | **YOLOv9c-seg** | `~/scratch/bubble-models/yolo/yolov9c-seg.pt` (COCO) | Real-time capable; converts masks to YOLO polygon format on the fly |
 | `train_maskrcnn.py` | **Mask R-CNN** | COCO weights (auto-downloaded by torchvision) | Standard CNN baseline; pure PyTorch |
 
+After you choose the model family, the menu shows the config file it will use. It then lists only exported training datasets, meaning only directories ending in `_train`.
+
+### MicroSAM is config-driven
+
+The built-in MicroSAM trainer now reads its hyperparameters from `configs/microsam.json` instead of individual CLI flags. Current defaults live in that file, for example patch size, epoch count, batch size, validation fraction, and encoder freezing.
+
+If you want to change the MicroSAM training setup, edit:
+
+```bash
+configs/microsam.json
+```
+
+Then submit training through `manage_bubbly.py` as usual.
+
+### StarDist and YOLOv9 are now config-driven
+
+Their canonical config files already exist:
+
+```bash
+configs/stardist.json
+configs/yolov9.json
+```
+
+Both trainers now accept `--config` and read their own training hyperparameters from those files.
+
 Give the run a name (e.g. `microsam_v01_seed_run1`) and set a time limit in hours (4 is reasonable for a first run).
 
-The script generates a Slurm job file in `bubbly_flows/logs/` and asks if you want to submit it. The job allocates a GPU, activates the environment, sets `MICROSAM_CACHEDIR`, and runs your selected script for 100 epochs. All trained weights are saved to `~/scratch/bubble-models/trained/<exp_name>/`.
+The script generates a Slurm job file in `bubbly_flows/logs/` and asks if you want to submit it. The job allocates a GPU, activates the environment, sets `MICROSAM_CACHEDIR`, and runs the selected trainer with `--config <path>`. After successful submission, `manage_bubbly.py` copies that chosen config into `~/scratch/bubble-models/trained/<exp_name>/config.json` so each run has a frozen provenance record.
 
 To check whether the job is running:
 
@@ -291,16 +329,17 @@ scancel <job_id>
 
 To add support for a new model, place a file named `train_<modelname>.py` in `bubbly_flows/scripts/` (e.g. `train_unet.py`, `train_cellpose.py`). It will appear automatically as an option in the training menu — no other changes needed.
 
-The script must accept these command-line arguments:
+The current menu integration still assumes this command-line interface for non-MicroSAM custom scripts:
 
 | Argument | Type | Required | What it is |
 |---|---|---|---|
 | `--dataset PATH` | path | yes | Root of the training dataset (has `images/` and `labels/` subdirectories) |
 | `--name STR` | string | yes | Experiment name, used for checkpoint folder naming |
-| `--epochs INT` | int | no (default 50) | Number of training epochs |
+| `--config PATH` | path | no | Config JSON if your custom trainer is config-driven |
+| `--epochs INT` | int | no | Legacy fallback if your custom trainer still uses per-flag hyperparameters |
 | `--save_root PATH` | path | no | Root directory for saving checkpoints; `manage_bubbly.py` passes `~/scratch/bubble-models/trained/` automatically |
 
-The dataset format is fixed regardless of model: `images/<stem>.png` paired with `labels/<stem>.tif`, where each pixel value is an integer instance ID (0 = background, 1 = first bubble, 2 = second bubble, ...). This is exactly what option 4 of the menu produces.
+The dataset format is fixed regardless of model: `images/<stem>.png` paired with `labels/<stem>.tif`, where each pixel value is an integer instance ID (0 = background, 1 = first bubble, 2 = second bubble, ...). This is what `Advanced -> Export Dataset` produces.
 
 When `--save_root` is provided, save checkpoints to `<save_root>/<name>/`. When it is absent, fall back to `bubbly_flows/pipeline/models/<name>/`. The menu always passes `--save_root`, so trained models land in `~/scratch/bubble-models/trained/` on the cluster. Print training progress to stdout — Slurm captures it in the `.out` log file automatically.
 
@@ -315,7 +354,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset",   required=True, type=Path)
     parser.add_argument("--name",      required=True, type=str)
-    parser.add_argument("--epochs",    type=int, default=50)
+    parser.add_argument("--config",    type=Path, default=None)
+    parser.add_argument("--epochs",    type=int, default=50)  # optional legacy fallback
     parser.add_argument("--save_root", type=Path, default=None)
     args = parser.parse_args()
 
@@ -328,10 +368,11 @@ def main():
     save_dir.mkdir(parents=True, exist_ok=True)
 
     # --- your model training code here ---
-    print(f"Training {args.name} for {args.epochs} epochs.")
+    print(f"Training {args.name}.")
     print(f"Images:  {images_dir}")
     print(f"Labels:  {labels_dir}")
     print(f"Output:  {save_dir}")
+    print(f"Config:  {args.config}")
 
 if __name__ == "__main__":
     main()
@@ -376,6 +417,8 @@ Three common problems:
 ## 9. Step 4 — Run Inference
 
 All trained checkpoints land under `~/scratch/bubble-models/trained/<exp_name>/`.
+
+From `manage_bubbly.py`, inference is now top-level option 4. If no trained run exists yet, the menu blocks the action and tells you to finish Step 2 first.
 
 Run inference on a **compute node**, not the login node — the model needs a GPU. Start an interactive session first:
 
@@ -487,6 +530,8 @@ In all cases the output mask has the same format: pixel value = bubble instance 
 
 `bubbly_flows/scripts/evaluate.py` is a complete evaluation script. Point it at a directory of predicted masks and the ground-truth labels from your test dataset:
 
+From `manage_bubbly.py`, evaluation is now top-level option 3. If no trained run exists yet, the menu blocks the action and tells you to finish Step 2 first.
+
 ```bash
 python bubbly_flows/scripts/evaluate.py \
     --preds output/preds/ \
@@ -542,13 +587,13 @@ The metrics reported (precision, recall, F1, mean IoU) are the standard benchmar
 
 ```
 annotations/gold/  (labels_json/*.json)
-        ↓  manage_bubbly.py — option 4  (train/test split + export)
+        ↓  manage_bubbly.py — Advanced → Export Dataset
 pipeline/datasets/<name>_train/   pipeline/datasets/<name>_test/
-        ↓  manage_bubbly.py — option 5  →  Slurm job
+        ↓  manage_bubbly.py — option 2  →  Slurm job
 ~/scratch/bubble-models/trained/<name>/
-        ↓  inference.py / model-specific snippet
+        ↓  manage_bubbly.py — option 4  or inference.py / model-specific snippet
 predicted masks  (run on test images)
-        ↓  evaluate.py --preds ... --gts datasets/<name>_test/labels/
+        ↓  manage_bubbly.py — option 3  or evaluate.py --preds ... --gts datasets/<name>_test/labels/
 precision, recall, F1, mean IoU
 ```
 

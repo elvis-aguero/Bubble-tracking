@@ -145,7 +145,7 @@ This stages MicroSAM vit_b_lm, the HZDR StarDist bubble weights, and YOLOv9c-seg
 
 **Step 1: Export Dataset**
 **Convert abstract JSON polygons into concrete binary masks for training.**
-1.  Select **Option 4 (Prepare Training Dataset (Export))**.
+1.  Select **Advanced**, then **Option 3 (Export Dataset)**.
 2.  Choose a Gold Version (e.g., `gold_seed_v00`).
 3.  Enable train/test split (recommended), accept defaults (0.2 test fraction, seed 42).
 4.  *Action*: The script generates two directories in `pipeline/datasets/`:
@@ -154,20 +154,22 @@ This stages MicroSAM vit_b_lm, the HZDR StarDist bubble weights, and YOLOv9c-seg
 
 **Step 2: Train Model**
 **Submit a job to the Oscar cluster to fine-tune a model.**
-1.  Select **Option 5 (Train Model)**.
+1.  Select **Option 2 (Train Model)**.
 2.  **Dependency Check**: The script verifies the base model weights exist in scratch.
 3.  **Submission**:
+    *   Choose a model family:
+        *   **1** — MicroSAM
+        *   **2** — StarDist
+        *   **3** — YOLOv9
+        *   **4** — Other
+    *   For built-in models, the script shows the canonical config file that will be used.
     *   Select the exported `_train` dataset.
-    *   Choose a training script:
-        *   **1** — MicroSAM ViT-B (`train.py`) — SAM-based, good general baseline
-        *   **2** — StarDist (`train_stardist.py`) — star-convex shapes, fast
-        *   **3** — YOLOv9 (`train_yolov9.py`) — detection + segmentation
-        *   **4** — Mask R-CNN (`train_maskrcnn.py`) — classic two-stage detector
     *   Set Experiment Name (e.g., `microsam_v01_run1`).
     *   Set Time Limit (e.g., 4 hours).
 4.  *Action*: A Slurm script is generated in `logs/` and submitted via `sbatch`.
     *   Logs appear as `logs/ExperimentName_JobID.out`.
     *   Checkpoints save to `~/scratch/bubble-models/trained/<experiment>/`.
+    *   The selected config is copied to `~/scratch/bubble-models/trained/<experiment>/config.json` for provenance.
 
 ---
 
