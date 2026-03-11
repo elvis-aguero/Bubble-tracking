@@ -229,8 +229,7 @@ State: gold=...  dataset=...  last_run=...
 
 1. Promote Workspace to Gold
 2. Train Model
-3. Evaluate on Test Set
-4. Inference on Image
+3. Inference on Image
 a. Advanced
 q. Quit
 ```
@@ -311,7 +310,11 @@ Both trainers now accept `--config` and read their own training hyperparameters 
 
 Give the run a name (e.g. `microsam_v01_seed_run1`) and set a time limit in hours (4 is reasonable for a first run).
 
-The script generates a Slurm job file in `bubbly_flows/logs/` and asks if you want to submit it. The job allocates a GPU, activates the environment, sets `MICROSAM_CACHEDIR`, and runs the selected trainer with `--config <path>`. After successful submission, `manage_bubbly.py` copies that chosen config into `~/scratch/bubble-models/trained/<exp_name>/config.json` so each run has a frozen provenance record.
+The script generates a Slurm job file in `bubbly_flows/logs/` and asks if you want to submit it. The job allocates a GPU, activates the environment, sets `MICROSAM_CACHEDIR`, runs the selected trainer with `--config <path>`, then automatically evaluates the trained run on the paired `*_test` split for the chosen `*_train` dataset. After successful submission, `manage_bubbly.py` copies that chosen config into `~/scratch/bubble-models/trained/<exp_name>/config.json` so each run has a frozen provenance record.
+
+Training now requires a matching test split:
+- choosing `seed_v04_train` requires `seed_v04_test`
+- if the paired test dataset is missing, the menu blocks submission
 
 To check whether the job is running:
 
@@ -418,7 +421,7 @@ Three common problems:
 
 All trained checkpoints land under `~/scratch/bubble-models/trained/<exp_name>/`.
 
-From `manage_bubbly.py`, inference is now top-level option 4. If no trained run exists yet, the menu blocks the action and tells you to finish Step 2 first.
+From `manage_bubbly.py`, inference is now top-level option 3. If no trained run exists yet, the menu blocks the action and tells you to finish Step 2 first.
 
 Run inference on a **compute node**, not the login node — the model needs a GPU. Start an interactive session first:
 
@@ -526,18 +529,26 @@ In all cases the output mask has the same format: pixel value = bubble instance 
 
 ---
 
-## 10. Step 5 — Evaluate
+## 10. Step 5 — Automatic Evaluation
+
+You no longer submit evaluation as a separate menu action. Evaluation now runs automatically inside the same Slurm job as training.
+
+For a run named `<exp_name>`, the job writes:
+- predicted test masks: `~/scratch/bubble-models/trained/<exp_name>/eval/`
+- metrics CSV: `~/scratch/bubble-models/trained/<exp_name>/eval/results.csv`
+
+The paired dataset rule is automatic:
+- training on `v01_seed_train`
+- evaluates on `v01_seed_test`
 
 `bubbly_flows/scripts/evaluate.py` is a complete evaluation script. Point it at a directory of predicted masks and the ground-truth labels from your test dataset:
 
-From `manage_bubbly.py`, evaluation is now top-level option 3. If no trained run exists yet, the menu blocks the action and tells you to finish Step 2 first.
-
 ```bash
 python bubbly_flows/scripts/evaluate.py \
-    --preds output/preds/ \
+    --preds ~/scratch/bubble-models/trained/<exp_name>/eval/ \
     --gts   bubbly_flows/pipeline/datasets/v01_seed_test/labels/ \
     --iou_threshold 0.5 \
-    --output results.csv       # optional
+    --output ~/scratch/bubble-models/trained/<exp_name>/eval/results.csv
 ```
 
 It prints a per-image table followed by an aggregate summary:
@@ -589,11 +600,11 @@ The metrics reported (precision, recall, F1, mean IoU) are the standard benchmar
 annotations/gold/  (labels_json/*.json)
         ↓  manage_bubbly.py — Advanced → Export Dataset
 pipeline/datasets/<name>_train/   pipeline/datasets/<name>_test/
-        ↓  manage_bubbly.py — option 2  →  Slurm job
+        ↓  manage_bubbly.py — option 2  →  Slurm train+eval job
 ~/scratch/bubble-models/trained/<name>/
-        ↓  manage_bubbly.py — option 4  or inference.py / model-specific snippet
-predicted masks  (run on test images)
-        ↓  manage_bubbly.py — option 3  or evaluate.py --preds ... --gts datasets/<name>_test/labels/
+        ↓  automatic evaluation on paired <name>_test split
+~/scratch/bubble-models/trained/<name>/eval/results.csv
+        ↓  manage_bubbly.py — option 3  or inference.py / model-specific snippet
 precision, recall, F1, mean IoU
 ```
 

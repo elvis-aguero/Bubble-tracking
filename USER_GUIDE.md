@@ -170,19 +170,26 @@ This stages MicroSAM vit_b_lm, the HZDR StarDist bubble weights, and YOLOv9c-seg
     *   Logs appear as `logs/ExperimentName_JobID.out`.
     *   Checkpoints save to `~/scratch/bubble-models/trained/<experiment>/`.
     *   The selected config is copied to `~/scratch/bubble-models/trained/<experiment>/config.json` for provenance.
+    *   The same Slurm job automatically evaluates the trained run on the paired `<name>_test` split and writes metrics to `~/scratch/bubble-models/trained/<experiment>/eval/results.csv`.
 
 ---
 
 ### Phase 4: Evaluate
 
-Once you have predicted masks (from `inference.py` or a model's own prediction script), compare them against the held-out test set:
+Evaluation is now part of training for the standard workflow. After the training job finishes, inspect:
+
+```bash
+~/scratch/bubble-models/trained/<experiment>/eval/results.csv
+```
+
+If you need to rerun evaluation manually, compare predicted masks against the held-out test set with:
 
 ```bash
 python bubbly_flows/scripts/evaluate.py \
-    --preds  <path-to-predicted-masks>/ \
+    --preds  ~/scratch/bubble-models/trained/<experiment>/eval/ \
     --gts    bubbly_flows/pipeline/datasets/<name>_test/labels/ \
     --iou_threshold 0.5 \
-    --output results.csv
+    --output ~/scratch/bubble-models/trained/<experiment>/eval/results.csv
 ```
 
 The script uses Hungarian matching — each predicted bubble is paired with at most one ground-truth instance. It reports per-image precision, recall, F1, and mean IoU, plus macro and micro aggregates. See `TRAINING_GUIDE.md` for interpretation.

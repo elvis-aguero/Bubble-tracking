@@ -41,3 +41,29 @@
 - 2026-03-10 14:36 EST: Added one-line tooltips to the top-level main menu and Advanced submenu in manage_bubbly.py. Verified with menu render assertions in the manage_bubbly unit test suite.
 - 2026-03-10 14:45 EST: Cleaned up Evaluate-on-Test-Set selection flow in manage_bubbly.py by adding dedicated helpers for *_test dataset discovery and trained-run model-type detection. evaluate_model() now uses those helpers with clearer, centralized block behavior. Verified with expanded manage_bubbly unit tests.
 - 2026-03-10 14:52 EST: Cleaned up Inference-on-Image selection flow in manage_bubbly.py to use scratch-trained runs and centralized model-type detection, matching the evaluate flow structure. Verified with expanded manage_bubbly unit tests.
+
+## 2026-03-10 15:56 Workflow Validation
+- Interactive `manage_bubbly.py` validation on node2333 is blocked by an environment/runtime issue before menu startup: importing `cv2` inside `bubbly-train-env` aborts with `OMP: Error #179: Function Can't open SHM2 failed`.
+- Confirmed this is not specific to `manage_bubbly.py`; `python3 -c "import cv2"` in the env reproduces the same abort on this node.
+- Switched workflow validation to Slurm, which is the correct heavy-work boundary on Oscar.
+- Submitted training validation job via Slurm script `bubbly_flows/logs/validate_train_microsam_20260310.sh`.
+  - Job ID: `670345`
+  - Name: `wfval_msam`
+  - Status at check: `RUNNING` on `gpu2507`
+  - Command: `train.py --dataset seed_v04_train --name wf_validate_microsam_20260310 --config configs/microsam.json --save_root ~/scratch/bubble-models/trained`
+- Submitted evaluation validation job via Slurm script `bubbly_flows/logs/validate_eval_stardist_20260310.sh`.
+  - Job ID: `670347`
+  - Name: `wfval_eval_sd`
+  - Produced predictions and metrics successfully.
+  - Output CSV: `bubbly_flows/tests/output/eval_preds/stardist_seed_v04_run1_slurm/results.csv`
+  - Summary metrics from log:
+    - Total: TP=13 FP=7 FN=1284
+    - Macro: precision=0.571 recall=0.007 F1=0.014 mean_IoU=0.538
+    - Micro: precision=0.650 recall=0.010 F1=0.020
+
+## 2026-03-11 10:25 Train+Auto-Eval Feature
+- Approved workflow change: remove standalone Evaluate menu entry and make training submit a combined train+evaluate Slurm job.
+- Added paired dataset enforcement: selecting `<stem>_train` now requires `<stem>_test`.
+- Updated generated Slurm training scripts to run post-train inference and `evaluate.py`, writing outputs to `~/scratch/bubble-models/trained/<run>/eval/`.
+- Updated docs (`README.md`, `TRAINING_GUIDE.md`, `USER_GUIDE.md`) and plan checklist to reflect automatic evaluation and new menu numbering.
+- Verified with `python3 -m unittest bubbly_flows.tests.unit.test_manage_bubbly_menu -v`.

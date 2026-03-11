@@ -31,8 +31,8 @@ Data flows through the project in this order:
 4. Labeling workspace batches: `bubbly_flows/workspaces/<workspace>/`
 5. Versioned gold labels: `bubbly_flows/annotations/gold/<gold_version>/`
 6. Training dataset export: `bubbly_flows/pipeline/datasets/<dataset>/`
-7. Trained checkpoints: `~/scratch/bubble-models/trained/<experiment>/`
-8. Evaluation: `bubbly_flows/scripts/evaluate.py` (compare predicted masks to gold test labels)
+7. Trained checkpoints + run-local evaluation artifacts: `~/scratch/bubble-models/trained/<experiment>/`
+8. Evaluation metrics: `~/scratch/bubble-models/trained/<experiment>/eval/results.csv`
 
 Operational logs are tracked in:
 - `bubbly_flows/diary.log` (action audit log)
@@ -107,7 +107,7 @@ Primary pipeline entry points.
 
 - `manage_bubbly.py`
   - Main interactive controller.
-  - Top-level happy path is: promote gold, train, evaluate, infer.
+  - Top-level happy path is: promote gold, train (+ automatic evaluation), infer.
   - Advanced submenu holds maintenance actions: pool update, workspace creation, dataset export.
   - Prints a live status line by scanning `annotations/gold/`, `pipeline/datasets/`, and `~/scratch/bubble-models/trained/`.
 - `utils.py`
@@ -193,8 +193,8 @@ Usually ephemeral/generated during runs:
 
 ## 7) Where To Start as a New Contributor
 
-1. Read `USER_GUIDE.md` for the operator workflow (annotation → training → evaluation).
-2. Read `TRAINING_GUIDE.md` for a detailed tutorial covering environment setup, training, and evaluation on the Oscar cluster.
+1. Read `USER_GUIDE.md` for the operator workflow (annotation → training + automatic evaluation).
+2. Read `TRAINING_GUIDE.md` for a detailed tutorial covering environment setup, training, automatic evaluation, and inference on the Oscar cluster.
 3. Read `bubbly_flows/scripts/manage_bubbly.py` to understand the canonical workflow.
 4. Review this data lineage: `data → workspaces → annotations/gold → pipeline/datasets → ~/scratch/bubble-models/trained`.
 5. Only then dive into `bubbly_flows/tests/` for experimental methods (FRST/SAM3 variants).

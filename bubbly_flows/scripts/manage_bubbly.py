@@ -162,6 +162,12 @@ def list_test_datasets(datasets_dir: Optional[Path] = None) -> List[str]:
     )
 
 
+def paired_test_dataset_name(train_dataset: str) -> Optional[str]:
+    if not train_dataset.endswith("_train"):
+        return None
+    return f"{train_dataset[:-6]}_test"
+
+
 def detect_trained_model_type(exp_dir: Path) -> Optional[Tuple[str, Path]]:
     exp_name = exp_dir.name
     microsam_ckpt = exp_dir / "checkpoints" / exp_name / "best.pt"
@@ -239,6 +245,85 @@ def _config_training_epochs(config_path: Optional[Path], default: int = 100) -> 
     with open(config_path) as f:
         cfg = json.load(f)
     return int(cfg.get("training", {}).get("epochs", default))
+
+
+def _post_train_eval_block(
+    model_label: str,
+    exp_name: str,
+    test_img_dir: Path,
+    test_lbl_dir: Path,
+) -> str:
+    common = f"""
+RUN_DIR={SCRATCH_TRAINED_DIR / exp_name}
+EVAL_DIR=$RUN_DIR/eval
+mkdir -p "$EVAL_DIR"
+
+echo "Running automatic evaluation on {test_img_dir.name} ..."
+"""
+
+    if model_label == "microsam":
+        infer = f"""
+for img in {test_img_dir}/*.png {test_img_dir}/*.tif; do
+    [ -e "$img" ] || continue
+    out="$EVAL_DIR/$(basename "$img")"
+    python3 {SCRIPTS_DIR}/inference.py \\
+      --model_path "$RUN_DIR/checkpoints/{exp_name}/best.pt" \\
+      --image "$img" \\
+      --output "$out" \\
+      --model_type vit_b || exit 1
+done
+"""
+    elif model_label == "stardist":
+        infer = f"""
+python3 - <<'PY'
+import cv2, numpy as np
+from pathlib import Path
+from stardist.models import StarDist2D
+from csbdeep.utils import normalize
+model = StarDist2D(None, name="{exp_name}", basedir="{SCRATCH_TRAINED_DIR}")
+test_img_dir = Path(r"{test_img_dir}")
+pred_dir = Path(r"{SCRATCH_TRAINED_DIR / exp_name}") / "eval"
+pred_dir.mkdir(parents=True, exist_ok=True)
+for p in sorted(list(test_img_dir.glob("*.png")) + list(test_img_dir.glob("*.tif"))):
+    raw = cv2.imread(str(p), cv2.IMREAD_UNCHANGED)
+    gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY) if raw.ndim == 3 else raw
+    labels, _ = model.predict_instances(normalize(gray.astype(float), 1, 99.8))
+    cv2.imwrite(str(pred_dir / p.name), labels.astype("uint16"))
+    print(p.name, int(labels.max()), "instances")
+PY
+"""
+    elif model_label == "yolov9":
+        infer = f"""
+python3 - <<'PY'
+import cv2, numpy as np
+from pathlib import Path
+from ultralytics import YOLO
+model = YOLO(r"{SCRATCH_TRAINED_DIR / exp_name / 'weights' / 'best.pt'}")
+test_img_dir = Path(r"{test_img_dir}")
+pred_dir = Path(r"{SCRATCH_TRAINED_DIR / exp_name}") / "eval"
+pred_dir.mkdir(parents=True, exist_ok=True)
+for p in sorted(list(test_img_dir.glob("*.png")) + list(test_img_dir.glob("*.tif"))):
+    raw = cv2.imread(str(p), cv2.IMREAD_UNCHANGED)
+    h, w = raw.shape[:2]
+    lmap = np.zeros((h, w), dtype="uint16")
+    res = model.predict(str(p), imgsz=640, conf=0.25, device=0, verbose=False)
+    if res[0].masks is not None:
+        for i, m in enumerate(res[0].masks.data.cpu().numpy()):
+            lmap[cv2.resize(m, (w, h)) > 0.5] = i + 1
+    cv2.imwrite(str(pred_dir / p.name), lmap)
+    print(p.name, int(lmap.max()), "instances")
+PY
+"""
+    else:
+        return 'echo "Automatic evaluation skipped: unsupported custom trainer."\n'
+
+    evaluate = f"""
+python3 {SCRIPTS_DIR}/evaluate.py \\
+  --preds "$EVAL_DIR" \\
+  --gts {test_lbl_dir} \\
+  --output "$RUN_DIR/eval/results.csv"
+"""
+    return common + infer + evaluate
 
 import os
 import sys
@@ -1202,6 +1287,15 @@ def submit_training_job():
         return
     ds_name = datasets[idx]
 
+    paired_test = paired_test_dataset_name(ds_name)
+    if paired_test is None or not (ds_root / paired_test).is_dir():
+        print(f"Matching test dataset not found for {ds_name}.")
+        print(f"Expected paired split: {paired_test or '<dataset>_test'}")
+        input("Press Enter...")
+        return
+    test_img_dir = ds_root / paired_test / "images"
+    test_lbl_dir = ds_root / paired_test / "labels"
+
     # Pre-flight: verify base model weights exist in scratch
     req = MODEL_WEIGHTS_MAP.get(train_script.name)
     if req is not None:
@@ -1233,6 +1327,7 @@ def submit_training_job():
         train_args.append(f"    --epochs {_config_training_epochs(config_path)}")
     train_args.append(f"    --save_root {SCRATCH_TRAINED_DIR}")
     train_args_block = " \\\n".join(train_args)
+    eval_block = _post_train_eval_block(script_label, exp_name, test_img_dir, test_lbl_dir)
 
     # Generate Slurm Script
     slurm_content = f"""#!/bin/bash
@@ -1264,6 +1359,13 @@ echo "Dataset: {ds_name}"
 export MICROSAM_CACHEDIR={SCRATCH_MODELS_DIR / "pipeline"}
 python3 {train_script} \\
 {train_args_block}
+
+train_status=$?
+if [ "$train_status" -ne 0 ]; then
+  echo "Training failed; skipping automatic evaluation."
+  exit "$train_status"
+fi
+{eval_block}
 """
     
     # Write Script
@@ -1372,9 +1474,8 @@ def main_menu():
         banner()
         print(f"  {format_pipeline_state_line()}\n")
         print("1. Promote Workspace to Gold     - finalise annotations, create train/test split")
-        print("2. Train Model                   - submit Slurm job using configs/<model>.json")
-        print("3. Evaluate on Test Set          - run inference + metrics on held-out split")
-        print("4. Inference on Image            - run a trained model on any single image")
+        print("2. Train Model                   - submit Slurm train+eval job using configs/<model>.json")
+        print("3. Inference on Image            - run a trained model on any single image")
         print("----------------------------------------")
         print("a. Advanced                      - pool management, workspace creation, dataset export")
         print("q. Quit")
@@ -1391,12 +1492,6 @@ def main_menu():
                 continue
             submit_training_job()
         elif choice == '3':
-            if not has_trained_run():
-                print("No trained checkpoint found. Run Option 2 first.")
-                input("Press Enter...")
-                continue
-            evaluate_model()
-        elif choice == '4':
             if not has_trained_run():
                 print("No trained checkpoint found. Run Option 2 first.")
                 input("Press Enter...")

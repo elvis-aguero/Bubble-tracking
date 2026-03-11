@@ -47,18 +47,17 @@ class ManageBubblyMenuTests(unittest.TestCase):
     def test_main_menu_routes_happy_path_choices(self):
         module = load_manage_bubbly()
         calls = []
-        choices = iter(["1", "2", "3", "4", "q"])
+        choices = iter(["1", "2", "3", "q"])
 
         with mock.patch.object(module, "clear_screen", lambda: None), \
              mock.patch.object(module, "banner", lambda: None), \
              mock.patch.object(module, "promote_to_gold", lambda: calls.append("promote")), \
              mock.patch.object(module, "submit_training_job", lambda: calls.append("train")), \
-             mock.patch.object(module, "evaluate_model", lambda: calls.append("evaluate")), \
              mock.patch.object(module, "run_inference_menu", lambda: calls.append("infer"), create=True), \
              mock.patch.object(module, "input_str", lambda prompt, default=None: next(choices)):
             module.main_menu()
 
-        self.assertEqual(calls, ["promote", "train", "evaluate", "infer"])
+        self.assertEqual(calls, ["promote", "train", "infer"])
 
     def test_advanced_menu_routes_legacy_operations(self):
         module = load_manage_bubbly()
@@ -132,24 +131,23 @@ class ManageBubblyMenuTests(unittest.TestCase):
 
         self.assertIn("No training dataset found. Run Option 1 first.", output.getvalue())
 
-    def test_evaluate_and_inference_are_blocked_without_trained_run(self):
+    def test_inference_is_blocked_without_trained_run(self):
         module = load_manage_bubbly()
         output = io.StringIO()
-        choices = iter(["3", "4", "q"])
+        choices = iter(["3", "q"])
 
         with tempfile.TemporaryDirectory() as tmpdir, \
              mock.patch.object(module, "SCRATCH_TRAINED_DIR", Path(tmpdir) / "trained"), \
              mock.patch.object(module, "clear_screen", lambda: None), \
              mock.patch.object(module, "banner", lambda: None), \
              mock.patch.object(module, "format_pipeline_state_line", lambda: "State: gold=seed_v04  dataset=seed_v04_train/test  last_run=none"), \
-             mock.patch.object(module, "evaluate_model", side_effect=AssertionError("evaluate handler should not run")), \
              mock.patch.object(module, "run_inference_menu", side_effect=AssertionError("inference handler should not run")), \
              mock.patch.object(module, "input", lambda prompt='': ""), \
              mock.patch.object(module, "input_str", lambda prompt, default=None: next(choices)), \
              mock.patch("sys.stdout", output):
             module.main_menu()
 
-        self.assertEqual(output.getvalue().count("No trained checkpoint found. Run Option 2 first."), 2)
+        self.assertEqual(output.getvalue().count("No trained checkpoint found. Run Option 2 first."), 1)
 
     def test_builtin_model_choice_maps_to_canonical_script_and_config(self):
         module = load_manage_bubbly()
@@ -199,10 +197,39 @@ class ManageBubblyMenuTests(unittest.TestCase):
 
         rendered = output.getvalue()
         self.assertIn("1. Promote Workspace to Gold     - finalise annotations, create train/test split", rendered)
-        self.assertIn("2. Train Model                   - submit Slurm job using configs/<model>.json", rendered)
-        self.assertIn("3. Evaluate on Test Set          - run inference + metrics on held-out split", rendered)
-        self.assertIn("4. Inference on Image            - run a trained model on any single image", rendered)
+        self.assertIn("2. Train Model                   - submit Slurm train+eval job using configs/<model>.json", rendered)
+        self.assertIn("3. Inference on Image            - run a trained model on any single image", rendered)
+        self.assertNotIn("Evaluate on Test Set", rendered)
         self.assertIn("a. Advanced                      - pool management, workspace creation, dataset export", rendered)
+
+    def test_submit_training_job_blocks_when_matching_test_split_missing(self):
+        module = load_manage_bubbly()
+        output = io.StringIO()
+        with tempfile.TemporaryDirectory() as tmpdir, \
+             tempfile.TemporaryDirectory() as home_tmp, \
+             mock.patch.object(module, "ROOT_DIR", Path(tmpdir) / "bubbly_flows"), \
+             mock.patch.object(module, "PIPELINE_DIR", Path(tmpdir) / "bubbly_flows" / "pipeline"), \
+             mock.patch.object(module, "SCRIPTS_DIR", Path(tmpdir) / "bubbly_flows" / "scripts"), \
+             mock.patch.object(module, "CONFIGS_DIR", Path(tmpdir) / "configs"), \
+             mock.patch.object(module, "SCRATCH_TRAINED_DIR", Path(home_tmp) / "trained"), \
+             mock.patch.object(module, "SCRATCH_MODELS_DIR", Path(home_tmp) / "models"), \
+             mock.patch.object(module, "MODEL_WEIGHTS_MAP", {"train.py": Path(home_tmp) / "vit_b.pt"}), \
+             mock.patch.object(module, "input", lambda prompt='': ""), \
+             mock.patch.object(module, "input_str", side_effect=["1"]), \
+             mock.patch.object(module, "input_int", side_effect=[1]), \
+             mock.patch("sys.stdout", output):
+            root = module.ROOT_DIR
+            (root / "logs").mkdir(parents=True)
+            (module.PIPELINE_DIR / "datasets" / "seed_v04_train" / "images").mkdir(parents=True)
+            (module.SCRIPTS_DIR).mkdir(parents=True)
+            (module.CONFIGS_DIR).mkdir(parents=True)
+            (module.CONFIGS_DIR / "microsam.json").write_text('{"training": {"epochs": 100, "patch_shape": 1024, "freeze": ["image_encoder"]}}', encoding='ascii')
+            (module.SCRIPTS_DIR / "train.py").write_text('', encoding='ascii')
+            (Path(home_tmp) / "vit_b.pt").write_text('', encoding='ascii')
+
+            module.submit_training_job()
+
+        self.assertIn("Matching test dataset not found", output.getvalue())
 
     def test_advanced_menu_shows_one_line_tooltips(self):
         module = load_manage_bubbly()
@@ -289,6 +316,8 @@ class ManageBubblyMenuTests(unittest.TestCase):
             root = module.ROOT_DIR
             (root / "logs").mkdir(parents=True)
             (module.PIPELINE_DIR / "datasets" / "seed_v04_train" / "images").mkdir(parents=True)
+            (module.PIPELINE_DIR / "datasets" / "seed_v04_test" / "images").mkdir(parents=True)
+            (module.PIPELINE_DIR / "datasets" / "seed_v04_test" / "labels").mkdir(parents=True)
             (module.SCRIPTS_DIR).mkdir(parents=True)
             (module.CONFIGS_DIR).mkdir(parents=True)
             (module.CONFIGS_DIR / "stardist.json").write_text('{"training": {"epochs": 123, "batch_size": 2, "val_fraction": 0.15, "n_rays": 64, "grid": [2, 2]}}', encoding='ascii')
@@ -310,6 +339,8 @@ class ManageBubblyMenuTests(unittest.TestCase):
             root = module.ROOT_DIR
             (root / "logs").mkdir(parents=True)
             (module.PIPELINE_DIR / "datasets" / "seed_v04_train" / "images").mkdir(parents=True)
+            (module.PIPELINE_DIR / "datasets" / "seed_v04_test" / "images").mkdir(parents=True)
+            (module.PIPELINE_DIR / "datasets" / "seed_v04_test" / "labels").mkdir(parents=True)
             (module.SCRIPTS_DIR).mkdir(parents=True)
             (module.CONFIGS_DIR).mkdir(parents=True)
             config_body = '{"training": {"epochs": 100, "patch_shape": 1024, "freeze": ["image_encoder"]}}'
@@ -322,6 +353,104 @@ class ManageBubblyMenuTests(unittest.TestCase):
             copied = module.SCRATCH_TRAINED_DIR / "demo_run" / "config.json"
             self.assertTrue(copied.exists())
             self.assertEqual(copied.read_text(encoding='ascii'), config_body)
+
+    def test_submit_training_job_generates_eval_commands_for_microsam(self):
+        module = load_manage_bubbly()
+        with tempfile.TemporaryDirectory() as tmpdir, \
+             tempfile.TemporaryDirectory() as home_tmp, \
+             mock.patch.object(module, "ROOT_DIR", Path(tmpdir) / "bubbly_flows"), \
+             mock.patch.object(module, "PIPELINE_DIR", Path(tmpdir) / "bubbly_flows" / "pipeline"), \
+             mock.patch.object(module, "SCRIPTS_DIR", Path(tmpdir) / "bubbly_flows" / "scripts"), \
+             mock.patch.object(module, "CONFIGS_DIR", Path(tmpdir) / "configs"), \
+             mock.patch.object(module, "SCRATCH_TRAINED_DIR", Path(home_tmp) / "trained"), \
+             mock.patch.object(module, "SCRATCH_MODELS_DIR", Path(home_tmp) / "models"), \
+             mock.patch.object(module, "MODEL_WEIGHTS_MAP", {"train.py": Path(home_tmp) / "vit_b.pt"}), \
+             mock.patch.object(module, "input", lambda prompt='': ""), \
+             mock.patch.object(module, "input_str", side_effect=["1", "demo_run", "n"]), \
+             mock.patch.object(module, "input_int", side_effect=[1, 4]):
+            root = module.ROOT_DIR
+            (root / "logs").mkdir(parents=True)
+            (module.PIPELINE_DIR / "datasets" / "seed_v04_train" / "images").mkdir(parents=True)
+            (module.PIPELINE_DIR / "datasets" / "seed_v04_test" / "images").mkdir(parents=True)
+            (module.PIPELINE_DIR / "datasets" / "seed_v04_test" / "labels").mkdir(parents=True)
+            (module.SCRIPTS_DIR).mkdir(parents=True)
+            (module.CONFIGS_DIR).mkdir(parents=True)
+            (module.CONFIGS_DIR / "microsam.json").write_text('{"training": {"epochs": 100, "patch_shape": 1024, "freeze": ["image_encoder"]}}', encoding='ascii')
+            (module.SCRIPTS_DIR / "train.py").write_text('', encoding='ascii')
+            (Path(home_tmp) / "vit_b.pt").write_text('', encoding='ascii')
+
+            module.submit_training_job()
+
+            script_path = root / "logs" / "submit_demo_run.sh"
+            content = script_path.read_text(encoding='ascii')
+
+        self.assertIn("evaluate.py", content)
+        self.assertIn("results.csv", content)
+        self.assertIn("seed_v04_test", content)
+
+    def test_submit_training_job_writes_eval_outputs_into_run_dir(self):
+        module = load_manage_bubbly()
+        with tempfile.TemporaryDirectory() as tmpdir, \
+             tempfile.TemporaryDirectory() as home_tmp, \
+             mock.patch.object(module, "ROOT_DIR", Path(tmpdir) / "bubbly_flows"), \
+             mock.patch.object(module, "PIPELINE_DIR", Path(tmpdir) / "bubbly_flows" / "pipeline"), \
+             mock.patch.object(module, "SCRIPTS_DIR", Path(tmpdir) / "bubbly_flows" / "scripts"), \
+             mock.patch.object(module, "CONFIGS_DIR", Path(tmpdir) / "configs"), \
+             mock.patch.object(module, "SCRATCH_TRAINED_DIR", Path(home_tmp) / "trained"), \
+             mock.patch.object(module, "SCRATCH_MODELS_DIR", Path(home_tmp) / "models"), \
+             mock.patch.object(module, "MODEL_WEIGHTS_MAP", {"train.py": Path(home_tmp) / "vit_b.pt"}), \
+             mock.patch.object(module, "input", lambda prompt='': ""), \
+             mock.patch.object(module, "input_str", side_effect=["1", "demo_run", "n"]), \
+             mock.patch.object(module, "input_int", side_effect=[1, 4]):
+            root = module.ROOT_DIR
+            (root / "logs").mkdir(parents=True)
+            (module.PIPELINE_DIR / "datasets" / "seed_v04_train" / "images").mkdir(parents=True)
+            (module.PIPELINE_DIR / "datasets" / "seed_v04_test" / "images").mkdir(parents=True)
+            (module.PIPELINE_DIR / "datasets" / "seed_v04_test" / "labels").mkdir(parents=True)
+            (module.SCRIPTS_DIR).mkdir(parents=True)
+            (module.CONFIGS_DIR).mkdir(parents=True)
+            (module.CONFIGS_DIR / "microsam.json").write_text('{"training": {"epochs": 100, "patch_shape": 1024, "freeze": ["image_encoder"]}}', encoding='ascii')
+            (module.SCRIPTS_DIR / "train.py").write_text('', encoding='ascii')
+            (Path(home_tmp) / "vit_b.pt").write_text('', encoding='ascii')
+
+            module.submit_training_job()
+
+            script_path = root / "logs" / "submit_demo_run.sh"
+            content = script_path.read_text(encoding='ascii')
+
+        self.assertIn("$RUN_DIR/eval", content)
+        self.assertIn("$RUN_DIR/eval/results.csv", content)
+
+    def test_submit_training_job_skips_auto_eval_for_custom_trainers(self):
+        module = load_manage_bubbly()
+        with tempfile.TemporaryDirectory() as tmpdir, \
+             tempfile.TemporaryDirectory() as home_tmp, \
+             mock.patch.object(module, "ROOT_DIR", Path(tmpdir) / "bubbly_flows"), \
+             mock.patch.object(module, "PIPELINE_DIR", Path(tmpdir) / "bubbly_flows" / "pipeline"), \
+             mock.patch.object(module, "SCRIPTS_DIR", Path(tmpdir) / "bubbly_flows" / "scripts"), \
+             mock.patch.object(module, "CONFIGS_DIR", Path(tmpdir) / "configs"), \
+             mock.patch.object(module, "SCRATCH_TRAINED_DIR", Path(home_tmp) / "trained"), \
+             mock.patch.object(module, "SCRATCH_MODELS_DIR", Path(home_tmp) / "models"), \
+             mock.patch.object(module, "MODEL_WEIGHTS_MAP", {}), \
+             mock.patch.object(module, "input", lambda prompt='': ""), \
+             mock.patch.object(module, "input_str", side_effect=["4", "demo_run", "n"]), \
+             mock.patch.object(module, "input_int", side_effect=[1, 1, 4]):
+            root = module.ROOT_DIR
+            (root / "logs").mkdir(parents=True)
+            (module.PIPELINE_DIR / "datasets" / "seed_v04_train" / "images").mkdir(parents=True)
+            (module.PIPELINE_DIR / "datasets" / "seed_v04_test" / "images").mkdir(parents=True)
+            (module.PIPELINE_DIR / "datasets" / "seed_v04_test" / "labels").mkdir(parents=True)
+            (module.SCRIPTS_DIR).mkdir(parents=True)
+            (module.CONFIGS_DIR).mkdir(parents=True)
+            (module.SCRIPTS_DIR / "train_custom.py").write_text('', encoding='ascii')
+
+            module.submit_training_job()
+
+            script_path = root / "logs" / "submit_demo_run.sh"
+            content = script_path.read_text(encoding='ascii')
+
+        self.assertIn("Automatic evaluation skipped: unsupported custom trainer.", content)
+        self.assertNotIn("evaluate.py", content)
 
 
 if __name__ == "__main__":

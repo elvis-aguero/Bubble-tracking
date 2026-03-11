@@ -33,7 +33,7 @@
 - [x] Refactor built-in StarDist and YOLO trainers to consume their config JSONs directly
   - [x] StarDist complete
   - [x] YOLOv9 complete
-- [x] Redesign Evaluate flow to fully match the approved plan
+- [x] Fold evaluation into the training Slurm workflow on the paired `*_test` split
 - [x] Redesign Inference flow to fully match the approved plan
 
 ---
@@ -418,9 +418,8 @@ def main_menu():
         banner()
         print(f"  State: {_pipeline_state()}\n")
         print("  1. Promote Workspace to Gold     — finalise annotations, create train/test split")
-        print("  2. Train Model                   — submit Slurm job using configs/<model>.json")
-        print("  3. Evaluate on Test Set          — run inference + metrics on held-out split")
-        print("  4. Inference on Image            — run a trained model on any single image")
+        print("  2. Train Model                   — submit Slurm train+eval job using configs/<model>.json")
+        print("  3. Inference on Image            — run a trained model on any single image")
         print("  " + "─" * 50)
         print("  a. Advanced                      — pool management, workspace creation, dataset export")
         print("  q. Quit\n")

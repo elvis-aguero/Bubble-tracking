@@ -1,0 +1,28 @@
+STARTING TRAINING: wf_validate_microsam_20260310
+Config:      /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/configs/microsam.json
+Dataset:     /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/pipeline/datasets/seed_v04_train
+Epochs:      100
+Patch shape: (1024, 1024)
+Batch size:  1
+Num workers: 4
+Val fraction:0.15
+Early stop:  10
+Freeze:      ['image_encoder']
+Backbone:    vit_b
+--------------------------------
+Found 44 images for training.
+Using device: cuda
+Checkpoints will be saved to: /users/eaguerov/scratch/bubble-models/trained/wf_validate_microsam_20260310
+Creating DataLoaders...
+Split: 37 training, 7 validation.
+Starting MicroSAM training...
+Start fitting for 10000 iterations /  100 epochs
+with 100 iterations per epoch
+Training with mixed precision
+Stopping training because there has been no improvement for 10 epochs
+Finished training after 19 epochs / 2000 iterations.
+The best epoch is number 8.
+Training took 2199.863458633423 seconds (= 00:36:40 hours)
+--------------------------------
+TRAINING COMPLETE.
+Best model expected at: /users/eaguerov/scratch/bubble-models/trained/wf_validate_microsam_20260310/checkpoints/wf_validate_microsam_20260310/best.pt
