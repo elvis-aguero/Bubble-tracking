@@ -67,3 +67,114 @@
 - Updated generated Slurm training scripts to run post-train inference and `evaluate.py`, writing outputs to `~/scratch/bubble-models/trained/<run>/eval/`.
 - Updated docs (`README.md`, `TRAINING_GUIDE.md`, `USER_GUIDE.md`) and plan checklist to reflect automatic evaluation and new menu numbering.
 - Verified with `python3 -m unittest bubbly_flows.tests.unit.test_manage_bubbly_menu -v`.
+
+## 2026-03-11 Project Checkpoint
+- Pipeline restructure status:
+  - Main menu simplified to Promote / Train / Inference / Advanced.
+  - Training is now config-native for MicroSAM, StarDist, and YOLOv9.
+  - Training submissions copy `config.json` into the run directory for provenance.
+  - Standalone Evaluate menu entry removed.
+  - Training now requires paired `<stem>_train` + `<stem>_test` datasets.
+  - Generated training Slurm jobs now perform automatic evaluation on the paired test split and write metrics to `~/scratch/bubble-models/trained/<run>/eval/results.csv`.
+  - Inference remains top-level option 3.
+- Team docs synced: `README.md`, `TRAINING_GUIDE.md`, `USER_GUIDE.md`, and `docs/plans/2026-03-09-pipeline-restructure-plan.md` updated for the new workflow.
+- New implementation plan saved at `docs/plans/2026-03-11-train-auto-eval-plan.md`.
+- Verification status:
+  - `python3 -m unittest bubbly_flows.tests.unit.test_manage_bubbly_menu bubbly_flows.tests.unit.test_train_stardist_config bubbly_flows.tests.unit.test_train_yolov9_config -v` passed (`25` tests).
+- Live cluster validation:
+  - Prior MicroSAM workflow validation job completed successfully (`670345`).
+  - Prior StarDist evaluation validation job completed successfully (`670347`).
+  - Real YOLOv9 train+auto-eval submission created from the new workflow script: `submit_yolov9_seed_v04_autoeval_20260311.sh` with Slurm job `682129`.
+- Temporary validation artifacts still present and not yet cleaned up:
+  - `bubbly_flows/logs/validate_train_microsam_20260310.sh`
+  - `bubbly_flows/logs/validate_eval_stardist_20260310.sh`
+  - `bubbly_flows/logs/wfval_*`
+  - `bubbly_flows/tests/output/eval_preds/stardist_seed_v04_run1_slurm/`
+
+## 2026-03-11 Hybrid Inventory Feature
+- Added `bubbly_flows/tests/inventory.py` to scan the hybrid research workspace and classify:
+  - pipeline entrypoints
+  - helper modules
+  - sample inputs
+  - outputs
+  - logs
+- Generated `bubbly_flows/tests/experiment_registry.json` as a machine-readable manifest.
+- Generated `bubbly_flows/tests/EXPERIMENT_INDEX.md` as a human-readable index of tested hybrid artifacts.
+- Verified with `python3 -m unittest bubbly_flows.tests.unit.test_experiment_inventory -v`.
+- Scratch audit did not reveal extra active hybrid scripts outside the repo; the active research surface appears to already be in `bubbly_flows/tests/`.
+
+## 2026-03-11 Hybrid Layout Reorg
+- Reorganized active hybrid research code under `bubbly_flows/tests/src/` by category:
+  - `src/hybrid/`
+  - `src/sam3/`
+  - `src/deterministic/`
+  - `src/prompting/`
+  - `src/backends/`
+  - `src/common/bubble_sam3/`
+- Kept outputs, logs, sample images, and generated artifacts in place for provenance.
+- Updated internal imports for the moved files.
+- Updated the inventory scanner and regenerated `EXPERIMENT_INDEX.md` / `experiment_registry.json` so the new layout is the source of truth.
+- Verified with `python3 -m unittest bubbly_flows.tests.unit.test_experiment_inventory -v`.
+
+## 2026-03-12 Hybrid Experiment Metadata
+- Added `bubbly_flows/tests/experiment_metadata.json` as a minimal curated provenance layer for top-level experiment scripts.
+- The metadata stays intentionally light and experiment-oriented. Each entry records:
+  - `path`
+  - `label`
+  - `status`
+  - `components`
+  - `question`
+  - `outputs`
+  - `notes`
+- Updated `bubbly_flows/tests/inventory.py` to load curated metadata and merge it into the generated Markdown index without changing the filesystem-discovery registry format.
+- Regenerated `bubbly_flows/tests/EXPERIMENT_INDEX.md` so the index now shows both discovered artifacts and short notes about what each experiment is trying to test.
+- Verified with `python3 -m unittest bubbly_flows.tests.unit.test_experiment_inventory -v`.
+
+## 2026-03-12 Hybrid Experiment Harness
+- Added a new provenance-first experiment harness package under `bubbly_flows/tests/src/experiments/`:
+  - `gold_eval.py`
+  - `provenance.py`
+  - `runner.py`
+  - `search_space.py`
+  - `variant_executor.py`
+- Implemented a cached gold-evaluation prep path that:
+  - scans `annotations/gold/<version>/labels_json`
+  - resolves source images
+  - rasterizes LabelMe polygons into instance-mask rows
+  - writes an evaluation-set manifest under `bubbly_flows/tests/output/...`
+- Implemented run-level provenance writing:
+  - `manifest.json`
+  - `aggregate_metrics.json`
+  - `per_image_metrics.csv`
+  - `gallery.md`
+  - `ranking.csv`
+- Implemented the initial search-space generator for the three starting families:
+  - `frst_only`
+  - `blackhat_only`
+  - `hybrid_current`
+  with explicit hybrid fusion variants:
+  - `current`
+  - `conservative`
+  - `branch_priority`
+- Integrated the real family executor path into the runner:
+  - materializes per-run variant config JSON
+  - builds family-specific commands against `tests/src/hybrid/bubble_frst_sam3_mask.py`
+  - converts predicted LabelMe JSON into instance-mask files for evaluation
+  - reuses `bubbly_flows/scripts/evaluate.py` for metric computation
+  - exposes `execute_real_experiment_batch(...)` as the concrete runner entrypoint
+- Real runtime validation status:
+  - Attempted a 3-family 2-image Slurm batch under `bubbly_flows/tests/output/experiments/validate_2img_seed_v04/`
+  - Resolved two harness/runtime integration issues:
+    - Slurm shell wrapper failed with `set -u` + `source ~/.bashrc`
+    - hybrid script had to be launched as a module (`python -m ...`) rather than by file path so `bubbly_flows` imports resolve
+  - Current environment blocker for `frst_only` / `hybrid_current`:
+    - `transformers` with SAM3 tracker classes is missing
+    - `sam3` package is missing
+  - Successful end-to-end Slurm validation completed for `blackhat_only` on 2 gold images:
+    - job `698942`
+    - outputs written under `bubbly_flows/tests/output/experiments/validate_2img_blackhat_only/`
+    - provenance artifacts created (`manifest.json`, `aggregate_metrics.json`, `per_image_metrics.csv`, `gallery.md`, `ranking.csv`, prediction masks, overlays, LabelMe JSON)
+    - aggregate result on the 2-image slice: `F1=0.0`
+- Verified with lightweight login-node-safe commands only:
+  - `python3 -m unittest bubbly_flows.tests.unit.test_hybrid_experiment_harness bubbly_flows.tests.unit.test_experiment_inventory -v`
+  - `python3 -m py_compile bubbly_flows/tests/src/experiments/__init__.py bubbly_flows/tests/src/experiments/gold_eval.py bubbly_flows/tests/src/experiments/provenance.py bubbly_flows/tests/src/experiments/runner.py bubbly_flows/tests/src/experiments/search_space.py bubbly_flows/tests/src/experiments/variant_executor.py`

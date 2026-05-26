@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Hybrid Bubble UI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --bg: #f3efe7;
+      --panel: #fffaf0;
+      --ink: #222018;
+      --accent: #2f6f5e;
+      --line: #d8ceb9;
+    }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background: radial-gradient(circle at top left, #f9f5ea, var(--bg));
+      color: var(--ink);
+    }
+    header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .status { color: var(--accent); font-weight: 700; }
+    main {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      min-height: calc(100vh - 65px);
+    }
+    aside {
+      border-right: 1px solid var(--line);
+      padding: 16px;
+      overflow-y: auto;
+      background: rgba(255,250,240,0.85);
+    }
+    .control {
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed var(--line);
+    }
+    .control label { display: block; font-size: 14px; margin-bottom: 4px; }
+    .control .value { font-weight: 700; color: var(--accent); }
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 12px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 10px;
+    }
+    .panel h2 { margin: 0 0 8px; font-size: 18px; }
+    .panel img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border: 1px solid var(--line);
+      background: #000;
+    }
+    .summary {
+      margin-top: 8px;
+      font-size: 14px;
+      min-height: 20px;
+    }
+    button {
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      background: #f6ead4;
+      cursor: pointer;
+    }
+    @media (max-width: 1100px) {
+      main { grid-template-columns: 1fr; }
+      aside { border-right: 0; border-bottom: 1px solid var(--line); }
+      .panels { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div><strong>Hybrid Bubble UI</strong> <span id="status" class="status">idle</span></div>
+    <div>Image: <code>img006001</code> <button id="reset-btn" type="button">Reset To Baseline</button></div>
+  </header>
+  <main>
+    <aside>
+      <div id="controls"></div>
+    </aside>
+    <section class="panels">
+      <div class="panel">
+        <h2>Gold Annotation</h2>
+        <img id="gold-image" alt="gold annotation panel">
+      </div>
+      <div class="panel">
+        <h2>Current Hybrid Overlay</h2>
+        <img id="current-image" alt="current hybrid overlay panel">
+        <div class="summary" id="summary"></div>
+      </div>
+    </section>
+  </main>
+  <script>
+    const SCHEMA = [
+      {key: "r_min", label: "r_min", type: "range", min: 3, max: 8, step: 1},
+      {key: "r_max", label: "r_max", type: "range", min: 18, max: 32, step: 1},
+      {key: "alpha", label: "alpha", type: "range", min: 0.8, max: 2.0, step: 0.1},
+      {key: "mag_percentile", label: "mag_percentile", type: "range", min: 75, max: 97, step: 1},
+      {key: "peak_percentile", label: "peak_percentile", type: "range", min: 95, max: 100, step: 0.5},
+      {key: "nms_size", label: "nms_size", type: "range", min: 3, max: 15, step: 2},
+      {key: "knn_k", label: "knn_k", type: "range", min: 1, max: 6, step: 1},
+      {key: "hex_radius_factor", label: "hex_radius_factor", type: "range", min: 0.8, max: 2.5, step: 0.1},
+      {key: "tile_size_factor", label: "tile_size_factor", type: "range", min: 4, max: 12, step: 0.5},
+      {key: "tile_overlap_factor", label: "tile_overlap_factor", type: "range", min: 1, max: 4, step: 0.1},
+      {key: "area_limit_factor", label: "area_limit_factor", type: "range", min: 8, max: 24, step: 1},
+      {key: "adaptive_area_min", label: "adaptive_area_min", type: "range", min: 5, max: 60, step: 1},
+      {key: "adaptive_area_max", label: "adaptive_area_max", type: "range", min: 80, max: 500, step: 5},
+      {key: "adaptive_circularity_min", label: "adaptive_circularity_min", type: "range", min: 0.0, max: 1.0, step: 0.05},
+      {key: "adaptive_solidity_min", label: "adaptive_solidity_min", type: "range", min: 0.0, max: 1.0, step: 0.05},
+      {key: "adaptive_intensity_max", label: "adaptive_intensity_max", type: "range", min: 50, max: 255, step: 5},
+      {key: "blackhat_split_fused", label: "blackhat_split_fused", type: "checkbox"},
+      {key: "iou_dedup_thresh", label: "iou_dedup_thresh", type: "range", min: 0.1, max: 0.95, step: 0.05},
+      {key: "containment_thresh", label: "containment_thresh", type: "range", min: 0.5, max: 0.99, step: 0.01},
+      {key: "min_area_px", label: "min_area_px", type: "range", min: 1, max: 200, step: 1},
+      {key: "enable_consolidation", label: "enable_consolidation", type: "checkbox"},
+      {key: "enable_hole_fill", label: "enable_hole_fill", type: "checkbox"}
+    ];
+
+    let lastParams = {};
+
+    function renderControls(params) {
+      const root = document.getElementById("controls");
+      root.innerHTML = "";
+      for (const spec of SCHEMA) {
+        const wrap = document.createElement("div");
+        wrap.className = "control";
+        const label = document.createElement("label");
+        label.textContent = spec.label + " ";
+        const value = document.createElement("span");
+        value.className = "value";
+        value.id = `value-${spec.key}`;
+        label.appendChild(value);
+        wrap.appendChild(label);
+
+        const input = document.createElement("input");
+        input.id = `input-${spec.key}`;
+        input.dataset.key = spec.key;
+        input.type = spec.type === "checkbox" ? "checkbox" : "range";
+        if (spec.type !== "checkbox") {
+          input.min = spec.min;
+          input.max = spec.max;
+          input.step = spec.step;
+          input.value = params[spec.key];
+          value.textContent = params[spec.key];
+        } else {
+          input.checked = !!params[spec.key];
+          value.textContent = params[spec.key] ? "true" : "false";
+        }
+        input.addEventListener("input", onControlChange);
+        input.addEventListener("change", onControlChange);
+        wrap.appendChild(input);
+        root.appendChild(wrap);
+      }
+    }
+
+    async function onControlChange() {
+      const payload = {};
+      for (const spec of SCHEMA) {
+        const input = document.getElementById(`input-${spec.key}`);
+        const val = spec.type === "checkbox" ? input.checked : Number(input.value);
+        payload[spec.key] = val;
+        document.getElementById(`value-${spec.key}`).textContent = String(val);
+      }
+      lastParams = payload;
+      await fetch("/api/params", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload)
+      });
+      pollState();
+    }
+
+    async function resetBaseline() {
+      await fetch("/api/reset", {method: "POST"});
+      await pollState();
+    }
+
+    async function pollState() {
+      const response = await fetch("/api/state");
+      const payload = await response.json();
+      document.getElementById("status").textContent = payload.status;
+      document.getElementById("summary").textContent =
+        payload.summary && payload.summary.instance_count !== undefined
+          ? `instances=${payload.summary.instance_count}`
+          : (payload.last_error || "");
+      if (Object.keys(lastParams).length === 0 || JSON.stringify(lastParams) !== JSON.stringify(payload.params)) {
+        lastParams = payload.params;
+        renderControls(payload.params);
+      }
+      document.getElementById("gold-image").src = `/api/image/gold?rev=${payload.revision}`;
+      document.getElementById("current-image").src = `/api/image/current?rev=${payload.revision}`;
+    }
+
+    document.getElementById("reset-btn").addEventListener("click", resetBaseline);
+    setInterval(pollState, 2000);
+    pollState();
+  </script>
+</body>
+</html>

@@ -1,26 +1,65 @@
 #!/usr/bin/env python3
 """
-Bubbly Flows interactive dataset manager.
+Bubbly Flows operator entrypoint for dataset management, training submission, and
+single-image inference.
 
-This script is the main operator entry point for the annotation/training pipeline.
-It launches an interactive menu for day-to-day data operations:
-1. Initialize / update the patch pool from newly generated patches.
-2. Create labeling workspaces from full-frame images (default) or patch pool sources.
-3. Promote completed workspace JSON labels into a versioned Gold snapshot.
-4. Export a selected Gold snapshot to a training-ready dataset (images + masks).
-5. Submit model training jobs (Slurm).
-6. Run one-off inference with an existing trained checkpoint.
+This is the main scripted interface for the production-side pipeline under
+``bubbly_flows/scripts/``. The file is interactive from a user perspective, but it also
+acts as a coordination module that other agents can read to understand the pipeline API
+surface and filesystem contracts.
 
-Typical workflow:
-- Prepare or update source data (pool/frames).
-- Create workspace and annotate in X-AnyLabeling.
-- Promote validated annotations to a new Gold version.
-- Export Gold to `pipeline/datasets`, then train or run inference.
+Operational model:
+- ``main_menu()`` is the human-facing top-level dispatcher.
+- ``advanced_menu()`` groups maintenance tasks that are not part of the happy path.
+- ``create_workspace()`` creates labeling workspaces under ``workspaces/``.
+- ``promote_to_gold()`` promotes reviewed workspace JSON into a versioned Gold snapshot
+  under ``annotations/gold/``.
+- ``export_microsam_dataset()`` materializes paired ``*_train`` / ``*_test``
+  datasets under ``pipeline/datasets/``.
+- ``submit_training_job()`` submits Slurm jobs that train and then automatically evaluate
+  on the paired test split, writing run artifacts under ``~/scratch/bubble-models/trained``.
+- ``run_inference_menu()`` runs one-off inference against an existing trained run.
 
-Directory model:
-- `workspaces/`: transient labeling batches.
-- `annotations/gold/`: versioned source-of-truth labels for reproducible training.
-- `pipeline/datasets/`: materialized training datasets derived from Gold.
+Public helper/API surface agents should treat as stable first:
+- ``parse_cli_args(argv=None)``: early CLI parsing so ``--help`` exits before bootstrap.
+- ``format_state_line(...)`` / ``has_training_dataset(...)`` / ``has_trained_run(...)``:
+  menu-state and prerequisite helpers.
+- ``list_training_datasets(...)`` / ``list_test_datasets(...)``:
+  exported dataset discovery helpers.
+- ``detect_trained_model_type(exp_dir)``: canonical run-type detection from a trained run
+  directory.
+- ``submit_training_job()``: canonical training submission path.
+- ``main_menu()``: top-level operator flow.
+
+Filesystem contract:
+- ``workspaces/``: transient annotation batches.
+- ``annotations/gold/``: versioned source-of-truth LabelMe JSON.
+- ``pipeline/datasets/``: exported datasets derived from Gold.
+- ``~/scratch/bubble-models/trained/<run>/``: trained checkpoints, copied ``config.json``,
+  and automatic evaluation outputs under ``eval/``.
+
+Model/training contract:
+- Built-in training choices are MicroSAM, StarDist, and YOLOv9, each backed by a canonical
+  config file in ``configs/``.
+- Training is config-first for built-ins: this module passes ``--config <path>`` into the
+  trainer and copies the chosen config into the run directory for provenance.
+- Training requires a paired exported dataset stem, e.g. ``foo_train`` must have
+  ``foo_test``.
+- Evaluation is no longer a standalone operator action; it is part of the submitted
+  training job.
+
+What this module is not:
+- It does not own model internals, metric definitions, or annotation tooling behavior.
+- It is not the research workbench for hybrid experiments; that work lives under
+  ``bubbly_flows/tests/``.
+
+Typical operator flow:
+1. Create workspace.
+2. Annotate outside this script.
+3. Promote workspace to Gold.
+4. Export ``*_train`` / ``*_test`` dataset.
+5. Submit training job.
+6. Inspect trained run and automatic evaluation outputs.
 """
 
 HELP_EXAMPLES = """Examples:
