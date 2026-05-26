@@ -1,0 +1,369 @@
+{
+  "helper_modules": [
+    {
+      "path": "hough/detect_bubbles.py"
+    },
+    {
+      "path": "src/common/bubble_sam3/__init__.py"
+    },
+    {
+      "path": "src/common/bubble_sam3/backend.py"
+    },
+    {
+      "path": "src/common/bubble_sam3/candidates.py"
+    },
+    {
+      "path": "src/common/bubble_sam3/config.py"
+    },
+    {
+      "path": "src/common/bubble_sam3/outputs.py"
+    },
+    {
+      "path": "src/common/bubble_sam3/pipeline.py"
+    },
+    {
+      "path": "src/common/bubble_sam3/postprocess.py"
+    },
+    {
+      "path": "src/common/bubble_sam3/preprocess.py"
+    },
+    {
+      "path": "src/common/bubble_sam3/tiling.py"
+    }
+  ],
+  "logs": [
+    {
+      "path": "logs/bubble_frst_sam3_20260201_154841.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260201_160516.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260201_163314.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260201_163718.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260201_171211.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260201_181912.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260201_195744.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260201_202451.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260201_204754.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260201_205242.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260201_210555.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260201_210834.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260201_211012.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260201_214052.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260201_215218.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260201_221841.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260202_145416.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260202_145439.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260202_160106.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260202_160916.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260202_161325.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260202_161718.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260202_162434.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260202_163601.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260202_164105.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260202_165618.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260202_165949.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260202_170658.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260202_171027.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260202_172045.log"
+    },
+    {
+      "path": "logs/bubble_frst_sam3_20260202_172755.log"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "output/ZeroG_C1S0024_img011620_pred.png"
+    },
+    {
+      "path": "output/ZeroG_C1S0024_img011620_pred_vis.png"
+    },
+    {
+      "path": "output/eval_preds/microsam/ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.png"
+    },
+    {
+      "path": "output/eval_preds/microsam/ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001_vis.png"
+    },
+    {
+      "path": "output/eval_preds/microsam/ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.png"
+    },
+    {
+      "path": "output/eval_preds/microsam/ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509_vis.png"
+    },
+    {
+      "path": "output/eval_preds/microsam/ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.png"
+    },
+    {
+      "path": "output/eval_preds/microsam/ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432_vis.png"
+    },
+    {
+      "path": "output/eval_preds/microsam_seed_v04_run2/ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.png"
+    },
+    {
+      "path": "output/eval_preds/microsam_seed_v04_run2/ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001_vis.png"
+    },
+    {
+      "path": "output/eval_preds/microsam_seed_v04_run2/ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.png"
+    },
+    {
+      "path": "output/eval_preds/microsam_seed_v04_run2/ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509_vis.png"
+    },
+    {
+      "path": "output/eval_preds/microsam_seed_v04_run2/ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.png"
+    },
+    {
+      "path": "output/eval_preds/microsam_seed_v04_run2/ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432_vis.png"
+    },
+    {
+      "path": "output/eval_preds/microsam_seed_v04_run2/results.csv"
+    },
+    {
+      "path": "output/eval_preds/stardist/ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.png"
+    },
+    {
+      "path": "output/eval_preds/stardist/ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.png"
+    },
+    {
+      "path": "output/eval_preds/stardist/ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.png"
+    },
+    {
+      "path": "output/eval_preds/stardist_seed_v04_run1_slurm/ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.png"
+    },
+    {
+      "path": "output/eval_preds/stardist_seed_v04_run1_slurm/ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.png"
+    },
+    {
+      "path": "output/eval_preds/stardist_seed_v04_run1_slurm/ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.png"
+    },
+    {
+      "path": "output/eval_preds/stardist_seed_v04_run1_slurm/results.csv"
+    },
+    {
+      "path": "output/eval_preds/yolov9/ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.png"
+    },
+    {
+      "path": "output/eval_preds/yolov9/ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.png"
+    },
+    {
+      "path": "output/eval_preds/yolov9/ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.png"
+    },
+    {
+      "path": "output/infer_microsam_C1S0024_img011620.png"
+    },
+    {
+      "path": "output/infer_microsam_C1S0024_img011620_vis.png"
+    },
+    {
+      "path": "output/infer_stardist_C1S0024_img011620.png"
+    },
+    {
+      "path": "output/infer_stardist_C1S0024_img011620_vis.png"
+    },
+    {
+      "path": "output/infer_yolov9_C1S0024_img011620.png"
+    },
+    {
+      "path": "output/infer_yolov9_C1S0024_img011620_vis.png"
+    },
+    {
+      "path": "output/result.json"
+    },
+    {
+      "path": "output/result.png"
+    },
+    {
+      "path": "output/result19655.json"
+    },
+    {
+      "path": "output/result19655.png"
+    },
+    {
+      "path": "output/result19655_big.png"
+    },
+    {
+      "path": "output/result19655_blackhat.png"
+    },
+    {
+      "path": "output/result19655_frst.png"
+    },
+    {
+      "path": "output/result6001.json"
+    },
+    {
+      "path": "output/result6001.png"
+    },
+    {
+      "path": "output/result6001_big.png"
+    },
+    {
+      "path": "output/result6001_blackhat.png"
+    },
+    {
+      "path": "output/result6001_frst.png"
+    },
+    {
+      "path": "output/result8008.json"
+    },
+    {
+      "path": "output/result8008.png"
+    },
+    {
+      "path": "output/result8008_big.png"
+    },
+    {
+      "path": "output/result8008_blackhat.png"
+    },
+    {
+      "path": "output/result8008_frst.png"
+    },
+    {
+      "path": "output/result_big.png"
+    },
+    {
+      "path": "output/result_blackhat.png"
+    },
+    {
+      "path": "output/result_frst.png"
+    }
+  ],
+  "pipeline_entrypoints": [
+    {
+      "family": "backend",
+      "name": "frst_point_backend_fb.py",
+      "path": "src/backends/frst_point_backend_fb.py"
+    },
+    {
+      "family": "backend",
+      "name": "frst_point_backend_hf.py",
+      "path": "src/backends/frst_point_backend_hf.py"
+    },
+    {
+      "family": "deterministic",
+      "name": "blackhat_mask.py",
+      "path": "src/deterministic/blackhat_mask.py"
+    },
+    {
+      "family": "deterministic",
+      "name": "classical_test.py",
+      "path": "src/deterministic/classical_test.py"
+    },
+    {
+      "family": "deterministic",
+      "name": "detect_bubbles.py",
+      "path": "src/deterministic/detect_bubbles.py"
+    },
+    {
+      "family": "hybrid",
+      "name": "bubble_frst_sam3_mask.py",
+      "path": "src/hybrid/bubble_frst_sam3_mask.py"
+    },
+    {
+      "family": "prompting",
+      "name": "big_bubble_prompt_fb.py",
+      "path": "src/prompting/big_bubble_prompt_fb.py"
+    },
+    {
+      "family": "prompting",
+      "name": "big_bubble_prompt_hf.py",
+      "path": "src/prompting/big_bubble_prompt_hf.py"
+    },
+    {
+      "family": "sam3",
+      "name": "bubble_sam3_mask.py",
+      "path": "src/sam3/bubble_sam3_mask.py"
+    }
+  ],
+  "sample_inputs": [
+    {
+      "path": "img19655.png"
+    },
+    {
+      "path": "img4966.png"
+    },
+    {
+      "path": "img6001.png"
+    },
+    {
+      "path": "img6001_bubble_crop_1_masks.png"
+    },
+    {
+      "path": "img6001_bubbles_crop_1_masks.png"
+    },
+    {
+      "path": "img6001_circle_crop_0.51_masks.png"
+    },
+    {
+      "path": "img6001_circular blob_crop_0.5_masks.png"
+    },
+    {
+      "path": "img6001_circular blob_crop_1_masks.png"
+    },
+    {
+      "path": "img6001_microbubble_crop_0.51_masks.png"
+    },
+    {
+      "path": "img6001_round object_crop_1_masks.png"
+    },
+    {
+      "path": "img6001_tiny bubble_crop_0.51_masks.png"
+    },
+    {
+      "path": "img8008.png"
+    }
+  ]
+}

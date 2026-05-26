@@ -1,0 +1,116 @@
+{
+  "experiments": [
+    {
+      "components": [
+        "FRST",
+        "SAM3",
+        "blackhat"
+      ],
+      "label": "FRST + SAM3 + black-hat hybrid",
+      "notes": "Primary hybrid workbench for combining classical proposals with SAM3 masks.",
+      "outputs": [
+        "output/result6001.png",
+        "output/result6001_frst.png",
+        "output/result6001_blackhat.png",
+        "logs/bubble_frst_sam3_20260202_172755.log"
+      ],
+      "path": "src/hybrid/bubble_frst_sam3_mask.py",
+      "question": "Can classical proposals and SAM3 cover both small and large bubbles in one pass?",
+      "status": "active"
+    },
+    {
+      "components": [
+        "SAM3"
+      ],
+      "label": "Automatic SAM3 segmentation",
+      "notes": "Pure SAM3 pipeline without the hybrid classical branch.",
+      "outputs": [
+        "output/result.png",
+        "output/result.json"
+      ],
+      "path": "src/sam3/bubble_sam3_mask.py",
+      "question": "How far does standalone SAM3 get before classical proposals are needed?",
+      "status": "tentative"
+    },
+    {
+      "components": [
+        "blackhat",
+        "DoG",
+        "LoG"
+      ],
+      "label": "Black-hat microbubble masks",
+      "notes": "Focused on tiny, high-curvature bubbles that SAM3 often misses.",
+      "outputs": [
+        "output/result19655_blackhat.png",
+        "output/result6001_blackhat.png",
+        "output/result8008_blackhat.png"
+      ],
+      "path": "src/deterministic/blackhat_mask.py",
+      "question": "Can black-hat style filtering recover small spherical bubbles with acceptable false positives?",
+      "status": "active"
+    },
+    {
+      "components": [
+        "FRST"
+      ],
+      "label": "FRST center detector",
+      "notes": "Classical center proposal generator used by the hybrid pipeline.",
+      "outputs": [
+        "output/result19655_frst.png",
+        "output/result6001_frst.png",
+        "output/result8008_frst.png"
+      ],
+      "path": "src/deterministic/classical_test.py",
+      "question": "How reliable are FRST center proposals before any SAM3 masking?",
+      "status": "active"
+    },
+    {
+      "components": [
+        "adaptive-threshold",
+        "morphology"
+      ],
+      "label": "Adaptive threshold detector",
+      "notes": "Baseline classical detector kept as a comparison point.",
+      "outputs": [
+        "output/result19655.png",
+        "output/result6001.png",
+        "output/result8008.png"
+      ],
+      "path": "src/deterministic/detect_bubbles.py",
+      "question": "How far can a simple deterministic detector go without FRST or SAM3?",
+      "status": "tentative"
+    },
+    {
+      "components": [
+        "SAM3",
+        "text-prompt",
+        "facebook-backend"
+      ],
+      "label": "SAM3 big-bubble prompt (Meta backend)",
+      "notes": "Prompting experiment for larger high-contrast bubbles using the Meta SAM3 stack.",
+      "outputs": [
+        "img6001_bubble_crop_1_masks.png",
+        "img6001_round object_crop_1_masks.png"
+      ],
+      "path": "src/prompting/big_bubble_prompt_fb.py",
+      "question": "Do text prompts improve SAM3 recall on larger bubbles when using the Meta backend?",
+      "status": "tentative"
+    },
+    {
+      "components": [
+        "SAM3",
+        "text-prompt",
+        "hf-backend"
+      ],
+      "label": "SAM3 big-bubble prompt (HF backend)",
+      "notes": "Same prompting idea as the Meta backend variant, but through the Hugging Face stack.",
+      "outputs": [
+        "img6001_circular blob_crop_1_masks.png",
+        "img6001_tiny bubble_crop_0.51_masks.png"
+      ],
+      "path": "src/prompting/big_bubble_prompt_hf.py",
+      "question": "Does the Hugging Face SAM3 path behave differently enough to justify a separate prompting workflow?",
+      "status": "tentative"
+    }
+  ]
+}
