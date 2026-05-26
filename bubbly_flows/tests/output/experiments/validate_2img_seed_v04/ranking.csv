@@ -1,0 +1,4 @@
+experiment_id,family,variant,F1
+validate_frst_only,frst_only,baseline,0.003
+validate_hybrid_current,hybrid_current,current,0.003
+validate_blackhat_only,blackhat_only,baseline,0.000

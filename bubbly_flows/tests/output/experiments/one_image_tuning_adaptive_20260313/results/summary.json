@@ -1,0 +1,106 @@
+{
+  "ranking": [
+    {
+      "F1": "0.005",
+      "experiment_id": "hybrid_current_r2_mag_percentile_92p0",
+      "family": "hybrid_current",
+      "variant": "adaptive_round_2"
+    },
+    {
+      "F1": "0.004",
+      "experiment_id": "hybrid_current_r1_r_max_22",
+      "family": "hybrid_current",
+      "variant": "adaptive_round_1"
+    },
+    {
+      "F1": "0.004",
+      "experiment_id": "hybrid_current_r2_alpha_1p2",
+      "family": "hybrid_current",
+      "variant": "adaptive_round_2"
+    },
+    {
+      "F1": "0.004",
+      "experiment_id": "hybrid_current_r2_alpha_1p6",
+      "family": "hybrid_current",
+      "variant": "adaptive_round_2"
+    },
+    {
+      "F1": "0.004",
+      "experiment_id": "hybrid_current_r2_mag_percentile_84p0",
+      "family": "hybrid_current",
+      "variant": "adaptive_round_2"
+    },
+    {
+      "F1": "0.004",
+      "experiment_id": "hybrid_current_r2_nms_size_9",
+      "family": "hybrid_current",
+      "variant": "adaptive_round_2"
+    },
+    {
+      "F1": "0.000",
+      "experiment_id": "baseline_hybrid_original",
+      "family": "hybrid_current",
+      "variant": "baseline_hybrid_original"
+    },
+    {
+      "F1": "0.000",
+      "experiment_id": "hybrid_current_r1_r_min_5",
+      "family": "hybrid_current",
+      "variant": "adaptive_round_1"
+    },
+    {
+      "F1": "0.000",
+      "experiment_id": "hybrid_current_r1_r_max_28",
+      "family": "hybrid_current",
+      "variant": "adaptive_round_1"
+    },
+    {
+      "F1": "0.000",
+      "experiment_id": "hybrid_current_r1_alpha_1p2",
+      "family": "hybrid_current",
+      "variant": "adaptive_round_1"
+    },
+    {
+      "F1": "0.000",
+      "experiment_id": "hybrid_current_r1_alpha_1p6",
+      "family": "hybrid_current",
+      "variant": "adaptive_round_1"
+    },
+    {
+      "F1": "0.000",
+      "experiment_id": "hybrid_current_r1_mag_percentile_84p0",
+      "family": "hybrid_current",
+      "variant": "adaptive_round_1"
+    },
+    {
+      "F1": "0.000",
+      "experiment_id": "hybrid_current_r1_mag_percentile_92p0",
+      "family": "hybrid_current",
+      "variant": "adaptive_round_1"
+    },
+    {
+      "F1": "0.000",
+      "experiment_id": "hybrid_current_r1_peak_percentile_97p0",
+      "family": "hybrid_current",
+      "variant": "adaptive_round_1"
+    },
+    {
+      "F1": "0.000",
+      "experiment_id": "hybrid_current_r2_r_min_5",
+      "family": "hybrid_current",
+      "variant": "adaptive_round_2"
+    },
+    {
+      "F1": "0.000",
+      "experiment_id": "hybrid_current_r2_r_max_25",
+      "family": "hybrid_current",
+      "variant": "adaptive_round_2"
+    },
+    {
+      "F1": "0.000",
+      "experiment_id": "hybrid_current_r2_peak_percentile_97p0",
+      "family": "hybrid_current",
+      "variant": "adaptive_round_2"
+    }
+  ]
+}

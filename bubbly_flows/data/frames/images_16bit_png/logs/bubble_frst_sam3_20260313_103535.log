@@ -1,0 +1,31 @@
+2026-03-13 10:35:35 [INFO] root - Logging initialized. Log file: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/logs/bubble_frst_sam3_20260313_103535.log
+2026-03-13 10:35:35 [INFO] __main__ - Single file mode: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test_C1S0014_img006001.png
+2026-03-13 10:35:35 [INFO] __main__ - Initializing FRST backend (hf)...
+2026-03-13 10:35:43 [INFO] __main__ - Initializing PCS backend...
+2026-03-13 10:35:46 [INFO] __main__ - --- File 1/1: ZeroG_FlightDay_Test_C1S0014_img006001.png ---
+2026-03-13 10:35:46 [INFO] __main__ - Processing: /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test_C1S0014_img006001.png
+2026-03-13 10:35:46 [DEBUG] PIL.PngImagePlugin - STREAM b'IHDR' 16 13
+2026-03-13 10:35:46 [DEBUG] PIL.PngImagePlugin - STREAM b'bKGD' 41 2
+2026-03-13 10:35:46 [DEBUG] PIL.PngImagePlugin - b'bKGD' 41 2 (unknown)
+2026-03-13 10:35:46 [DEBUG] PIL.PngImagePlugin - STREAM b'orNT' 55 1
+2026-03-13 10:35:46 [DEBUG] PIL.PngImagePlugin - b'orNT' 55 1 (unknown)
+2026-03-13 10:35:46 [DEBUG] PIL.PngImagePlugin - STREAM b'IDAT' 68 32768
+2026-03-13 10:35:46 [DEBUG] PIL.PngImagePlugin - STREAM b'tEXt' 1462962 37
+2026-03-13 10:35:46 [DEBUG] PIL.PngImagePlugin - STREAM b'tEXt' 1463011 37
+2026-03-13 10:35:46 [DEBUG] PIL.PngImagePlugin - STREAM b'tEXt' 1463060 40
+2026-03-13 10:35:46 [DEBUG] PIL.PngImagePlugin - STREAM b'tEXt' 1463112 15
+2026-03-13 10:35:46 [DEBUG] PIL.PngImagePlugin - STREAM b'tEXt' 1463139 29
+2026-03-13 10:35:46 [DEBUG] PIL.PngImagePlugin - STREAM b'tEXt' 1463180 21
+2026-03-13 10:35:46 [INFO] __main__ - FRST detected 588 centers
+2026-03-13 10:36:01 [INFO] __main__ - Point pass totals: masks=1307 discarded_large=0 (limit=7744 px)
+2026-03-13 10:36:01 [INFO] __main__ - Adaptive Threshold found 138 instances.
+2026-03-13 10:36:02 [INFO] __main__ - PCS produced 0 micro-text masks
+2026-03-13 10:36:02 [INFO] __main__ - Big-prompt produced 0 masks
+2026-03-13 10:36:03 [INFO] bubbly_flows.tests.src.common.bubble_sam3.postprocess - Consolidation replacements due to containment: 0
+2026-03-13 10:36:03 [INFO] __main__ - Instances: FRST=894, ADAPTIVE=138, BIG=0, COMBINED=364
+2026-03-13 10:36:03 [INFO] __main__ - Saved FRST to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/experiments/one_image_tuning_adaptive_20260313/results/hybrid_current_r2_alpha_1p6/images/ZeroG_FlightDay_Test_C1S0014_img006001_overlay_frst.png
+2026-03-13 10:36:03 [INFO] __main__ - Saved ADAPTIVE to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/experiments/one_image_tuning_adaptive_20260313/results/hybrid_current_r2_alpha_1p6/images/ZeroG_FlightDay_Test_C1S0014_img006001_overlay_blackhat.png
+2026-03-13 10:36:03 [INFO] __main__ - Saved BIG to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/experiments/one_image_tuning_adaptive_20260313/results/hybrid_current_r2_alpha_1p6/images/ZeroG_FlightDay_Test_C1S0014_img006001_overlay_big.png
+2026-03-13 10:36:03 [INFO] __main__ - Saved COMBINED to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/experiments/one_image_tuning_adaptive_20260313/results/hybrid_current_r2_alpha_1p6/images/ZeroG_FlightDay_Test_C1S0014_img006001_overlay.png
+2026-03-13 10:36:03 [INFO] __main__ - Saved LabelMe JSON to /oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/experiments/one_image_tuning_adaptive_20260313/results/hybrid_current_r2_alpha_1p6/images/ZeroG_FlightDay_Test_C1S0014_img006001.json
+2026-03-13 10:36:03 [INFO] __main__ - All tasks completed.

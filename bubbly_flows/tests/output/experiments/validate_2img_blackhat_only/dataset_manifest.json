@@ -1,0 +1,24 @@
+{
+  "count": 2,
+  "dataset_name": "gold_seed_v04",
+  "dataset_root": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/eval_sets/gold_seed_v04",
+  "items": [
+    {
+      "image": "images/ZeroG_FlightDay_Test_C1S0014_img006001.png",
+      "instance_count": 119,
+      "label": "labels/ZeroG_FlightDay_Test_C1S0014_img006001.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test_C1S0014_img006001.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test_C1S0014_img006001.json",
+      "stem": "ZeroG_FlightDay_Test_C1S0014_img006001"
+    },
+    {
+      "image": "images/ZeroG_FlightDay_Test_C1S0014_img009542.png",
+      "instance_count": 492,
+      "label": "labels/ZeroG_FlightDay_Test_C1S0014_img009542.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test_C1S0014_img009542.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test_C1S0014_img009542.json",
+      "stem": "ZeroG_FlightDay_Test_C1S0014_img009542"
+    }
+  ],
+  "source_dir": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/annotations/gold/gold_seed_v04/labels_json"
+}

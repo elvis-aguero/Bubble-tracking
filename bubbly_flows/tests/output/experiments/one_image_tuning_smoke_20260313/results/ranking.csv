@@ -1,0 +1,3 @@
+experiment_id,family,variant,F1
+frst_only_001,frst_only,one_image_tuning,0.000
+hybrid_current_001,hybrid_current,one_image_tuning,0.000

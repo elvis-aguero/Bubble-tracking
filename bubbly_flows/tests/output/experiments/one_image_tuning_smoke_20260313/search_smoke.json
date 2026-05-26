@@ -1,0 +1,36 @@
+{
+  "families": ["frst_only", "hybrid_current"],
+  "frst": {
+    "r_min": [4],
+    "r_max": [25],
+    "r_step": [2],
+    "alpha": [1.4],
+    "mag_percentile": [88.0],
+    "peak_percentile": [99.0],
+    "nms_size": [7],
+    "border": [6],
+    "max_peaks": [1500]
+  },
+  "geometry": {
+    "knn_k": [3],
+    "hex_radius_factor": [1.5],
+    "tile_size_factor": [8.0],
+    "tile_overlap_factor": [2.5],
+    "area_limit_factor": [16.0]
+  },
+  "adaptive": {
+    "adaptive_area_min": [20],
+    "adaptive_area_max": [350],
+    "adaptive_circularity_min": [0.4],
+    "adaptive_solidity_min": [0.75],
+    "adaptive_intensity_max": [160.0],
+    "blackhat_split_fused": [true]
+  },
+  "fusion": {
+    "iou_dedup_thresh": [0.5],
+    "containment_thresh": [0.9],
+    "min_area_px": [60],
+    "enable_consolidation": [true],
+    "enable_hole_fill": [true]
+  }
+}

@@ -1,0 +1,4 @@
+image,TP,FP,FN,precision,recall,F1,mean_IoU
+ZeroG_FlightDay_Test_C1S0014_img006001.tif,1,363,113,0.003,0.009,0.004,0.609
+MACRO (n=1),,,,0.003,0.009,0.004,0.609
+MICRO,1,363,113,0.003,0.009,0.004,

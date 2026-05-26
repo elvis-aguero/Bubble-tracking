@@ -1,0 +1,54 @@
+{
+  "created_at": "2026-03-13T14:28:39.586890+00:00",
+  "dataset_items": [
+    {
+      "image": "images/ZeroG_FlightDay_Test_C1S0014_img006001.png",
+      "instance_count": 119,
+      "label": "labels/ZeroG_FlightDay_Test_C1S0014_img006001.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test_C1S0014_img006001.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test_C1S0014_img006001.json",
+      "stem": "ZeroG_FlightDay_Test_C1S0014_img006001"
+    }
+  ],
+  "dataset_name": "gold_seed_v04",
+  "experiment_id": "hybrid_current_r1_mag_percentile_92p0",
+  "extra": {
+    "previews": [
+      {
+        "labelme_json": "images/ZeroG_FlightDay_Test_C1S0014_img006001.json",
+        "overlay": "images/ZeroG_FlightDay_Test_C1S0014_img006001_overlay.png",
+        "prediction_mask": "predictions/ZeroG_FlightDay_Test_C1S0014_img006001.tif",
+        "stem": "ZeroG_FlightDay_Test_C1S0014_img006001"
+      }
+    ]
+  },
+  "family": "hybrid_current",
+  "parameters": {
+    "adaptive_area_max": 350,
+    "adaptive_area_min": 20,
+    "adaptive_circularity_min": 0.4,
+    "adaptive_intensity_max": 160.0,
+    "adaptive_solidity_min": 0.75,
+    "alpha": 1.4,
+    "area_limit_factor": 16.0,
+    "blackhat_split_fused": false,
+    "border": 8,
+    "containment_thresh": 0.9,
+    "enable_consolidation": true,
+    "enable_hole_fill": true,
+    "hex_radius_factor": 1.5,
+    "iou_dedup_thresh": 0.5,
+    "knn_k": 3,
+    "mag_percentile": 92.0,
+    "max_peaks": 2000,
+    "min_area_px": 60,
+    "nms_size": 7,
+    "peak_percentile": 99.0,
+    "r_max": 25,
+    "r_min": 4,
+    "r_step": 2,
+    "tile_overlap_factor": 2.5,
+    "tile_size_factor": 8.0
+  },
+  "variant": "adaptive_round_1"
+}

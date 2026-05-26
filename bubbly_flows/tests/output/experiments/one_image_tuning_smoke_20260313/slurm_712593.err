@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/src/experiments/gold_eval.py", line 73, in _default_mask_writer
+    from PIL import Image
+ModuleNotFoundError: No module named 'PIL'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/run_one_image_tuning.py", line 116, in <module>
+    main()
+  File "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/run_one_image_tuning.py", line 98, in main
+    manifest = prepare_gold_evaluation_set(gold_json_dir, output_eval_root, image_search_dirs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/src/experiments/gold_eval.py", line 119, in prepare_gold_evaluation_set
+    writer(mask_rows, label_path)
+  File "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/src/experiments/gold_eval.py", line 75, in _default_mask_writer
+    raise RuntimeError("Pillow is required to write default evaluation masks") from exc
+RuntimeError: Pillow is required to write default evaluation masks

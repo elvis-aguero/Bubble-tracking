@@ -1,0 +1,16 @@
+{
+  "ranking": [
+    {
+      "F1": "0.000",
+      "experiment_id": "frst_only_001",
+      "family": "frst_only",
+      "variant": "one_image_tuning"
+    },
+    {
+      "F1": "0.000",
+      "experiment_id": "hybrid_current_001",
+      "family": "hybrid_current",
+      "variant": "one_image_tuning"
+    }
+  ]
+}

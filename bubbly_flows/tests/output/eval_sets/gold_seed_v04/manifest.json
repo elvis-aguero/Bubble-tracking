@@ -1,0 +1,120 @@
+{
+  "count": 14,
+  "dataset_name": "gold_seed_v04",
+  "dataset_root": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/tests/output/eval_sets/gold_seed_v04",
+  "items": [
+    {
+      "image": "images/ZeroG_FlightDay_Test_C1S0014_img006001.png",
+      "instance_count": 119,
+      "label": "labels/ZeroG_FlightDay_Test_C1S0014_img006001.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test_C1S0014_img006001.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test_C1S0014_img006001.json",
+      "stem": "ZeroG_FlightDay_Test_C1S0014_img006001"
+    },
+    {
+      "image": "images/ZeroG_FlightDay_Test_C1S0014_img009542.png",
+      "instance_count": 492,
+      "label": "labels/ZeroG_FlightDay_Test_C1S0014_img009542.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test_C1S0014_img009542.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test_C1S0014_img009542.json",
+      "stem": "ZeroG_FlightDay_Test_C1S0014_img009542"
+    },
+    {
+      "image": "images/ZeroG_FlightDay_Test_C1S0014_img018008.png",
+      "instance_count": 83,
+      "label": "labels/ZeroG_FlightDay_Test_C1S0014_img018008.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test_C1S0014_img018008.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test_C1S0014_img018008.json",
+      "stem": "ZeroG_FlightDay_Test_C1S0014_img018008"
+    },
+    {
+      "image": "images/ZeroG_FlightDay_Test_C1S0014_img018351.png",
+      "instance_count": 77,
+      "label": "labels/ZeroG_FlightDay_Test_C1S0014_img018351.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test_C1S0014_img018351.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test_C1S0014_img018351.json",
+      "stem": "ZeroG_FlightDay_Test_C1S0014_img018351"
+    },
+    {
+      "image": "images/ZeroG_FlightDay_Test_C1S0019_img003593.png",
+      "instance_count": 375,
+      "label": "labels/ZeroG_FlightDay_Test_C1S0019_img003593.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test_C1S0019_img003593.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test_C1S0019_img003593.json",
+      "stem": "ZeroG_FlightDay_Test_C1S0019_img003593"
+    },
+    {
+      "image": "images/ZeroG_FlightDay_Test_C1S0019_img011890.png",
+      "instance_count": 18,
+      "label": "labels/ZeroG_FlightDay_Test_C1S0019_img011890.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test_C1S0019_img011890.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test_C1S0019_img011890.json",
+      "stem": "ZeroG_FlightDay_Test_C1S0019_img011890"
+    },
+    {
+      "image": "images/ZeroG_FlightDay_Test_C1S0024_img014500.png",
+      "instance_count": 201,
+      "label": "labels/ZeroG_FlightDay_Test_C1S0024_img014500.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test_C1S0024_img014500.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test_C1S0024_img014500.json",
+      "stem": "ZeroG_FlightDay_Test_C1S0024_img014500"
+    },
+    {
+      "image": "images/ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.png",
+      "instance_count": 76,
+      "label": "labels/ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001.json",
+      "stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001000001"
+    },
+    {
+      "image": "images/ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.png",
+      "instance_count": 641,
+      "label": "labels/ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509.json",
+      "stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001004509"
+    },
+    {
+      "image": "images/ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070.png",
+      "instance_count": 9,
+      "label": "labels/ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070.json",
+      "stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001005070"
+    },
+    {
+      "image": "images/ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062.png",
+      "instance_count": 4,
+      "label": "labels/ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062.json",
+      "stem": "ZeroG_FlightDay_Test__C1S0004_IMG_S0001012062"
+    },
+    {
+      "image": "images/ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002.png",
+      "instance_count": 10,
+      "label": "labels/ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002.json",
+      "stem": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001000002"
+    },
+    {
+      "image": "images/ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.png",
+      "instance_count": 581,
+      "label": "labels/ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432.json",
+      "stem": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001005432"
+    },
+    {
+      "image": "images/ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655.png",
+      "instance_count": 5,
+      "label": "labels/ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655.tif",
+      "source_image": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/data/frames/images_16bit_png/ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655.png",
+      "source_json": "gold_seed_v04/labels_json/ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655.json",
+      "stem": "ZeroG_FlightDay_Test__C1S0010_IMG_S0001019655"
+    }
+  ],
+  "source_dir": "/oscar/data/dharri15/eaguerov/Github/Bubble-tracking/bubbly_flows/annotations/gold/gold_seed_v04/labels_json"
+}

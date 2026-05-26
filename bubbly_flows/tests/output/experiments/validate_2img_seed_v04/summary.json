@@ -1,0 +1,22 @@
+{
+  "ranking": [
+    {
+      "F1": "0.003",
+      "experiment_id": "validate_frst_only",
+      "family": "frst_only",
+      "variant": "baseline"
+    },
+    {
+      "F1": "0.003",
+      "experiment_id": "validate_hybrid_current",
+      "family": "hybrid_current",
+      "variant": "current"
+    },
+    {
+      "F1": "0.000",
+      "experiment_id": "validate_blackhat_only",
+      "family": "blackhat_only",
+      "variant": "baseline"
+    }
+  ]
+}

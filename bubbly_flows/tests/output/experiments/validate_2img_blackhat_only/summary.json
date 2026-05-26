@@ -1,0 +1,10 @@
+{
+  "ranking": [
+    {
+      "F1": "0.000",
+      "experiment_id": "validate_blackhat_only",
+      "family": "blackhat_only",
+      "variant": "baseline"
+    }
+  ]
+}
